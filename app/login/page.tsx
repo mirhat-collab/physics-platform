@@ -5,26 +5,17 @@ import { useRouter } from 'next/navigation'
 
 const GRADES = ['7', '8', '9', '10', '11']
 
-// Функция автоматического перехода класса
 function getActualGrade(grade: string, createdAt: string): string {
   const now = new Date()
   const created = new Date(createdAt)
   const currentYear = now.getFullYear()
-  
-  // Сентябрь 1 текущего года
-  const sep1 = new Date(currentYear, 8, 1)
-  
-  // Сколько учебных лет прошло с регистрации
   let yearsPassedSinceSep = 0
-  
-  // Считаем сколько раз прошло 1 сентября после регистрации
   for (let y = created.getFullYear(); y <= currentYear; y++) {
     const sep = new Date(y, 8, 1)
     if (sep > created && sep <= now) {
       yearsPassedSinceSep++
     }
   }
-  
   const newGrade = Math.min(parseInt(grade) + yearsPassedSinceSep, 11)
   return newGrade.toString()
 }
@@ -59,14 +50,14 @@ export default function LoginPage() {
           id: data.user.id,
           email,
           full_name: fullName,
-          grade,                    // сохраняем оригинальный класс
+          grade,
           total_xp: 0,
           streak: 0,
           created_at: now,
           last_visit: now.split('T')[0],
         })
       }
-      router.push('/classes')
+      router.push('/dashboard')
 
     } else {
       const { error } = await supabase.auth.signInWithPassword({ email, password })
@@ -85,7 +76,6 @@ export default function LoginPage() {
             ? (profile.streak || 0) + 1
             : lastVisit === today ? profile.streak : 1
 
-          // Автоматически обновляем класс если прошло 1 сентября
           const actualGrade = getActualGrade(
             profile.grade,
             profile.created_at || new Date().toISOString()
@@ -94,11 +84,11 @@ export default function LoginPage() {
           await supabase.from('profiles').update({
             last_visit: today,
             streak: newStreak,
-            grade: actualGrade,   // обновляем класс автоматически
+            grade: actualGrade,
           }).eq('id', user.id)
         }
       }
-      router.push('/classes')
+      router.push('/dashboard')
     }
     setLoading(false)
   }
@@ -128,8 +118,6 @@ export default function LoginPage() {
               value={fullName}
               onChange={e => setFullName(e.target.value)}
             />
-
-            {/* Выбор класса кнопками */}
             <div style={{ marginBottom: 12 }}>
               <div style={{ color: '#888', fontSize: 13, marginBottom: 8 }}>Выбери свой класс:</div>
               <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
@@ -138,15 +126,12 @@ export default function LoginPage() {
                     key={g}
                     onClick={() => setGrade(g)}
                     style={{
-                      padding: '10px 18px',
-                      borderRadius: 10,
+                      padding: '10px 18px', borderRadius: 10,
                       border: grade === g ? '2px solid #a78bfa' : '1px solid #2a2a3e',
                       background: grade === g ? 'rgba(167,139,250,0.2)' : '#0f0f1a',
                       color: grade === g ? '#a78bfa' : '#888',
-                      fontSize: 15,
-                      fontWeight: grade === g ? 700 : 400,
-                      cursor: 'pointer',
-                      transition: 'all 0.2s',
+                      fontSize: 15, fontWeight: grade === g ? 700 : 400,
+                      cursor: 'pointer', transition: 'all 0.2s',
                     }}
                   >
                     {g} класс
@@ -157,20 +142,8 @@ export default function LoginPage() {
           </>
         )}
 
-        <input
-          style={input}
-          type="email"
-          placeholder="Email"
-          value={email}
-          onChange={e => setEmail(e.target.value)}
-        />
-        <input
-          style={input}
-          type="password"
-          placeholder="Пароль (минимум 6 символов)"
-          value={password}
-          onChange={e => setPassword(e.target.value)}
-        />
+        <input style={input} type="email" placeholder="Email" value={email} onChange={e => setEmail(e.target.value)} />
+        <input style={input} type="password" placeholder="Пароль (минимум 6 символов)" value={password} onChange={e => setPassword(e.target.value)} />
 
         {error && (
           <div style={{ background: '#2d1a1a', border: '1px solid #f5576c', borderRadius: 8, padding: '10px 14px', color: '#f5576c', fontSize: 14, marginBottom: 12 }}>
@@ -188,10 +161,7 @@ export default function LoginPage() {
 
         <p style={{ color: '#888', textAlign: 'center', fontSize: 14 }}>
           {isSignUp ? 'Уже есть аккаунт? ' : 'Нет аккаунта? '}
-          <span
-            onClick={() => setIsSignUp(!isSignUp)}
-            style={{ color: '#a78bfa', cursor: 'pointer', fontWeight: 600 }}
-          >
+          <span onClick={() => setIsSignUp(!isSignUp)} style={{ color: '#a78bfa', cursor: 'pointer', fontWeight: 600 }}>
             {isSignUp ? 'Войти' : 'Зарегистрироваться'}
           </span>
         </p>
