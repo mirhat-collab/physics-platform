@@ -3,7 +3,31 @@ import { useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
 
-const GRADES = ['7th Grade', '8th Grade', '9th Grade', '10th Grade', '11th Grade']
+const GRADES = ['7', '8', '9', '10', '11']
+
+// Функция автоматического перехода класса
+function getActualGrade(grade: string, createdAt: string): string {
+  const now = new Date()
+  const created = new Date(createdAt)
+  const currentYear = now.getFullYear()
+  
+  // Сентябрь 1 текущего года
+  const sep1 = new Date(currentYear, 8, 1)
+  
+  // Сколько учебных лет прошло с регистрации
+  let yearsPassedSinceSep = 0
+  
+  // Считаем сколько раз прошло 1 сентября после регистрации
+  for (let y = created.getFullYear(); y <= currentYear; y++) {
+    const sep = new Date(y, 8, 1)
+    if (sep > created && sep <= now) {
+      yearsPassedSinceSep++
+    }
+  }
+  
+  const newGrade = Math.min(parseInt(grade) + yearsPassedSinceSep, 11)
+  return newGrade.toString()
+}
 
 export default function LoginPage() {
   const router = useRouter()
@@ -20,35 +44,58 @@ export default function LoginPage() {
     setError('')
 
     if (isSignUp) {
+      if (!fullName || !grade) {
+        setError('Заполни имя и выбери класс!')
+        setLoading(false)
+        return
+      }
+
       const { data, error } = await supabase.auth.signUp({ email, password })
       if (error) { setError(error.message); setLoading(false); return }
 
-      // Сохраняем имя и класс в профиль
       if (data.user) {
+        const now = new Date().toISOString()
         await supabase.from('profiles').upsert({
           id: data.user.id,
           email,
           full_name: fullName,
-          grade,
+          grade,                    // сохраняем оригинальный класс
           total_xp: 0,
           streak: 0,
+          created_at: now,
+          last_visit: now.split('T')[0],
         })
       }
       router.push('/classes')
+
     } else {
       const { error } = await supabase.auth.signInWithPassword({ email, password })
       if (error) { setError(error.message); setLoading(false); return }
 
-      // Обновляем серию при входе
       const { data: { user } } = await supabase.auth.getUser()
       if (user) {
         const today = new Date().toISOString().split('T')[0]
-        const { data: profile } = await supabase.from('profiles').select('*').eq('id', user.id).single()
+        const { data: profile } = await supabase
+          .from('profiles').select('*').eq('id', user.id).single()
+
         if (profile) {
           const lastVisit = profile.last_visit
           const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0]
-          const newStreak = lastVisit === yesterday ? (profile.streak || 0) + 1 : lastVisit === today ? profile.streak : 1
-          await supabase.from('profiles').update({ last_visit: today, streak: newStreak }).eq('id', user.id)
+          const newStreak = lastVisit === yesterday
+            ? (profile.streak || 0) + 1
+            : lastVisit === today ? profile.streak : 1
+
+          // Автоматически обновляем класс если прошло 1 сентября
+          const actualGrade = getActualGrade(
+            profile.grade,
+            profile.created_at || new Date().toISOString()
+          )
+
+          await supabase.from('profiles').update({
+            last_visit: today,
+            streak: newStreak,
+            grade: actualGrade,   // обновляем класс автоматически
+          }).eq('id', user.id)
         }
       }
       router.push('/classes')
@@ -56,11 +103,11 @@ export default function LoginPage() {
     setLoading(false)
   }
 
-  const input = {
+  const input: React.CSSProperties = {
     width: '100%', padding: '12px 16px', borderRadius: 10,
     border: '1px solid #2a2a3e', background: '#1a1a2e',
     color: '#fff', fontSize: 15, marginBottom: 12,
-    boxSizing: 'border-box' as const, outline: 'none'
+    boxSizing: 'border-box', outline: 'none'
   }
 
   return (
@@ -81,14 +128,32 @@ export default function LoginPage() {
               value={fullName}
               onChange={e => setFullName(e.target.value)}
             />
-            <select
-              style={{ ...input, marginBottom: 12 }}
-              value={grade}
-              onChange={e => setGrade(e.target.value)}
-            >
-              <option value="">Выбери свой класс</option>
-              {GRADES.map(g => <option key={g} value={g}>{g}</option>)}
-            </select>
+
+            {/* Выбор класса кнопками */}
+            <div style={{ marginBottom: 12 }}>
+              <div style={{ color: '#888', fontSize: 13, marginBottom: 8 }}>Выбери свой класс:</div>
+              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                {GRADES.map(g => (
+                  <button
+                    key={g}
+                    onClick={() => setGrade(g)}
+                    style={{
+                      padding: '10px 18px',
+                      borderRadius: 10,
+                      border: grade === g ? '2px solid #a78bfa' : '1px solid #2a2a3e',
+                      background: grade === g ? 'rgba(167,139,250,0.2)' : '#0f0f1a',
+                      color: grade === g ? '#a78bfa' : '#888',
+                      fontSize: 15,
+                      fontWeight: grade === g ? 700 : 400,
+                      cursor: 'pointer',
+                      transition: 'all 0.2s',
+                    }}
+                  >
+                    {g} класс
+                  </button>
+                ))}
+              </div>
+            </div>
           </>
         )}
 
