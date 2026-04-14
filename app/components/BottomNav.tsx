@@ -6,10 +6,10 @@ export default function BottomNav() {
   const path = usePathname()
 
   const items = [
-    { href: '/classes', icon: '🏠', label: 'Главная' },
+    { href: '/dashboard', icon: '🏠', label: 'Главная' },
     { href: '/topics', icon: '📚', label: 'Темы' },
     { href: '/progress', icon: '🏆', label: 'Рейтинг' },
-    { href: '/profile', icon: '👤', label: 'Профиль' },
+    { href: '/classes', icon: '🎓', label: 'Классы' },
   ]
 
   const hide = ['/', '/login', '/admin']
@@ -32,6 +32,7 @@ export default function BottomNav() {
             alignItems: 'center', justifyContent: 'center',
             textDecoration: 'none', gap: 2,
             background: 'transparent',
+            position: 'relative',
           }}>
             <span style={{ fontSize: 22 }}>{item.icon}</span>
             <span style={{
