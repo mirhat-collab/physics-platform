@@ -1,42 +1,21 @@
 'use client'
-import { useEffect, useState } from 'react'
 import Link from 'next/link'
+import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
+import { useRouter } from 'next/navigation'
 
-type Topic = {
-  id: string
-  name: string
-  theory: string
-  formulas: string
-  grade: string
-}
-
-export default function TopicsPage() {
-  const [topics, setTopics] = useState<Topic[]>([])
+export default function LandingPage() {
+  const router = useRouter()
   const [loading, setLoading] = useState(true)
-  const [hovered, setHovered] = useState<string | null>(null)
 
   useEffect(() => {
-    async function load() {
-      const { data } = await supabase.from('topics').select('*')
-      if (data) setTopics(data)
-      setLoading(false)
+    async function check() {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (user) router.push('/dashboard')
+      else setLoading(false)
     }
-    load()
+    check()
   }, [])
-
-  const gradeColors: Record<string, string> = {
-    '7th Grade':  '#667eea',
-    '8th Grade':  '#f59e0b',
-    '9th Grade':  '#10b981',
-    '10th Grade': '#ec4899',
-    '11th Grade': '#06b6d4',
-    '7':  '#667eea',
-    '8':  '#f59e0b',
-    '9':  '#10b981',
-    '10': '#ec4899',
-    '11': '#06b6d4',
-  }
 
   if (loading) return (
     <div style={{ minHeight: '100vh', background: '#0f0f1a', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -45,79 +24,73 @@ export default function TopicsPage() {
   )
 
   return (
-    <main style={{ minHeight: '100vh', background: '#0f0f1a', padding: '2rem', color: '#fff' }}>
-      <div style={{ maxWidth: 900, margin: '0 auto' }}>
+    <div style={{ minHeight: '100vh', background: '#0f0f1a', color: '#fff', overflow: 'hidden' }}>
 
-        <h1 style={{ fontSize: '2.2rem', fontWeight: 800, marginBottom: 8 }}>⚡ Темы</h1>
-        <p style={{ color: '#888', marginBottom: 36 }}>Выбери тему и начни изучать</p>
+      {/* Фоновые круги */}
+      <div style={{ position: 'fixed', top: -200, right: -200, width: 600, height: 600, borderRadius: '50%', background: 'radial-gradient(circle, rgba(102,126,234,0.15) 0%, transparent 70%)', pointerEvents: 'none' }} />
+      <div style={{ position: 'fixed', bottom: -200, left: -200, width: 500, height: 500, borderRadius: '50%', background: 'radial-gradient(circle, rgba(118,75,162,0.15) 0%, transparent 70%)', pointerEvents: 'none' }} />
 
-        <div style={{ display: 'grid', gap: 16 }}>
-          {topics.map((topic) => {
-            const color = gradeColors[topic.grade] || '#667eea'
-            const isHovered = hovered === topic.id
+      <div style={{ maxWidth: 600, margin: '0 auto', padding: '3rem 1.5rem', position: 'relative' }}>
 
-            return (
-              <Link
-                key={topic.id}
-                href={`/topics/${topic.id}`}
-                style={{ textDecoration: 'none' }}
-              >
-                <div
-                  onMouseEnter={() => setHovered(topic.id)}
-                  onMouseLeave={() => setHovered(null)}
-                  style={{
-                    background: isHovered ? '#20203e' : '#1a1a2e',
-                    border: '1px solid #2a2a3e',
-                    borderLeft: `4px solid ${color}`,
-                    borderRadius: 16,
-                    padding: '20px 24px',
-                    cursor: 'pointer',
-                    transition: 'all 0.2s ease',
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    gap: 16,
-                    transform: isHovered ? 'translateX(6px)' : 'translateX(0)',
-                    boxShadow: isHovered ? `0 0 20px ${color}22` : 'none',
-                  }}
-                >
-                  <div style={{ flex: 1 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8 }}>
-                      <h2 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 700, color: '#fff' }}>
-                        {topic.name}
-                      </h2>
-                      <span style={{
-                        background: `${color}22`,
-                        color: color,
-                        fontSize: 11,
-                        fontWeight: 600,
-                        padding: '3px 10px',
-                        borderRadius: 999,
-                        border: `1px solid ${color}44`,
-                        whiteSpace: 'nowrap',
-                      }}>
-                        {topic.grade}
-                      </span>
-                    </div>
-                    <p style={{
-                      margin: 0, color: '#888', fontSize: 13,
-                      overflow: 'hidden', textOverflow: 'ellipsis',
-                      display: '-webkit-box', WebkitLineClamp: 2,
-                      WebkitBoxOrient: 'vertical',
-                    }}>
-                      {topic.theory}
-                    </p>
-                  </div>
-
-                  <div style={{ color: isHovered ? '#fff' : '#444', fontSize: 22, flexShrink: 0, transition: 'color 0.2s' }}>
-                    →
-                  </div>
-                </div>
-              </Link>
-            )
-          })}
+        {/* Логотип */}
+        <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
+          <div style={{ width: 80, height: 80, borderRadius: 24, background: 'linear-gradient(135deg, #667eea, #764ba2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 40, margin: '0 auto 20px' }}>
+            ⚡
+          </div>
+          <h1 style={{ fontSize: '2.8rem', fontWeight: 900, margin: '0 0 12px', lineHeight: 1.1 }}>
+            Physics<br />
+            <span style={{ background: 'linear-gradient(135deg, #667eea, #a78bfa)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Platform</span>
+          </h1>
+          <p style={{ color: '#888', fontSize: 16, margin: 0, lineHeight: 1.6 }}>
+            Учи физику с удовольствием.<br />Зарабатывай XP, соревнуйся с классом.
+          </p>
         </div>
+
+        {/* Фичи */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: '2.5rem' }}>
+          {[
+            { icon: '📚', title: 'Темы', desc: 'Теория, формулы, практика' },
+            { icon: '⭐', title: 'XP система', desc: '+10 XP за каждую тему' },
+            { icon: '🏆', title: 'Рейтинг', desc: 'Соревнуйся с классом' },
+            { icon: '🔥', title: 'Streak', desc: 'Заходи каждый день' },
+          ].map((f, i) => (
+            <div key={i} style={{ background: '#1a1a2e', border: '1px solid #2a2a3e', borderRadius: 16, padding: '16px' }}>
+              <div style={{ fontSize: 28, marginBottom: 8 }}>{f.icon}</div>
+              <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 4 }}>{f.title}</div>
+              <div style={{ color: '#888', fontSize: 12 }}>{f.desc}</div>
+            </div>
+          ))}
+        </div>
+
+        {/* Кнопки */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          <Link href="/login" style={{ textDecoration: 'none' }}>
+            <div style={{ width: '100%', padding: '16px', borderRadius: 16, background: 'linear-gradient(135deg, #667eea, #764ba2)', color: '#fff', fontSize: 17, fontWeight: 700, textAlign: 'center', cursor: 'pointer', boxShadow: '0 8px 32px rgba(102,126,234,0.4)' }}>
+              🚀 Начать учиться
+            </div>
+          </Link>
+          <Link href="/login" style={{ textDecoration: 'none' }}>
+            <div style={{ width: '100%', padding: '16px', borderRadius: 16, background: 'transparent', border: '1px solid #2a2a3e', color: '#888', fontSize: 16, fontWeight: 600, textAlign: 'center', cursor: 'pointer' }}>
+              Уже есть аккаунт? Войти
+            </div>
+          </Link>
+        </div>
+
+        {/* Статистика */}
+        <div style={{ display: 'flex', justifyContent: 'center', gap: 32, marginTop: '2.5rem', paddingTop: '2rem', borderTop: '1px solid #2a2a3e' }}>
+          {[
+            { num: '5', label: 'классов' },
+            { num: '25+', label: 'тем' },
+            { num: '∞', label: 'знаний' },
+          ].map((s, i) => (
+            <div key={i} style={{ textAlign: 'center' }}>
+              <div style={{ fontSize: '1.8rem', fontWeight: 800, color: '#a78bfa' }}>{s.num}</div>
+              <div style={{ color: '#888', fontSize: 13 }}>{s.label}</div>
+            </div>
+          ))}
+        </div>
+
       </div>
-    </main>
+    </div>
   )
 }
