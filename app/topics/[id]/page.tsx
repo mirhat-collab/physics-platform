@@ -6,6 +6,8 @@ import { supabase } from '@/lib/supabase'
 import katex from 'katex'
 import 'katex/dist/katex.min.css'
 
+type MediaItem = { url: string; type: 'image' | 'video'; name: string }
+
 type Topic = {
   id: string
   name: string
@@ -15,11 +17,11 @@ type Topic = {
   tasks: string
   resource: string
   grade: string
+  media: MediaItem[]
 }
 
 function FormulaBlock({ text }: { text: string }) {
   const lines = text.split('\n').filter(l => l.trim() !== '')
-
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
       {lines.map((line, i) => {
@@ -30,13 +32,7 @@ function FormulaBlock({ text }: { text: string }) {
           html = `<span style="color:#fcd34d;font-family:monospace">${line}</span>`
         }
         return (
-          <div key={i} style={{
-            background: '#0a0a14',
-            borderRadius: 12,
-            padding: '16px 24px',
-            border: '1px solid rgba(245,158,11,0.2)',
-            overflowX: 'auto',
-          }}
+          <div key={i} style={{ background: '#0a0a14', borderRadius: 12, padding: '16px 24px', border: '1px solid rgba(245,158,11,0.2)', overflowX: 'auto' }}
             dangerouslySetInnerHTML={{ __html: html }}
           />
         )
@@ -145,6 +141,21 @@ export default function TopicPage() {
             <a href={topic.resource} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: 10, padding: '12px 20px', background: 'rgba(6,182,212,0.12)', border: '1px solid rgba(6,182,212,0.35)', borderRadius: 12, color: '#67e8f9', textDecoration: 'none', fontSize: 14, fontWeight: 600 }}>
               🔗 Открыть ресурс <span style={{ fontSize: 12, opacity: 0.7 }}>↗</span>
             </a>
+          </Section>
+        )}
+
+        {topic.media && topic.media.length > 0 && (
+          <Section icon="🖼" title="Материалы" color="#a78bfa" bg="rgba(167,139,250,0.08)">
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 12 }}>
+              {topic.media.map((item, i) => (
+                <div key={i} style={{ borderRadius: 12, overflow: 'hidden', border: '1px solid #2a2a3e', background: '#0a0a14' }}>
+                  {item.type === 'image'
+                    ? <img src={item.url} style={{ width: '100%', display: 'block' }} alt={item.name} />
+                    : <video src={item.url} controls style={{ width: '100%', display: 'block' }} />
+                  }
+                </div>
+              ))}
+            </div>
           </Section>
         )}
 
