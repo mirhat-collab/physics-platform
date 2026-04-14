@@ -9,7 +9,7 @@ export default function BottomNav() {
     { href: '/dashboard', icon: '🏠', label: 'Главная' },
     { href: '/topics', icon: '📚', label: 'Темы' },
     { href: '/progress', icon: '🏆', label: 'Рейтинг' },
-    { href: '/classes', icon: '🎓', label: 'Классы' },
+    { href: '/profile', icon: '👤', label: 'Профиль' },
   ]
 
   const hide = ['/', '/login', '/admin']
