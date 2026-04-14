@@ -1,6 +1,7 @@
 'use client'
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
 
 type Profile = { id: string; full_name: string; email: string; grade: string; total_xp: number; streak: number }
@@ -101,6 +102,20 @@ export default function ProfilePage() {
           </div>
         </div>
 
+        {/* Достижения */}
+        <Link href="/achievements" style={{ textDecoration: 'none', display: 'block', marginBottom: 12 }}>
+          <div style={{ background: '#1a1a2e', border: '1px solid #2a2a3e', borderRadius: 16, padding: '18px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+              <span style={{ fontSize: 24 }}>🏅</span>
+              <div>
+                <div style={{ fontWeight: 600, fontSize: 15 }}>Достижения</div>
+                <div style={{ color: '#888', fontSize: 12, marginTop: 2 }}>Твои награды и значки</div>
+              </div>
+            </div>
+            <span style={{ color: '#555', fontSize: 20 }}>→</span>
+          </div>
+        </Link>
+
         {/* Редактировать имя */}
         <div style={{ background: '#1a1a2e', borderRadius: 16, padding: '20px', marginBottom: 20, border: '1px solid #2a2a3e' }}>
           <div style={{ fontWeight: 600, marginBottom: 12 }}>✏️ Изменить имя</div>
@@ -127,7 +142,7 @@ export default function ProfilePage() {
         {/* Выйти */}
         <button
           onClick={handleLogout}
-style={{ width: '100%', padding: '14px', borderRadius: 14, border: 'none', background: '#2d1a1a', color: '#f5576c', fontSize: 16, fontWeight: 700, cursor: 'pointer' }}
+          style={{ width: '100%', padding: '14px', borderRadius: 14, border: '1px solid #f5576c33', background: '#2d1a1a', color: '#f5576c', fontSize: 16, fontWeight: 700, cursor: 'pointer' }}
         >
           🚪 Выйти из аккаунта
         </button>
