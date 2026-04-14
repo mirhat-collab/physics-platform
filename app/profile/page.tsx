@@ -127,7 +127,7 @@ export default function ProfilePage() {
         {/* Выйти */}
         <button
           onClick={handleLogout}
-          style={{ width: '100%', padding: '14px', borderRadius: 14, border: 'none', background: '#2d1a1a', color: '#f5576c', fontSize: 16, fontWeight: 700, cursor: 'pointer', border: '1px solid #f5576c33' }}
+style={{ width: '100%', padding: '14px', borderRadius: 14, border: 'none', background: '#2d1a1a', color: '#f5576c', fontSize: 16, fontWeight: 700, cursor: 'pointer' }}
         >
           🚪 Выйти из аккаунта
         </button>
