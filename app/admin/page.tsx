@@ -1,0 +1,234 @@
+'use client'
+import { useEffect, useState } from 'react'
+import { supabase } from '../../lib/supabase'
+
+type Class = { id: number; name: string; program: string; total_topics: number }
+type Topic = { id: number; name: string; theory: string; formulas: string; examples: string; tasks: string; resource: string; grade: string }
+
+export default function AdminPage() {
+  const [classes, setClasses] = useState<Class[]>([])
+  const [topics, setTopics] = useState<Topic[]>([])
+  const [tab, setTab] = useState<'classes' | 'topics'>('classes')
+
+  const [newClass, setNewClass] = useState({ name: '', program: '', total_topics: 0 })
+  const [newTopic, setNewTopic] = useState({ name: '', theory: '', formulas: '', examples: '', tasks: '', resource: '', grade: '' })
+
+  const [editClass, setEditClass] = useState<Class | null>(null)
+  const [editTopic, setEditTopic] = useState<Topic | null>(null)
+
+  useEffect(() => { loadData() }, [])
+
+  async function loadData() {
+    const { data: c } = await supabase.from('classes').select('*')
+    const { data: t } = await supabase.from('topics').select('*')
+    if (c) setClasses(c)
+    if (t) setTopics(t)
+  }
+
+  async function addClass() {
+    if (!newClass.name) return
+    await supabase.from('classes').insert(newClass)
+    setNewClass({ name: '', program: '', total_topics: 0 })
+    loadData()
+  }
+
+  async function addTopic() {
+    if (!newTopic.name) return
+    await supabase.from('topics').insert(newTopic)
+    setNewTopic({ name: '', theory: '', formulas: '', examples: '', tasks: '', resource: '', grade: '' })
+    loadData()
+  }
+
+  async function deleteClass(id: number) {
+    if (!confirm('Удалить класс?')) return
+    await supabase.from('classes').delete().eq('id', id)
+    loadData()
+  }
+
+  async function deleteTopic(id: number) {
+    if (!confirm('Удалить тему?')) return
+    await supabase.from('topics').delete().eq('id', id)
+    loadData()
+  }
+
+  async function saveEditClass() {
+    if (!editClass) return
+    await supabase.from('classes').update(editClass).eq('id', editClass.id)
+    setEditClass(null)
+    loadData()
+  }
+
+  async function saveEditTopic() {
+    if (!editTopic) return
+    await supabase.from('topics').update(editTopic).eq('id', editTopic.id)
+    setEditTopic(null)
+    loadData()
+  }
+
+  const input: React.CSSProperties = {
+    width: '100%', padding: '10px 14px', borderRadius: 10,
+    border: '1px solid #2a2a3e', background: '#0f0f1a',
+    color: '#fff', fontSize: 14, marginBottom: 10,
+    boxSizing: 'border-box', outline: 'none',
+  }
+  const textarea: React.CSSProperties = {
+    ...input, height: 90, resize: 'vertical', fontFamily: 'sans-serif', lineHeight: 1.6,
+  }
+  const formulaArea: React.CSSProperties = {
+    ...input, height: 90, resize: 'vertical',
+    fontFamily: 'monospace', color: '#fcd34d',
+    background: '#0a0a14', border: '1px solid rgba(245,158,11,0.3)',
+  }
+  const btn = (color: string): React.CSSProperties => ({
+    padding: '9px 18px', borderRadius: 10, border: 'none',
+    background: color, color: '#fff', cursor: 'pointer', fontWeight: 600, fontSize: 14,
+  })
+  const label: React.CSSProperties = {
+    display: 'block', color: '#888', fontSize: 12,
+    marginBottom: 4, marginTop: 4, fontWeight: 600, letterSpacing: 0.5,
+  }
+
+  return (
+    <div style={{ minHeight: '100vh', background: '#0f0f1a', padding: '2rem', color: '#fff' }}>
+      <div style={{ maxWidth: 900, margin: '0 auto' }}>
+        <h1 style={{ fontSize: '2rem', fontWeight: 800, marginBottom: 8 }}>⚙️ Панель админа</h1>
+        <p style={{ color: '#888', marginBottom: 32 }}>Управление классами и темами</p>
+
+        {/* Табы */}
+        <div style={{ display: 'flex', gap: 12, marginBottom: 32 }}>
+          <button onClick={() => setTab('classes')} style={{ ...btn(tab === 'classes' ? '#667eea' : '#1a1a2e'), border: '1px solid #2a2a3e' }}>
+            📚 Классы ({classes.length})
+          </button>
+          <button onClick={() => setTab('topics')} style={{ ...btn(tab === 'topics' ? '#667eea' : '#1a1a2e'), border: '1px solid #2a2a3e' }}>
+            📖 Темы ({topics.length})
+          </button>
+        </div>
+
+        {/* ===== КЛАССЫ ===== */}
+        {tab === 'classes' && (
+          <div>
+            <div style={{ background: '#1a1a2e', borderRadius: 20, padding: 28, marginBottom: 32, border: '1px solid #2a2a3e' }}>
+              <h2 style={{ marginBottom: 20, fontSize: '1.1rem' }}>➕ Добавить класс</h2>
+              <span style={label}>Название класса</span>
+              <input style={input} placeholder="Например: 7th Grade или 10А" value={newClass.name} onChange={e => setNewClass({ ...newClass, name: e.target.value })} />
+              <span style={label}>Программа</span>
+              <input style={input} placeholder="Например: Физика базовый уровень" value={newClass.program} onChange={e => setNewClass({ ...newClass, program: e.target.value })} />
+              <span style={label}>Количество тем</span>
+              <input style={input} type="number" placeholder="20" value={newClass.total_topics || ''} onChange={e => setNewClass({ ...newClass, total_topics: +e.target.value })} />
+              <button onClick={addClass} style={btn('#43e97b')}>✅ Добавить класс</button>
+            </div>
+
+            <h2 style={{ marginBottom: 16 }}>📋 Все классы</h2>
+            {classes.map(cls => (
+              <div key={cls.id} style={{ background: '#1a1a2e', borderRadius: 16, padding: 20, marginBottom: 12, border: '1px solid #2a2a3e' }}>
+                {editClass?.id === cls.id ? (
+                  <div>
+                    <span style={label}>Название</span>
+                    <input style={input} value={editClass.name} onChange={e => setEditClass({ ...editClass, name: e.target.value })} />
+                    <span style={label}>Программа</span>
+                    <input style={input} value={editClass.program} onChange={e => setEditClass({ ...editClass, program: e.target.value })} />
+                    <span style={label}>Количество тем</span>
+                    <input style={input} type="number" value={editClass.total_topics} onChange={e => setEditClass({ ...editClass, total_topics: +e.target.value })} />
+                    <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
+                      <button onClick={saveEditClass} style={btn('#43e97b')}>💾 Сохранить</button>
+                      <button onClick={() => setEditClass(null)} style={btn('#555')}>Отмена</button>
+                    </div>
+                  </div>
+                ) : (
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div>
+                      <div style={{ fontWeight: 700, fontSize: 17 }}>{cls.name}</div>
+                      <div style={{ color: '#aaa', fontSize: 13, marginTop: 4 }}>{cls.program} · {cls.total_topics} тем</div>
+                    </div>
+                    <div style={{ display: 'flex', gap: 8 }}>
+                      <button onClick={() => setEditClass(cls)} style={btn('#667eea')}>✏️</button>
+                      <button onClick={() => deleteClass(cls.id)} style={btn('#f5576c')}>🗑️</button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* ===== ТЕМЫ ===== */}
+        {tab === 'topics' && (
+          <div>
+            <div style={{ background: '#1a1a2e', borderRadius: 20, padding: 28, marginBottom: 32, border: '1px solid #2a2a3e' }}>
+              <h2 style={{ marginBottom: 20, fontSize: '1.1rem' }}>➕ Добавить тему</h2>
+
+              <span style={label}>Название темы</span>
+              <input style={input} placeholder="Например: Законы Ньютона" value={newTopic.name} onChange={e => setNewTopic({ ...newTopic, name: e.target.value })} />
+
+              <span style={label}>Класс</span>
+              <input style={input} placeholder="Например: 7th Grade или 10А" value={newTopic.grade} onChange={e => setNewTopic({ ...newTopic, grade: e.target.value })} />
+
+              <span style={label}>📖 Теория</span>
+              <textarea style={textarea} placeholder="Объяснение темы..." value={newTopic.theory} onChange={e => setNewTopic({ ...newTopic, theory: e.target.value })} />
+
+              <span style={label}>🔢 Формулы (каждая на новой строке, формат LaTeX)</span>
+              <textarea style={formulaArea} placeholder={"F = ma\n\\frac{v_f - v_i}{t}"} value={newTopic.formulas} onChange={e => setNewTopic({ ...newTopic, formulas: e.target.value })} />
+              <div style={{ color: '#666', fontSize: 11, marginBottom: 10 }}>
+                💡 Дроби: \frac{"{числитель}"}{"{знаменатель}"}  |  Степень: x^2  |  Индекс: v_0
+              </div>
+
+              <span style={label}>💡 Примеры</span>
+              <textarea style={textarea} placeholder="Разобранные примеры задач..." value={newTopic.examples} onChange={e => setNewTopic({ ...newTopic, examples: e.target.value })} />
+
+              <span style={label}>🧪 Практика / Задачи</span>
+              <textarea style={textarea} placeholder="Задачи для самостоятельного решения..." value={newTopic.tasks} onChange={e => setNewTopic({ ...newTopic, tasks: e.target.value })} />
+
+              <span style={label}>🌐 Ссылка на ресурс</span>
+              <input style={input} placeholder="https://..." value={newTopic.resource} onChange={e => setNewTopic({ ...newTopic, resource: e.target.value })} />
+
+              <button onClick={addTopic} style={{ ...btn('#43e97b'), marginTop: 8 }}>✅ Добавить тему</button>
+            </div>
+
+            <h2 style={{ marginBottom: 16 }}>📋 Все темы</h2>
+            {topics.map(topic => (
+              <div key={topic.id} style={{ background: '#1a1a2e', borderRadius: 16, padding: 20, marginBottom: 12, border: '1px solid #2a2a3e' }}>
+                {editTopic?.id === topic.id ? (
+                  <div>
+                    <span style={label}>Название</span>
+                    <input style={input} value={editTopic.name} onChange={e => setEditTopic({ ...editTopic, name: e.target.value })} />
+                    <span style={label}>Класс</span>
+                    <input style={input} value={editTopic.grade} onChange={e => setEditTopic({ ...editTopic, grade: e.target.value })} />
+                    <span style={label}>📖 Теория</span>
+                    <textarea style={textarea} value={editTopic.theory} onChange={e => setEditTopic({ ...editTopic, theory: e.target.value })} />
+                    <span style={label}>🔢 Формулы (LaTeX)</span>
+                    <textarea style={formulaArea} value={editTopic.formulas} onChange={e => setEditTopic({ ...editTopic, formulas: e.target.value })} />
+                    <div style={{ color: '#666', fontSize: 11, marginBottom: 10 }}>
+                      💡 Дроби: \frac{"{числитель}"}{"{знаменатель}"}  |  Степень: x^2  |  Индекс: v_0
+                    </div>
+                    <span style={label}>💡 Примеры</span>
+                    <textarea style={textarea} value={editTopic.examples || ''} onChange={e => setEditTopic({ ...editTopic, examples: e.target.value })} />
+                    <span style={label}>🧪 Практика</span>
+                    <textarea style={textarea} value={editTopic.tasks} onChange={e => setEditTopic({ ...editTopic, tasks: e.target.value })} />
+                    <span style={label}>🌐 Ссылка на ресурс</span>
+                    <input style={input} value={editTopic.resource || ''} onChange={e => setEditTopic({ ...editTopic, resource: e.target.value })} />
+                    <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
+                      <button onClick={saveEditTopic} style={btn('#43e97b')}>💾 Сохранить</button>
+                      <button onClick={() => setEditTopic(null)} style={btn('#555')}>Отмена</button>
+                    </div>
+                  </div>
+                ) : (
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontWeight: 700, fontSize: 16 }}>{topic.name}</div>
+                      <div style={{ color: '#a78bfa', fontSize: 13, marginTop: 2 }}>{topic.grade}</div>
+                      <div style={{ color: '#666', fontSize: 12, marginTop: 6 }}>{topic.theory?.slice(0, 100)}...</div>
+                    </div>
+                    <div style={{ display: 'flex', gap: 8, marginLeft: 16, flexShrink: 0 }}>
+                      <button onClick={() => setEditTopic(topic)} style={btn('#667eea')}>✏️ Изменить</button>
+                      <button onClick={() => deleteTopic(topic.id)} style={btn('#f5576c')}>🗑️ Удалить</button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
