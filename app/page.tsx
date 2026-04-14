@@ -7,12 +7,20 @@ import { useRouter } from 'next/navigation'
 export default function LandingPage() {
   const router = useRouter()
   const [loading, setLoading] = useState(true)
+  const [topicsCount, setTopicsCount] = useState(0)
+  const [classesCount, setClassesCount] = useState(0)
 
   useEffect(() => {
     async function check() {
       const { data: { user } } = await supabase.auth.getUser()
-      if (user) router.push('/dashboard')
-      else setLoading(false)
+      if (user) { router.push('/dashboard'); return }
+
+      const { count: tCount } = await supabase.from('topics').select('*', { count: 'exact', head: true })
+      const { count: cCount } = await supabase.from('classes').select('*', { count: 'exact', head: true })
+      if (tCount) setTopicsCount(tCount)
+      if (cCount) setClassesCount(cCount)
+
+      setLoading(false)
     }
     check()
   }, [])
@@ -26,13 +34,11 @@ export default function LandingPage() {
   return (
     <div style={{ minHeight: '100vh', background: '#0f0f1a', color: '#fff', overflow: 'hidden' }}>
 
-      {/* Фоновые круги */}
       <div style={{ position: 'fixed', top: -200, right: -200, width: 600, height: 600, borderRadius: '50%', background: 'radial-gradient(circle, rgba(102,126,234,0.15) 0%, transparent 70%)', pointerEvents: 'none' }} />
       <div style={{ position: 'fixed', bottom: -200, left: -200, width: 500, height: 500, borderRadius: '50%', background: 'radial-gradient(circle, rgba(118,75,162,0.15) 0%, transparent 70%)', pointerEvents: 'none' }} />
 
       <div style={{ maxWidth: 600, margin: '0 auto', padding: '3rem 1.5rem', position: 'relative' }}>
 
-        {/* Логотип */}
         <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
           <div style={{ width: 80, height: 80, borderRadius: 24, background: 'linear-gradient(135deg, #667eea, #764ba2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 40, margin: '0 auto 20px' }}>
             ⚡
@@ -46,7 +52,6 @@ export default function LandingPage() {
           </p>
         </div>
 
-        {/* Фичи */}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: '2.5rem' }}>
           {[
             { icon: '📚', title: 'Темы', desc: 'Теория, формулы, практика' },
@@ -62,7 +67,6 @@ export default function LandingPage() {
           ))}
         </div>
 
-        {/* Кнопки */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
           <Link href="/login" style={{ textDecoration: 'none' }}>
             <div style={{ width: '100%', padding: '16px', borderRadius: 16, background: 'linear-gradient(135deg, #667eea, #764ba2)', color: '#fff', fontSize: 17, fontWeight: 700, textAlign: 'center', cursor: 'pointer', boxShadow: '0 8px 32px rgba(102,126,234,0.4)' }}>
@@ -76,11 +80,10 @@ export default function LandingPage() {
           </Link>
         </div>
 
-        {/* Статистика */}
         <div style={{ display: 'flex', justifyContent: 'center', gap: 32, marginTop: '2.5rem', paddingTop: '2rem', borderTop: '1px solid #2a2a3e' }}>
           {[
-            { num: '5', label: 'классов' },
-            { num: '25+', label: 'тем' },
+            { num: classesCount.toString(), label: 'классов' },
+            { num: topicsCount.toString(), label: 'тем' },
             { num: '∞', label: 'знаний' },
           ].map((s, i) => (
             <div key={i} style={{ textAlign: 'center' }}>
