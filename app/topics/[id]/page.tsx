@@ -97,7 +97,7 @@ export default function TopicPage() {
     setCompleted(true)
     setMarking(false)
     setShowXP(true)
-    setTimeout(() => setShowXP(false), 2500)
+    setTimeout(() => setShowXP(false), 3000)
   }
 
   if (loading) return (
@@ -178,8 +178,23 @@ export default function TopicPage() {
 
         <div style={{ marginTop: 40, textAlign: 'center', position: 'relative', paddingBottom: 60 }}>
           {showXP && (
-            <div style={{ position: 'absolute', top: -50, left: '50%', transform: 'translateX(-50%)', fontSize: 26, fontWeight: 800, color: '#4ade80', animation: 'floatUp 2.5s ease forwards', pointerEvents: 'none', whiteSpace: 'nowrap' }}>
-              +10 XP ⭐
+            <div style={{
+              position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              background: 'rgba(0,0,0,0.6)', zIndex: 1000,
+              animation: 'fadeIn 0.3s ease'
+            }}>
+              <div style={{
+                background: 'linear-gradient(135deg, #1a1a2e, #16213e)',
+                border: '1px solid #667eea55', borderRadius: 24,
+                padding: '40px 48px', textAlign: 'center',
+                animation: 'popIn 0.4s ease'
+              }}>
+                <div style={{ fontSize: 56, marginBottom: 12 }}>🎉</div>
+                <div style={{ fontSize: 22, fontWeight: 800, color: '#fff', marginBottom: 6 }}>Тема завершена!</div>
+                <div style={{ fontSize: 36, fontWeight: 800, color: '#4ade80', marginBottom: 8 }}>+10 XP ⭐</div>
+                <div style={{ color: '#888', fontSize: 14 }}>Продолжай в том же духе!</div>
+              </div>
             </div>
           )}
           <button
@@ -202,10 +217,8 @@ export default function TopicPage() {
 
       </div>
       <style>{`
-        @keyframes floatUp {
-          0%   { opacity: 1; transform: translateX(-50%) translateY(0px); }
-          100% { opacity: 0; transform: translateX(-50%) translateY(-70px); }
-        }
+        @keyframes fadeIn { from { opacity: 0 } to { opacity: 1 } }
+        @keyframes popIn { from { transform: scale(0.8); opacity: 0 } to { transform: scale(1); opacity: 1 } }
         .katex { color: #fcd34d !important; font-size: 1.2em !important; }
         .katex-display { margin: 0 !important; }
       `}</style>

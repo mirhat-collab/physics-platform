@@ -25,10 +25,10 @@ export default function TopicsPage() {
   const [hovered, setHovered] = useState<string | null>(null)
   const [gradeFilter, setGradeFilter] = useState<string>('all')
   const [statusFilter, setStatusFilter] = useState<'all' | 'completed' | 'recent'>('all')
+  const [search, setSearch] = useState('')
 
   useEffect(() => {
     load()
-    // Загружаем недавно открытые из localStorage
     const recent = JSON.parse(localStorage.getItem('recentTopics') || '[]')
     setRecentIds(recent)
   }, [])
@@ -53,25 +53,30 @@ export default function TopicsPage() {
     setLoading(false)
   }
 
-  // Сортируем классы по порядку 7, 8, 9, 10, 11
   const grades = ['all', ...GRADE_ORDER.filter(g =>
     topics.some(t => t.grade === g || t.grade === `${g}th Grade`)
   )]
 
-  // Фильтрация по классу
   let filtered = gradeFilter === 'all'
     ? topics
     : topics.filter(t => t.grade === gradeFilter || t.grade === `${gradeFilter}th Grade`)
 
-  // Фильтрация по статусу
   if (statusFilter === 'completed') {
-    filtered = filtered.filter(t => completedIds.has(t.id))
+    filtered = filtered.filter(t => completedIds.has(t.id) || completedIds.has(String(t.id)))
   } else if (statusFilter === 'recent') {
     const recentSet = new Set(recentIds)
-    filtered = filtered.filter(t => recentSet.has(t.id))
-    // Сортируем по порядку открытия (последние сверху)
+    filtered = filtered.filter(t => recentSet.has(t.id) || recentSet.has(String(t.id)))
     filtered = [...filtered].sort((a, b) => recentIds.indexOf(a.id) - recentIds.indexOf(b.id))
   }
+
+  // Поиск по названию темы
+  if (search.trim()) {
+    filtered = filtered.filter(t =>
+      t.name.toLowerCase().includes(search.toLowerCase())
+    )
+  }
+
+  const progressPercent = topics.length > 0 ? Math.round((completedIds.size / topics.length) * 100) : 0
 
   if (loading) return (
     <div style={{ minHeight: '100vh', background: '#0f0f1a', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -111,8 +116,39 @@ export default function TopicsPage() {
             </div>
           </div>
 
+          {/* Прогресс-бар */}
+          <div style={{ marginTop: 16, background: '#1a1a2e', borderRadius: 12, padding: '12px 16px', border: '1px solid #2a2a3e' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, marginBottom: 8 }}>
+              <span style={{ color: '#888' }}>Твой прогресс</span>
+              <span style={{ color: '#a78bfa', fontWeight: 700 }}>{completedIds.size} / {topics.length} тем ({progressPercent}%)</span>
+            </div>
+            <div style={{ background: '#0f0f1a', borderRadius: 999, height: 8 }}>
+              <div style={{
+                height: '100%', width: `${progressPercent}%`,
+                background: 'linear-gradient(90deg, #667eea, #10b981)',
+                borderRadius: 999, transition: 'width 0.6s ease'
+              }} />
+            </div>
+          </div>
+
+          {/* Поиск */}
+          <div style={{ marginTop: 12, position: 'relative' }}>
+            <span style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', fontSize: 16, color: '#555' }}>🔍</span>
+            <input
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              placeholder="Поиск темы..."
+              style={{
+                width: '100%', padding: '10px 16px 10px 40px',
+                borderRadius: 12, border: '1px solid #2a2a3e',
+                background: '#1a1a2e', color: '#fff', fontSize: 14,
+                outline: 'none', boxSizing: 'border-box',
+              }}
+            />
+          </div>
+
           {/* Фильтр по классам */}
-          <div style={{ display: 'flex', gap: 8, marginTop: 16, flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', gap: 8, marginTop: 12, flexWrap: 'wrap' }}>
             {grades.map(g => (
               <button key={g} onClick={() => setGradeFilter(g)} style={{
                 padding: '6px 14px', borderRadius: 999, border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 600, transition: 'all 0.2s',
@@ -149,7 +185,7 @@ export default function TopicsPage() {
       <div style={{ maxWidth: 900, margin: '0 auto', padding: '1.5rem 2rem' }}>
         {filtered.length === 0 && (
           <div style={{ textAlign: 'center', color: '#555', padding: '60px 0', fontSize: 15 }}>
-            {statusFilter === 'completed' ? '😅 Ты ещё не изучил ни одной темы' : '😅 Нет недавно открытых тем'}
+            {search ? `😕 Ничего не найдено по запросу "${search}"` : statusFilter === 'completed' ? '😅 Ты ещё не изучил ни одной темы' : '😅 Нет недавно открытых тем'}
           </div>
         )}
         <div style={{ display: 'grid', gap: 12 }}>
@@ -161,7 +197,6 @@ export default function TopicsPage() {
             return (
               <Link key={topic.id} href={`/topics/${topic.id}`} style={{ textDecoration: 'none' }}
                 onClick={() => {
-                  // Сохраняем в недавние
                   const recent: string[] = JSON.parse(localStorage.getItem('recentTopics') || '[]')
                   const updated = [topic.id, ...recent.filter(id => id !== topic.id)].slice(0, 20)
                   localStorage.setItem('recentTopics', JSON.stringify(updated))
