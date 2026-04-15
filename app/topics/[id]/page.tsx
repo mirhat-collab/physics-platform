@@ -56,6 +56,10 @@ export default function TopicPage() {
   const [quizDone, setQuizDone] = useState(false)
   const [showQuiz, setShowQuiz] = useState(false)
   const [bookmarked, setBookmarked] = useState(false)
+  const [comments, setComments] = useState<{ id: number; user_name: string; text: string; created_at: string }[]>([])
+  const [commentText, setCommentText] = useState('')
+  const [sendingComment, setSendingComment] = useState(false)
+  const [userName, setUserName] = useState('')
 
   useEffect(() => { loadData() }, [id])
 
@@ -107,7 +111,34 @@ export default function TopicPage() {
       .from('progress').select('id')
       .eq('student', user.id).eq('topic', id).eq('status', 'completed').maybeSingle()
     if (prog) setCompleted(true)
+
+    const { data: profile } = await supabase.from('profiles').select('full_name, email').eq('id', user.id).single()
+    if (profile) setUserName(profile.full_name || profile.email || 'Аноним')
+
+    loadComments()
     setLoading(false)
+  }
+
+  async function loadComments() {
+    const { data } = await supabase
+      .from('comments').select('*')
+      .eq('topic_id', String(id))
+      .order('created_at', { ascending: false })
+    if (data) setComments(data)
+  }
+
+  async function sendComment() {
+    if (!commentText.trim() || !userId) return
+    setSendingComment(true)
+    await supabase.from('comments').insert({
+      topic_id: String(id),
+      user_id: userId,
+      user_name: userName,
+      text: commentText.trim(),
+    })
+    setCommentText('')
+    await loadComments()
+    setSendingComment(false)
   }
 
   async function markCompleted() {
@@ -370,6 +401,58 @@ export default function TopicPage() {
             )}
           </div>
         )}
+
+        {/* Комментарии */}
+        <div style={{ background: '#1a1a2e', borderRadius: 20, padding: '24px', border: '1px solid #2a2a3e', marginBottom: 40 }}>
+          <h2 style={{ margin: '0 0 20px', fontSize: '1.1rem', fontWeight: 800 }}>💬 Вопросы и комментарии</h2>
+
+          {/* Форма отправки */}
+          <div style={{ marginBottom: 24 }}>
+            <textarea
+              value={commentText}
+              onChange={e => setCommentText(e.target.value)}
+              placeholder="Задай вопрос или оставь комментарий..."
+              rows={3}
+              style={{
+                width: '100%', padding: '12px 16px', borderRadius: 12,
+                border: '1px solid #2a2a3e', background: '#0f0f1a',
+                color: '#fff', fontSize: 14, resize: 'vertical',
+                boxSizing: 'border-box', outline: 'none', fontFamily: 'sans-serif'
+              }}
+            />
+            <button
+              onClick={sendComment}
+              disabled={sendingComment || !commentText.trim()}
+              style={{
+                marginTop: 8, padding: '10px 24px', borderRadius: 10, border: 'none',
+                background: commentText.trim() ? 'linear-gradient(135deg, #667eea, #764ba2)' : '#2a2a3e',
+                color: '#fff', fontWeight: 700, cursor: commentText.trim() ? 'pointer' : 'not-allowed',
+                fontSize: 14, transition: 'all 0.2s'
+              }}>
+              {sendingComment ? 'Отправляем...' : '📨 Отправить'}
+            </button>
+          </div>
+
+          {/* Список комментариев */}
+          {comments.length === 0 && (
+            <div style={{ color: '#555', textAlign: 'center', padding: '20px 0', fontSize: 14 }}>
+              Пока нет комментариев. Будь первым!
+            </div>
+          )}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            {comments.map(c => (
+              <div key={c.id} style={{ background: '#0f0f1a', borderRadius: 12, padding: '14px 16px', border: '1px solid #2a2a3e' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
+                  <span style={{ fontWeight: 700, fontSize: 13, color: '#a78bfa' }}>{c.user_name || 'Аноним'}</span>
+                  <span style={{ color: '#555', fontSize: 12 }}>
+                    {new Date(c.created_at).toLocaleDateString('ru-RU', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                  </span>
+                </div>
+                <div style={{ color: '#ccc', fontSize: 14, lineHeight: 1.6 }}>{c.text}</div>
+              </div>
+            ))}
+          </div>
+        </div>
 
       </div>
       <style>{`
