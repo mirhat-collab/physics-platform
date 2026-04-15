@@ -127,7 +127,7 @@ export default function TopicsPage() {
               { key: 'recent', label: '🕐 Недавние' },
             ].map(({ key, label }) => (
               <button key={key} onClick={() => setStatusFilter(key as typeof statusFilter)} style={{
-                padding: '6px 14px', borderRadius: 999, border: 'none', cursor: 'pointer', fontSize: 12, fontWeight: 600, transition: 'all 0.2s',
+                padding: '6px 14px', borderRadius: 999, cursor: 'pointer', fontSize: 12, fontWeight: 600, transition: 'all 0.2s',
                 background: statusFilter === key ? '#2a2a4e' : 'transparent',
                 color: statusFilter === key ? '#a78bfa' : '#555',
                 border: statusFilter === key ? '1px solid #667eea55' : '1px solid transparent',
