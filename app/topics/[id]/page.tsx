@@ -58,6 +58,26 @@ export default function TopicPage() {
 
   useEffect(() => { loadData() }, [id])
 
+  // Загружаем квиз в фоне сразу после загрузки темы
+  useEffect(() => {
+    if (!topic) return
+    if (quiz) return
+    setQuizLoading(true)
+    fetch('/api/quiz', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ topicName: topic.name, theory: topic.theory, formulas: topic.formulas, examples: topic.examples })
+    })
+      .then(r => r.json())
+      .then(data => {
+        if (data.questions) {
+          setQuiz(data.questions)
+          setQuizAnswers(new Array(data.questions.length).fill(null))
+        }
+      })
+      .finally(() => setQuizLoading(false))
+  }, [topic])
+
   async function loadData() {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) { router.push('/login'); return }
@@ -105,22 +125,8 @@ export default function TopicPage() {
     setTimeout(() => setShowXP(false), 3000)
   }
 
-  async function startQuiz() {
-    if (!topic) return
+  function startQuiz() {
     setShowQuiz(true)
-    if (quiz) return // уже загружен
-    setQuizLoading(true)
-    const res = await fetch('/api/quiz', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ topicName: topic.name, theory: topic.theory, formulas: topic.formulas, examples: topic.examples })
-    })
-    const data = await res.json()
-    if (data.questions) {
-      setQuiz(data.questions)
-      setQuizAnswers(new Array(data.questions.length).fill(null))
-    }
-    setQuizLoading(false)
   }
 
   function answerQuestion(qIndex: number, aIndex: number) {
@@ -255,10 +261,14 @@ export default function TopicPage() {
         <div style={{ textAlign: 'center', marginTop: 16, paddingBottom: 60 }}>
           <button onClick={startQuiz} style={{
             padding: '14px 40px', borderRadius: 14, border: 'none', fontSize: 15, fontWeight: 700,
-            cursor: 'pointer', background: 'linear-gradient(135deg, #f59e0b, #d97706)',
-            color: '#fff', boxShadow: '0 8px 24px rgba(245,158,11,0.3)'
+            cursor: 'pointer',
+            background: quizLoading
+              ? '#2a2a3e'
+              : 'linear-gradient(135deg, #f59e0b, #d97706)',
+            color: '#fff', boxShadow: quizLoading ? 'none' : '0 8px 24px rgba(245,158,11,0.3)',
+            transition: 'all 0.3s'
           }}>
-            🧠 Проверить знания (квиз)
+            {quizLoading ? '⏳ Готовим вопросы...' : quiz ? '🧠 Проверить знания (квиз готов!)' : '🧠 Проверить знания (квиз)'}
           </button>
         </div>
 
