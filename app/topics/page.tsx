@@ -42,7 +42,14 @@ export default function TopicsPage() {
       const { data: progress } = await supabase
         .from('progress').select('topic')
         .eq('student', user.id).eq('status', 'completed')
-      if (progress) setCompletedIds(new Set(progress.map(p => p.topic)))
+      if (progress && data) {
+        const progressTopics = new Set(progress.map(p => p.topic))
+        // Поддерживаем оба формата: UUID и название темы
+        const ids = new Set(
+          data.filter(t => progressTopics.has(t.id) || progressTopics.has(t.name)).map(t => t.id)
+        )
+        setCompletedIds(ids)
+      }
     }
     setLoading(false)
   }
