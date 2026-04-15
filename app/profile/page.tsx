@@ -259,6 +259,20 @@ export default function ProfilePage() {
           {msg && <div style={{ color: '#4ade80', fontSize: 13, marginTop: 8 }}>{msg}</div>}
         </div>
 
+        {/* Установить приложение */}
+        <Link href="/install" style={{ textDecoration: 'none', display: 'block', marginBottom: 12 }}>
+          <div style={{ background: 'linear-gradient(135deg, rgba(102,126,234,0.15), rgba(118,75,162,0.15))', border: '1px solid rgba(102,126,234,0.3)', borderRadius: 16, padding: '18px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+              <span style={{ fontSize: 24 }}>📲</span>
+              <div>
+                <div style={{ fontWeight: 600, fontSize: 15 }}>Установить приложение</div>
+                <div style={{ color: '#888', fontSize: 12, marginTop: 2 }}>Добавь на экран телефона — бесплатно!</div>
+              </div>
+            </div>
+            <span style={{ color: '#667eea', fontSize: 20 }}>→</span>
+          </div>
+        </Link>
+
         {/* Выйти */}
         <button
           onClick={handleLogout}
