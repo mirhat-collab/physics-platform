@@ -12,23 +12,12 @@ export default function ThemeToggle() {
   }, [])
 
   function applyTheme(isDark: boolean) {
-    const root = document.documentElement
     if (isDark) {
-      root.style.setProperty('--bg', '#0f0f1a')
-      root.style.setProperty('--bg2', '#1a1a2e')
-      root.style.setProperty('--bg3', '#2a2a3e')
-      root.style.setProperty('--text', '#ffffff')
-      root.style.setProperty('--text2', '#888888')
-      root.style.setProperty('--border', '#2a2a3e')
+      document.body.classList.remove('light-theme')
       document.body.style.background = '#0f0f1a'
     } else {
-      root.style.setProperty('--bg', '#f0f0f8')
-      root.style.setProperty('--bg2', '#ffffff')
-      root.style.setProperty('--bg3', '#e8e8f0')
-      root.style.setProperty('--text', '#111111')
-      root.style.setProperty('--text2', '#555555')
-      root.style.setProperty('--border', '#d0d0e0')
-      document.body.style.background = '#f0f0f8'
+      document.body.classList.add('light-theme')
+      document.body.style.background = '#f0f2f8'
     }
   }
 
@@ -41,11 +30,15 @@ export default function ThemeToggle() {
 
   return (
     <button onClick={toggle} style={{
-      background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.12)',
-      borderRadius: 10, padding: '8px 12px', cursor: 'pointer',
-      fontSize: 18, transition: 'all 0.2s'
+      background: dark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)',
+      border: dark ? '1px solid rgba(255,255,255,0.15)' : '1px solid rgba(0,0,0,0.15)',
+      borderRadius: 10, padding: '8px 14px', cursor: 'pointer',
+      fontSize: 18, transition: 'all 0.2s', display: 'flex', alignItems: 'center', gap: 6
     }} title={dark ? 'Светлая тема' : 'Тёмная тема'}>
       {dark ? '☀️' : '🌙'}
+      <span style={{ fontSize: 12, fontWeight: 600, color: dark ? '#888' : '#555' }}>
+        {dark ? 'Светлая' : 'Тёмная'}
+      </span>
     </button>
   )
 }
