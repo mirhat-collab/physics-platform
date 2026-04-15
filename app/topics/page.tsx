@@ -24,13 +24,16 @@ export default function TopicsPage() {
   const [loading, setLoading] = useState(true)
   const [hovered, setHovered] = useState<string | null>(null)
   const [gradeFilter, setGradeFilter] = useState<string>('all')
-  const [statusFilter, setStatusFilter] = useState<'all' | 'completed' | 'recent'>('all')
+  const [statusFilter, setStatusFilter] = useState<'all' | 'completed' | 'recent' | 'bookmarked'>('all')
+  const [bookmarkIds, setBookmarkIds] = useState<Set<string>>(new Set())
   const [search, setSearch] = useState('')
 
   useEffect(() => {
     load()
     const recent = JSON.parse(localStorage.getItem('recentTopics') || '[]')
     setRecentIds(recent)
+    const bookmarks = JSON.parse(localStorage.getItem('bookmarks') || '[]')
+    setBookmarkIds(new Set(bookmarks))
   }, [])
 
   async function load() {
@@ -63,6 +66,8 @@ export default function TopicsPage() {
 
   if (statusFilter === 'completed') {
     filtered = filtered.filter(t => completedIds.has(t.id) || completedIds.has(String(t.id)))
+  } else if (statusFilter === 'bookmarked') {
+    filtered = filtered.filter(t => bookmarkIds.has(String(t.id)))
   } else if (statusFilter === 'recent') {
     const recentSet = new Set(recentIds)
     filtered = filtered.filter(t => recentSet.has(t.id) || recentSet.has(String(t.id)))
@@ -166,6 +171,7 @@ export default function TopicsPage() {
             {[
               { key: 'all', label: '📋 Все темы' },
               { key: 'completed', label: '✅ Изученные' },
+              { key: 'bookmarked', label: '🔖 Закладки' },
               { key: 'recent', label: '🕐 Недавние' },
             ].map(({ key, label }) => (
               <button key={key} onClick={() => setStatusFilter(key as typeof statusFilter)} style={{
@@ -185,7 +191,7 @@ export default function TopicsPage() {
       <div style={{ maxWidth: 900, margin: '0 auto', padding: '1.5rem 2rem' }}>
         {filtered.length === 0 && (
           <div style={{ textAlign: 'center', color: '#555', padding: '60px 0', fontSize: 15 }}>
-            {search ? `😕 Ничего не найдено по запросу "${search}"` : statusFilter === 'completed' ? '😅 Ты ещё не изучил ни одной темы' : '😅 Нет недавно открытых тем'}
+            {search ? `😕 Ничего не найдено по запросу "${search}"` : statusFilter === 'completed' ? '😅 Ты ещё не изучил ни одной темы' : statusFilter === 'bookmarked' ? '🔖 Нет сохранённых тем — нажми 📌 на странице темы' : '😅 Нет недавно открытых тем'}
           </div>
         )}
         <div style={{ display: 'grid', gap: 12 }}>

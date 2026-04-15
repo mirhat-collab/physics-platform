@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
+import ThemeToggle from '@/app/components/ThemeToggle'
 
 type Profile = { id: string; full_name: string; email: string; grade: string; total_xp: number; streak: number }
 
@@ -67,7 +68,10 @@ export default function ProfilePage() {
     <div style={{ minHeight: '100vh', background: '#0f0f1a', color: '#fff', padding: '1.5rem' }}>
       <div style={{ maxWidth: 500, margin: '0 auto' }}>
 
-        <h1 style={{ fontSize: '1.8rem', fontWeight: 800, marginBottom: 24 }}>👤 Профиль</h1>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
+          <h1 style={{ fontSize: '1.8rem', fontWeight: 800, margin: 0 }}>👤 Профиль</h1>
+          <ThemeToggle />
+        </div>
 
         {/* Аватар и имя */}
         <div style={{ background: 'linear-gradient(135deg, #667eea, #764ba2)', borderRadius: 24, padding: '32px', marginBottom: 20, textAlign: 'center' }}>

@@ -55,8 +55,27 @@ export default function TopicPage() {
   const [quizAnswers, setQuizAnswers] = useState<(number | null)[]>([])
   const [quizDone, setQuizDone] = useState(false)
   const [showQuiz, setShowQuiz] = useState(false)
+  const [bookmarked, setBookmarked] = useState(false)
 
   useEffect(() => { loadData() }, [id])
+
+  useEffect(() => {
+    if (!id) return
+    const saved: string[] = JSON.parse(localStorage.getItem('bookmarks') || '[]')
+    setBookmarked(saved.includes(String(id)))
+  }, [id])
+
+  function toggleBookmark() {
+    const saved: string[] = JSON.parse(localStorage.getItem('bookmarks') || '[]')
+    let updated: string[]
+    if (bookmarked) {
+      updated = saved.filter(b => b !== String(id))
+    } else {
+      updated = [String(id), ...saved]
+    }
+    localStorage.setItem('bookmarks', JSON.stringify(updated))
+    setBookmarked(!bookmarked)
+  }
 
   // Загружаем квиз в фоне сразу после загрузки темы
   useEffect(() => {
@@ -163,12 +182,24 @@ export default function TopicPage() {
         </Link>
 
         <div style={{ background: 'linear-gradient(135deg, #1a1a2e, #16213e)', border: '1px solid #2a2a3e', borderRadius: 24, padding: '32px 36px', marginBottom: 24 }}>
-          {topic.grade && (
-            <span style={{ background: 'rgba(167,139,250,0.15)', color: '#a78bfa', fontSize: 12, fontWeight: 600, padding: '4px 14px', borderRadius: 999, border: '1px solid rgba(167,139,250,0.3)', display: 'inline-block', marginBottom: 16 }}>
-              {topic.grade}
-            </span>
-          )}
-          <h1 style={{ fontSize: '1.9rem', fontWeight: 800, margin: 0, lineHeight: 1.2 }}>{topic.name}</h1>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 16 }}>
+            <div style={{ flex: 1 }}>
+              {topic.grade && (
+                <span style={{ background: 'rgba(167,139,250,0.15)', color: '#a78bfa', fontSize: 12, fontWeight: 600, padding: '4px 14px', borderRadius: 999, border: '1px solid rgba(167,139,250,0.3)', display: 'inline-block', marginBottom: 16 }}>
+                  {topic.grade}
+                </span>
+              )}
+              <h1 style={{ fontSize: '1.9rem', fontWeight: 800, margin: 0, lineHeight: 1.2 }}>{topic.name}</h1>
+            </div>
+            <button onClick={toggleBookmark} style={{
+              background: bookmarked ? 'rgba(245,158,11,0.15)' : 'rgba(255,255,255,0.05)',
+              border: bookmarked ? '1px solid rgba(245,158,11,0.4)' : '1px solid #2a2a3e',
+              borderRadius: 12, padding: '10px 14px', cursor: 'pointer',
+              fontSize: 20, transition: 'all 0.2s', flexShrink: 0
+            }} title={bookmarked ? 'Убрать из закладок' : 'Добавить в закладки'}>
+              {bookmarked ? '🔖' : '📌'}
+            </button>
+          </div>
         </div>
 
         {topic.theory && (
