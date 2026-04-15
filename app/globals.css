@@ -4,97 +4,13 @@ body {
   font-family: Arial, Helvetica, sans-serif;
 }
 
-/* Светлая тема — перекрывает все inline-стили */
+/* Светлая тема — переворачивает все цвета */
 body.light-theme {
-  background: #f0f2f8 !important;
-  color: #111 !important;
-  filter: none;
+  filter: invert(1) hue-rotate(180deg);
 }
 
-body.light-theme div,
-body.light-theme main,
-body.light-theme section,
-body.light-theme header,
-body.light-theme nav {
-  background-color: unset;
-}
-
-/* Главный фон страниц */
-body.light-theme [style*="background: #0f0f1a"],
-body.light-theme [style*="background:#0f0f1a"] {
-  background: #f0f2f8 !important;
-}
-
-body.light-theme [style*="background: #1a1a2e"],
-body.light-theme [style*="background:#1a1a2e"] {
-  background: #ffffff !important;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.08);
-}
-
-body.light-theme [style*="background: #0a0a14"],
-body.light-theme [style*="background:#0a0a14"] {
-  background: #f5f5fc !important;
-}
-
-body.light-theme [style*="background: #2a2a3e"],
-body.light-theme [style*="background:#2a2a3e"] {
-  background: #e8eaf0 !important;
-}
-
-/* Текст */
-body.light-theme [style*="color: #fff"],
-body.light-theme [style*="color:#fff"],
-body.light-theme [style*="color: #ffffff"],
-body.light-theme [style*="color: rgb(255, 255, 255)"] {
-  color: #111 !important;
-}
-
-body.light-theme [style*="color: #ccc"],
-body.light-theme [style*="color:#ccc"] {
-  color: #333 !important;
-}
-
-body.light-theme [style*="color: #888"],
-body.light-theme [style*="color:#888"] {
-  color: #666 !important;
-}
-
-body.light-theme [style*="color: #666"],
-body.light-theme [style*="color:#666"] {
-  color: #555 !important;
-}
-
-body.light-theme [style*="color: #555"],
-body.light-theme [style*="color:#555"] {
-  color: #666 !important;
-}
-
-body.light-theme [style*="color: #444"],
-body.light-theme [style*="color:#444"] {
-  color: #777 !important;
-}
-
-/* Границы */
-body.light-theme [style*="border: 1px solid #2a2a3e"],
-body.light-theme [style*="border:1px solid #2a2a3e"] {
-  border-color: #d0d4e8 !important;
-}
-
-/* Градиенты шапки */
-body.light-theme [style*="background: linear-gradient(135deg, #1a1a3e"],
-body.light-theme [style*="background:linear-gradient(135deg, #1a1a3e"] {
-  background: linear-gradient(135deg, #e8eaf8, #f0f2f8) !important;
-}
-
-/* Инпуты */
-body.light-theme input,
-body.light-theme textarea {
-  background: #f5f5fc !important;
-  color: #111 !important;
-  border-color: #d0d4e8 !important;
-}
-
-body.light-theme input::placeholder,
-body.light-theme textarea::placeholder {
-  color: #999 !important;
+/* Картинки и видео переворачиваем обратно чтобы выглядели нормально */
+body.light-theme img,
+body.light-theme video {
+  filter: invert(1) hue-rotate(180deg);
 }
