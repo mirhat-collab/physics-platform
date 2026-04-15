@@ -69,14 +69,31 @@ export default function TopicPage() {
   async function markCompleted() {
     if (!userId || !topic || completed || marking) return
     setMarking(true)
-    await supabase.from('progress').upsert(
-      { student: userId, topic: topic.id, status: 'completed', xp: 10, completed_at: new Date().toISOString() },
-      { onConflict: 'student,topic' }
-    )
-    const { data: profile } = await supabase.from('profiles').select('total_xp').eq('id', userId).single()
-    if (profile) {
-      await supabase.from('profiles').update({ total_xp: (profile.total_xp || 0) + 10 }).eq('id', userId)
+
+    // Проверяем — вдруг уже есть запись
+    const { data: existing } = await supabase.from('progress')
+      .select('id').eq('student', userId).eq('topic', topic.id).maybeSingle()
+
+    if (!existing) {
+      // Записываем прогресс
+      const { error: progressError } = await supabase.from('progress').insert({
+        student: userId, topic: topic.id, status: 'completed', xp: 10,
+        completed_at: new Date().toISOString()
+      })
+
+      if (progressError) {
+        console.error('Progress error:', progressError)
+        setMarking(false)
+        return
+      }
+
+      // Начисляем XP только если запись новая
+      const { data: profile } = await supabase.from('profiles').select('total_xp').eq('id', userId).single()
+      if (profile) {
+        await supabase.from('profiles').update({ total_xp: (profile.total_xp || 0) + 10 }).eq('id', userId)
+      }
     }
+
     setCompleted(true)
     setMarking(false)
     setShowXP(true)
