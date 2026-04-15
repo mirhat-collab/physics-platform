@@ -21,7 +21,7 @@ function getActualGrade(grade: string, createdAt: string): string {
 export default function LoginPage() {
   const router = useRouter()
   const [isSignUp, setIsSignUp] = useState(false)
-  const [role, setRole] = useState<'student' | 'teacher'>('student')
+  const [role, setRole] = useState<'student' | 'teacher' | 'parent'>('student')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [fullName, setFullName] = useState('')
@@ -58,7 +58,7 @@ export default function LoginPage() {
           last_visit: now.split('T')[0],
         })
       }
-      router.push(role === 'teacher' ? '/teacher' : '/dashboard')
+      router.push(role === 'teacher' ? '/teacher' : role === 'parent' ? '/parent' : '/dashboard')
 
     } else {
       const { error } = await supabase.auth.signInWithPassword({ email, password })
@@ -86,7 +86,7 @@ export default function LoginPage() {
             grade: actualGrade,
           }).eq('id', user.id)
 
-          router.push(profile.role === 'teacher' ? '/teacher' : '/dashboard')
+          router.push(profile.role === 'teacher' ? '/teacher' : profile.role === 'parent' ? '/parent' : '/dashboard')
         } else {
           router.push('/dashboard')
         }
@@ -127,6 +127,16 @@ export default function LoginPage() {
                 cursor: 'pointer', transition: 'all 0.2s',
               }}>
                 🎓 Ученик
+              </button>
+              <button onClick={() => setRole('parent')} style={{
+                flex: 1, padding: '12px', borderRadius: 12,
+                border: role === 'parent' ? '2px solid #f59e0b' : '1px solid #2a2a3e',
+                background: role === 'parent' ? 'rgba(245,158,11,0.15)' : '#0f0f1a',
+                color: role === 'parent' ? '#f59e0b' : '#888',
+                fontSize: 15, fontWeight: role === 'parent' ? 700 : 400,
+                cursor: 'pointer', transition: 'all 0.2s',
+              }}>
+                👨‍👩‍👧 Родитель
               </button>
               <button onClick={() => setRole('teacher')} style={{
                 flex: 1, padding: '12px', borderRadius: 12,

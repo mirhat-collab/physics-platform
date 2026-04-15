@@ -1,11 +1,11 @@
 'use client'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
 import ThemeToggle from '@/app/components/ThemeToggle'
 
-type Profile = { id: string; full_name: string; email: string; grade: string; total_xp: number; streak: number }
+type Profile = { id: string; full_name: string; email: string; grade: string; total_xp: number; streak: number; avatar_url?: string }
 
 export default function ProfilePage() {
   const router = useRouter()
@@ -15,6 +15,10 @@ export default function ProfilePage() {
   const [newName, setNewName] = useState('')
   const [saving, setSaving] = useState(false)
   const [msg, setMsg] = useState('')
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null)
+  const [avatarUploading, setAvatarUploading] = useState(false)
+  const [avatarHover, setAvatarHover] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => { loadData() }, [])
 
@@ -22,8 +26,58 @@ export default function ProfilePage() {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) { router.push('/login'); return }
     const { data: p } = await supabase.from('profiles').select('*').eq('id', user.id).single()
-    if (p) { setProfile(p); setNewName(p.full_name || '') }
+    if (p) {
+      setProfile(p)
+      setNewName(p.full_name || '')
+      setAvatarUrl(p.avatar_url || null)
+    }
     setLoading(false)
+  }
+
+  async function handleAvatarChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file || !profile) return
+
+    setAvatarUploading(true)
+    setMsg('')
+
+    const userId = profile.id
+
+    const { error: uploadError } = await supabase.storage
+      .from('avatars')
+      .upload(userId + '.jpg', file, { upsert: true })
+
+    if (uploadError) {
+      setMsg('❌ Ошибка загрузки: ' + uploadError.message)
+      setAvatarUploading(false)
+      setTimeout(() => setMsg(''), 5000)
+      return
+    }
+
+    const { data: urlData } = supabase.storage
+      .from('avatars')
+      .getPublicUrl(userId + '.jpg')
+
+    const publicUrl = urlData.publicUrl
+
+    const { error: updateError } = await supabase
+      .from('profiles')
+      .update({ avatar_url: publicUrl })
+      .eq('id', userId)
+
+    if (updateError) {
+      setMsg('❌ Ошибка сохранения: ' + updateError.message)
+      setAvatarUploading(false)
+      setTimeout(() => setMsg(''), 5000)
+      return
+    }
+
+    // Bust cache by appending timestamp so the browser fetches the new image
+    setAvatarUrl(publicUrl + '?t=' + Date.now())
+    setProfile({ ...profile, avatar_url: publicUrl })
+    setAvatarUploading(false)
+    setMsg('✅ Фото обновлено!')
+    setTimeout(() => setMsg(''), 3000)
   }
 
   async function saveName() {
@@ -75,9 +129,65 @@ export default function ProfilePage() {
 
         {/* Аватар и имя */}
         <div style={{ background: 'linear-gradient(135deg, #667eea, #764ba2)', borderRadius: 24, padding: '32px', marginBottom: 20, textAlign: 'center' }}>
-          <div style={{ width: 80, height: 80, borderRadius: '50%', background: 'rgba(255,255,255,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 32, fontWeight: 800, margin: '0 auto 16px' }}>
-            {initials}
+
+          {/* Hidden file input */}
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            style={{ display: 'none' }}
+            onChange={handleAvatarChange}
+          />
+
+          {/* Clickable avatar circle */}
+          <div
+            onClick={() => !avatarUploading && fileInputRef.current?.click()}
+            onMouseEnter={() => setAvatarHover(true)}
+            onMouseLeave={() => setAvatarHover(false)}
+            style={{
+              position: 'relative',
+              width: 80,
+              height: 80,
+              borderRadius: '50%',
+              background: 'rgba(255,255,255,0.2)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: 32,
+              fontWeight: 800,
+              margin: '0 auto 16px',
+              cursor: avatarUploading ? 'wait' : 'pointer',
+              overflow: 'hidden',
+            }}
+          >
+            {avatarUrl ? (
+              <img
+                src={avatarUrl}
+                alt="Avatar"
+                style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+              />
+            ) : (
+              initials
+            )}
+
+            {/* Camera overlay on hover or while uploading */}
+            {(avatarHover || avatarUploading) && (
+              <div style={{
+                position: 'absolute',
+                inset: 0,
+                borderRadius: '50%',
+                background: 'rgba(0,0,0,0.45)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: avatarUploading ? 14 : 22,
+                transition: 'opacity 0.15s',
+              }}>
+                {avatarUploading ? '...' : '📷'}
+              </div>
+            )}
           </div>
+
           <div style={{ fontSize: '1.5rem', fontWeight: 800, marginBottom: 4 }}>
             {profile?.full_name || 'Без имени'}
           </div>

@@ -8,6 +8,7 @@ export default function BottomNav() {
   const items = [
     { href: '/dashboard', icon: '🏠', label: 'Главная' },
     { href: '/topics', icon: '📚', label: 'Темы' },
+    { href: '/homework', icon: '📝', label: 'Задания' },
     { href: '/progress', icon: '🏆', label: 'Рейтинг' },
     { href: '/profile', icon: '👤', label: 'Профиль' },
   ]
