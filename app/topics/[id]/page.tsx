@@ -50,6 +50,11 @@ export default function TopicPage() {
   const [marking, setMarking] = useState(false)
   const [showXP, setShowXP] = useState(false)
   const [userId, setUserId] = useState<string | null>(null)
+  const [quiz, setQuiz] = useState<{ question: string; options: string[]; correct: number }[] | null>(null)
+  const [quizLoading, setQuizLoading] = useState(false)
+  const [quizAnswers, setQuizAnswers] = useState<(number | null)[]>([])
+  const [quizDone, setQuizDone] = useState(false)
+  const [showQuiz, setShowQuiz] = useState(false)
 
   useEffect(() => { loadData() }, [id])
 
@@ -99,6 +104,37 @@ export default function TopicPage() {
     setShowXP(true)
     setTimeout(() => setShowXP(false), 3000)
   }
+
+  async function startQuiz() {
+    if (!topic) return
+    setShowQuiz(true)
+    if (quiz) return // уже загружен
+    setQuizLoading(true)
+    const res = await fetch('/api/quiz', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ topicName: topic.name, theory: topic.theory, formulas: topic.formulas, examples: topic.examples })
+    })
+    const data = await res.json()
+    if (data.questions) {
+      setQuiz(data.questions)
+      setQuizAnswers(new Array(data.questions.length).fill(null))
+    }
+    setQuizLoading(false)
+  }
+
+  function answerQuestion(qIndex: number, aIndex: number) {
+    if (quizDone) return
+    const updated = [...quizAnswers]
+    updated[qIndex] = aIndex
+    setQuizAnswers(updated)
+  }
+
+  function submitQuiz() {
+    setQuizDone(true)
+  }
+
+  const quizScore = quiz ? quiz.filter((q, i) => quizAnswers[i] === q.correct).length : 0
 
   if (loading) return (
     <div style={{ minHeight: '100vh', background: '#0f0f1a', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -214,6 +250,85 @@ export default function TopicPage() {
             <p style={{ color: '#666', fontSize: 13, marginTop: 14 }}>Отличная работа! Ты уже прошёл эту тему.</p>
           )}
         </div>
+
+        {/* Кнопка квиза */}
+        <div style={{ textAlign: 'center', marginTop: 16, paddingBottom: 60 }}>
+          <button onClick={startQuiz} style={{
+            padding: '14px 40px', borderRadius: 14, border: 'none', fontSize: 15, fontWeight: 700,
+            cursor: 'pointer', background: 'linear-gradient(135deg, #f59e0b, #d97706)',
+            color: '#fff', boxShadow: '0 8px 24px rgba(245,158,11,0.3)'
+          }}>
+            🧠 Проверить знания (квиз)
+          </button>
+        </div>
+
+        {/* Квиз */}
+        {showQuiz && (
+          <div style={{ background: '#1a1a2e', borderRadius: 20, padding: '28px', border: '1px solid #2a2a3e', marginBottom: 40 }}>
+            <h2 style={{ margin: '0 0 20px', fontSize: '1.2rem', fontWeight: 800 }}>🧠 Мини-тест по теме</h2>
+            {quizLoading && (
+              <div style={{ textAlign: 'center', color: '#888', padding: '40px 0' }}>
+                <div style={{ fontSize: 32, marginBottom: 12 }}>⏳</div>
+                AI генерирует вопросы...
+              </div>
+            )}
+            {!quizLoading && quiz && quiz.map((q, qi) => (
+              <div key={qi} style={{ marginBottom: 24, padding: '20px', background: '#0f0f1a', borderRadius: 14, border: '1px solid #2a2a3e' }}>
+                <div style={{ fontWeight: 700, marginBottom: 14, fontSize: 15 }}>{qi + 1}. {q.question}</div>
+                <div style={{ display: 'grid', gap: 8 }}>
+                  {q.options.map((opt, ai) => {
+                    const isSelected = quizAnswers[qi] === ai
+                    const isCorrect = q.correct === ai
+                    let bg = '#1a1a2e'
+                    let border = '1px solid #2a2a3e'
+                    let color = '#ccc'
+                    if (quizDone) {
+                      if (isCorrect) { bg = 'rgba(16,185,129,0.15)'; border = '1px solid #10b981'; color = '#10b981' }
+                      else if (isSelected && !isCorrect) { bg = 'rgba(245,87,108,0.15)'; border = '1px solid #f5576c'; color = '#f5576c' }
+                    } else if (isSelected) {
+                      bg = 'rgba(102,126,234,0.2)'; border = '1px solid #667eea'; color = '#a78bfa'
+                    }
+                    return (
+                      <button key={ai} onClick={() => answerQuestion(qi, ai)} style={{
+                        padding: '12px 16px', borderRadius: 10, border, background: bg, color,
+                        textAlign: 'left', cursor: quizDone ? 'default' : 'pointer', fontSize: 14,
+                        fontWeight: isSelected || (quizDone && isCorrect) ? 600 : 400, transition: 'all 0.2s'
+                      }}>
+                        {quizDone && isCorrect && '✅ '}{quizDone && isSelected && !isCorrect && '❌ '}{opt}
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
+            ))}
+            {!quizLoading && quiz && !quizDone && (
+              <button onClick={submitQuiz}
+                disabled={quizAnswers.some(a => a === null)}
+                style={{
+                  width: '100%', padding: '14px', borderRadius: 12, border: 'none',
+                  background: quizAnswers.some(a => a === null) ? '#2a2a3e' : 'linear-gradient(135deg, #667eea, #764ba2)',
+                  color: '#fff', fontSize: 15, fontWeight: 700, cursor: quizAnswers.some(a => a === null) ? 'not-allowed' : 'pointer'
+                }}>
+                Проверить ответы
+              </button>
+            )}
+            {quizDone && (
+              <div style={{ textAlign: 'center', padding: '20px', background: quizScore >= 3 ? 'rgba(16,185,129,0.1)' : 'rgba(245,158,11,0.1)', borderRadius: 14, border: `1px solid ${quizScore >= 3 ? '#10b98155' : '#f59e0b55'}` }}>
+                <div style={{ fontSize: 40, marginBottom: 8 }}>{quizScore === 4 ? '🏆' : quizScore >= 3 ? '🎉' : quizScore >= 2 ? '😊' : '📚'}</div>
+                <div style={{ fontSize: 22, fontWeight: 800, color: quizScore >= 3 ? '#10b981' : '#f59e0b' }}>
+                  {quizScore} из {quiz.length} правильно
+                </div>
+                <div style={{ color: '#888', marginTop: 6, fontSize: 14 }}>
+                  {quizScore === 4 ? 'Отлично! Ты отлично знаешь тему!' : quizScore >= 3 ? 'Хорошо! Почти всё правильно!' : quizScore >= 2 ? 'Неплохо, но стоит повторить материал' : 'Советуем перечитать теорию ещё раз'}
+                </div>
+                <button onClick={() => { setQuizAnswers(new Array(quiz.length).fill(null)); setQuizDone(false) }}
+                  style={{ marginTop: 16, padding: '10px 28px', borderRadius: 10, border: 'none', background: '#2a2a3e', color: '#fff', cursor: 'pointer', fontSize: 14, fontWeight: 600 }}>
+                  Пройти снова
+                </button>
+              </div>
+            )}
+          </div>
+        )}
 
       </div>
       <style>{`
