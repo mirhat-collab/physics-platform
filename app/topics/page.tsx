@@ -43,10 +43,9 @@ export default function TopicsPage() {
         .from('progress').select('topic')
         .eq('student', user.id).eq('status', 'completed')
       if (progress && data) {
-        const progressTopics = new Set(progress.map(p => p.topic))
-        // Поддерживаем оба формата: UUID и название темы
+        const progressTopics = new Set(progress.map(p => String(p.topic)))
         const ids = new Set(
-          data.filter(t => progressTopics.has(t.id) || progressTopics.has(t.name)).map(t => t.id)
+          data.filter(t => progressTopics.has(String(t.id)) || progressTopics.has(t.name)).map(t => t.id)
         )
         setCompletedIds(ids)
       }
@@ -158,7 +157,7 @@ export default function TopicsPage() {
             const grade = topic.grade.replace('th Grade', '')
             const color = gradeColors[grade] || '#667eea'
             const isHovered = hovered === topic.id
-            const isDone = completedIds.has(topic.id)
+            const isDone = completedIds.has(topic.id) || completedIds.has(String(topic.id))
             return (
               <Link key={topic.id} href={`/topics/${topic.id}`} style={{ textDecoration: 'none' }}
                 onClick={() => {
