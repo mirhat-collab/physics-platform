@@ -28,8 +28,14 @@ export default function ProfilePage() {
   async function saveName() {
     if (!profile || !newName.trim()) return
     setSaving(true)
-    await supabase.from('profiles').update({ full_name: newName }).eq('id', profile.id)
-    setProfile({ ...profile, full_name: newName })
+    const { error } = await supabase.from('profiles').update({ full_name: newName.trim() }).eq('id', profile.id)
+    if (error) {
+      setMsg('❌ Ошибка: ' + error.message)
+      setSaving(false)
+      setTimeout(() => setMsg(''), 5000)
+      return
+    }
+    setProfile({ ...profile, full_name: newName.trim() })
     setEditing(false)
     setSaving(false)
     setMsg('✅ Имя сохранено!')

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import BottomNav from "./components/BottomNav";
+import StreakTracker from "./components/StreakTracker";
 
 export const metadata: Metadata = {
   title: "Physics Platform — Физика онлайн 7-11 класс Казахстан",
@@ -75,6 +76,7 @@ export default function RootLayout({
         <link rel="canonical" href="https://physics-platform-liart.vercel.app" />
       </head>
       <body style={{ margin: 0, fontFamily: 'sans-serif', background: '#0f0f1a', paddingBottom: 64 }}>
+        <StreakTracker />
         {children}
         <BottomNav />
       </body>
