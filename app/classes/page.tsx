@@ -1,4 +1,4 @@
-import { supabase } from '../../lib/supabase'
+import { createSupabaseServer } from '../../lib/supabase-server'
 import Link from 'next/link'
 
 const gradeColors: Record<string, { bg: string; accent: string; icon: string }> = {
@@ -10,6 +10,7 @@ const gradeColors: Record<string, { bg: string; accent: string; icon: string }> 
 }
 
 export default async function ClassesPage() {
+  const supabase = await createSupabaseServer()
   const { data: classes } = await supabase.from('classes').select('*')
   return (
     <>

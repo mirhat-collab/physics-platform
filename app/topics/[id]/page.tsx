@@ -316,12 +316,12 @@ export default function TopicPage() {
               <div style={{ textAlign: 'center', padding: '20px', background: quizScore >= 3 ? 'rgba(16,185,129,0.1)' : 'rgba(245,158,11,0.1)', borderRadius: 14, border: `1px solid ${quizScore >= 3 ? '#10b98155' : '#f59e0b55'}` }}>
                 <div style={{ fontSize: 40, marginBottom: 8 }}>{quizScore === 4 ? '🏆' : quizScore >= 3 ? '🎉' : quizScore >= 2 ? '😊' : '📚'}</div>
                 <div style={{ fontSize: 22, fontWeight: 800, color: quizScore >= 3 ? '#10b981' : '#f59e0b' }}>
-                  {quizScore} из {quiz.length} правильно
+                  {quizScore} из {quiz?.length ?? 0} правильно
                 </div>
                 <div style={{ color: '#888', marginTop: 6, fontSize: 14 }}>
                   {quizScore === 4 ? 'Отлично! Ты отлично знаешь тему!' : quizScore >= 3 ? 'Хорошо! Почти всё правильно!' : quizScore >= 2 ? 'Неплохо, но стоит повторить материал' : 'Советуем перечитать теорию ещё раз'}
                 </div>
-                <button onClick={() => { setQuizAnswers(new Array(quiz.length).fill(null)); setQuizDone(false) }}
+                <button onClick={() => { setQuizAnswers(new Array(quiz?.length ?? 0).fill(null)); setQuizDone(false) }}
                   style={{ marginTop: 16, padding: '10px 28px', borderRadius: 10, border: 'none', background: '#2a2a3e', color: '#fff', cursor: 'pointer', fontSize: 14, fontWeight: 600 }}>
                   Пройти снова
                 </button>
