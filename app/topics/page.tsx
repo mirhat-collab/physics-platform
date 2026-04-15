@@ -11,29 +11,61 @@ type Topic = {
   grade: string
 }
 
+const GRADE_ORDER = ['7', '8', '9', '10', '11']
+
+const gradeColors: Record<string, string> = {
+  '7': '#667eea', '8': '#f59e0b', '9': '#10b981', '10': '#ec4899', '11': '#06b6d4',
+}
+
 export default function TopicsPage() {
   const [topics, setTopics] = useState<Topic[]>([])
+  const [completedIds, setCompletedIds] = useState<Set<string>>(new Set())
+  const [recentIds, setRecentIds] = useState<string[]>([])
   const [loading, setLoading] = useState(true)
   const [hovered, setHovered] = useState<string | null>(null)
-  const [filter, setFilter] = useState<string>('all')
+  const [gradeFilter, setGradeFilter] = useState<string>('all')
+  const [statusFilter, setStatusFilter] = useState<'all' | 'completed' | 'recent'>('all')
 
   useEffect(() => {
-    async function load() {
-      const { data } = await supabase.from('topics').select('*')
-      if (data) setTopics(data)
-      setLoading(false)
-    }
     load()
+    // Загружаем недавно открытые из localStorage
+    const recent = JSON.parse(localStorage.getItem('recentTopics') || '[]')
+    setRecentIds(recent)
   }, [])
 
-  const gradeColors: Record<string, string> = {
-    '7th Grade': '#667eea', '8th Grade': '#f59e0b',
-    '9th Grade': '#10b981', '10th Grade': '#ec4899', '11th Grade': '#06b6d4',
-    '7': '#667eea', '8': '#f59e0b', '9': '#10b981', '10': '#ec4899', '11': '#06b6d4',
+  async function load() {
+    const { data } = await supabase.from('topics').select('*')
+    if (data) setTopics(data)
+
+    const { data: { user } } = await supabase.auth.getUser()
+    if (user) {
+      const { data: progress } = await supabase
+        .from('progress').select('topic')
+        .eq('student', user.id).eq('status', 'completed')
+      if (progress) setCompletedIds(new Set(progress.map(p => p.topic)))
+    }
+    setLoading(false)
   }
 
-  const grades = ['all', ...Array.from(new Set(topics.map(t => t.grade)))]
-  const filtered = filter === 'all' ? topics : topics.filter(t => t.grade === filter)
+  // Сортируем классы по порядку 7, 8, 9, 10, 11
+  const grades = ['all', ...GRADE_ORDER.filter(g =>
+    topics.some(t => t.grade === g || t.grade === `${g}th Grade`)
+  )]
+
+  // Фильтрация по классу
+  let filtered = gradeFilter === 'all'
+    ? topics
+    : topics.filter(t => t.grade === gradeFilter || t.grade === `${gradeFilter}th Grade`)
+
+  // Фильтрация по статусу
+  if (statusFilter === 'completed') {
+    filtered = filtered.filter(t => completedIds.has(t.id))
+  } else if (statusFilter === 'recent') {
+    const recentSet = new Set(recentIds)
+    filtered = filtered.filter(t => recentSet.has(t.id))
+    // Сортируем по порядку открытия (последние сверху)
+    filtered = [...filtered].sort((a, b) => recentIds.indexOf(a.id) - recentIds.indexOf(b.id))
+  }
 
   if (loading) return (
     <div style={{ minHeight: '100vh', background: '#0f0f1a', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -44,7 +76,7 @@ export default function TopicsPage() {
   return (
     <main style={{ minHeight: '100vh', background: '#0f0f1a', color: '#fff' }}>
 
-      {/* Красивая шапка */}
+      {/* Шапка */}
       <div style={{ background: 'linear-gradient(135deg, #1a1a3e 0%, #0f0f1a 100%)', borderBottom: '1px solid #2a2a3e', padding: '2rem 2rem 1.5rem' }}>
         <div style={{ maxWidth: 900, margin: '0 auto' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 8 }}>
@@ -58,13 +90,17 @@ export default function TopicsPage() {
           </div>
 
           {/* Статистика */}
-          <div style={{ display: 'flex', gap: 20, marginTop: 16 }}>
+          <div style={{ display: 'flex', gap: 12, marginTop: 16, flexWrap: 'wrap' }}>
             <div style={{ background: 'rgba(102,126,234,0.1)', border: '1px solid rgba(102,126,234,0.2)', borderRadius: 10, padding: '8px 16px', fontSize: 13 }}>
               <span style={{ color: '#a78bfa', fontWeight: 700 }}>{topics.length}</span>
               <span style={{ color: '#888', marginLeft: 6 }}>тем всего</span>
             </div>
             <div style={{ background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.2)', borderRadius: 10, padding: '8px 16px', fontSize: 13 }}>
-              <span style={{ color: '#10b981', fontWeight: 700 }}>{grades.length - 1}</span>
+              <span style={{ color: '#10b981', fontWeight: 700 }}>{completedIds.size}</span>
+              <span style={{ color: '#888', marginLeft: 6 }}>изучено</span>
+            </div>
+            <div style={{ background: 'rgba(245,158,11,0.1)', border: '1px solid rgba(245,158,11,0.2)', borderRadius: 10, padding: '8px 16px', fontSize: 13 }}>
+              <span style={{ color: '#f59e0b', fontWeight: 700 }}>{grades.length - 1}</span>
               <span style={{ color: '#888', marginLeft: 6 }}>классов</span>
             </div>
           </div>
@@ -72,13 +108,31 @@ export default function TopicsPage() {
           {/* Фильтр по классам */}
           <div style={{ display: 'flex', gap: 8, marginTop: 16, flexWrap: 'wrap' }}>
             {grades.map(g => (
-              <button key={g} onClick={() => setFilter(g)} style={{
+              <button key={g} onClick={() => setGradeFilter(g)} style={{
                 padding: '6px 14px', borderRadius: 999, border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 600, transition: 'all 0.2s',
-                background: filter === g ? (gradeColors[g] || '#667eea') : '#1a1a2e',
-                color: filter === g ? '#fff' : '#888',
-                boxShadow: filter === g ? `0 0 12px ${gradeColors[g] || '#667eea'}44` : 'none',
+                background: gradeFilter === g ? (gradeColors[g] || '#667eea') : '#1a1a2e',
+                color: gradeFilter === g ? '#fff' : '#888',
+                boxShadow: gradeFilter === g ? `0 0 12px ${gradeColors[g] || '#667eea'}44` : 'none',
               }}>
-                {g === 'all' ? '✦ Все' : g}
+                {g === 'all' ? '✦ Все' : `${g} класс`}
+              </button>
+            ))}
+          </div>
+
+          {/* Фильтр по статусу */}
+          <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
+            {[
+              { key: 'all', label: '📋 Все темы' },
+              { key: 'completed', label: '✅ Изученные' },
+              { key: 'recent', label: '🕐 Недавние' },
+            ].map(({ key, label }) => (
+              <button key={key} onClick={() => setStatusFilter(key as typeof statusFilter)} style={{
+                padding: '6px 14px', borderRadius: 999, border: 'none', cursor: 'pointer', fontSize: 12, fontWeight: 600, transition: 'all 0.2s',
+                background: statusFilter === key ? '#2a2a4e' : 'transparent',
+                color: statusFilter === key ? '#a78bfa' : '#555',
+                border: statusFilter === key ? '1px solid #667eea55' : '1px solid transparent',
+              }}>
+                {label}
               </button>
             ))}
           </div>
@@ -87,19 +141,33 @@ export default function TopicsPage() {
 
       {/* Список тем */}
       <div style={{ maxWidth: 900, margin: '0 auto', padding: '1.5rem 2rem' }}>
+        {filtered.length === 0 && (
+          <div style={{ textAlign: 'center', color: '#555', padding: '60px 0', fontSize: 15 }}>
+            {statusFilter === 'completed' ? '😅 Ты ещё не изучил ни одной темы' : '😅 Нет недавно открытых тем'}
+          </div>
+        )}
         <div style={{ display: 'grid', gap: 12 }}>
           {filtered.map((topic) => {
-            const color = gradeColors[topic.grade] || '#667eea'
+            const grade = topic.grade.replace('th Grade', '')
+            const color = gradeColors[grade] || '#667eea'
             const isHovered = hovered === topic.id
+            const isDone = completedIds.has(topic.id)
             return (
-              <Link key={topic.id} href={`/topics/${topic.id}`} style={{ textDecoration: 'none' }}>
+              <Link key={topic.id} href={`/topics/${topic.id}`} style={{ textDecoration: 'none' }}
+                onClick={() => {
+                  // Сохраняем в недавние
+                  const recent: string[] = JSON.parse(localStorage.getItem('recentTopics') || '[]')
+                  const updated = [topic.id, ...recent.filter(id => id !== topic.id)].slice(0, 20)
+                  localStorage.setItem('recentTopics', JSON.stringify(updated))
+                }}
+              >
                 <div
                   onMouseEnter={() => setHovered(topic.id)}
                   onMouseLeave={() => setHovered(null)}
                   style={{
                     background: isHovered ? '#20203e' : '#1a1a2e',
                     border: '1px solid #2a2a3e',
-                    borderLeft: `4px solid ${color}`,
+                    borderLeft: `4px solid ${isDone ? '#10b981' : color}`,
                     borderRadius: 16, padding: '18px 22px',
                     cursor: 'pointer', transition: 'all 0.2s ease',
                     display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 16,
@@ -108,11 +176,16 @@ export default function TopicsPage() {
                   }}
                 >
                   <div style={{ flex: 1 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 6 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 6, flexWrap: 'wrap' }}>
                       <h2 style={{ margin: 0, fontSize: '1rem', fontWeight: 700, color: '#fff' }}>{topic.name}</h2>
                       <span style={{ background: `${color}22`, color, fontSize: 11, fontWeight: 600, padding: '3px 10px', borderRadius: 999, border: `1px solid ${color}44`, whiteSpace: 'nowrap' }}>
-                        {topic.grade}
+                        {grade} класс
                       </span>
+                      {isDone && (
+                        <span style={{ background: 'rgba(16,185,129,0.15)', color: '#10b981', fontSize: 11, fontWeight: 600, padding: '3px 10px', borderRadius: 999, border: '1px solid rgba(16,185,129,0.3)', whiteSpace: 'nowrap' }}>
+                          ✅ Изучено
+                        </span>
+                      )}
                     </div>
                     <p style={{ margin: 0, color: '#666', fontSize: 13 }}>{topic.theory?.slice(0, 100)}...</p>
                   </div>
