@@ -41,6 +41,9 @@ ${content}
 
   } catch (err: any) {
     console.error('Quiz API error:', err)
-    return NextResponse.json({ error: err.message || 'Ошибка генерации вопросов' }, { status: 500 })
+    return NextResponse.json({
+      error: err.message || 'Ошибка генерации вопросов',
+      detail: err?.status || err?.code || String(err)
+    }, { status: 500 })
   }
 }
