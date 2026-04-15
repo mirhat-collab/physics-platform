@@ -55,6 +55,7 @@ export default function TopicPage() {
   const [quizAnswers, setQuizAnswers] = useState<(number | null)[]>([])
   const [quizDone, setQuizDone] = useState(false)
   const [showQuiz, setShowQuiz] = useState(false)
+  const [quizError, setQuizError] = useState(false)
   const [bookmarked, setBookmarked] = useState(false)
   const [comments, setComments] = useState<{ id: number; user_name: string; text: string; created_at: string }[]>([])
   const [commentText, setCommentText] = useState('')
@@ -85,21 +86,31 @@ export default function TopicPage() {
   useEffect(() => {
     if (!topic) return
     if (quiz) return
-    setQuizLoading(true)
-    fetch('/api/quiz', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ topicName: topic.name, theory: topic.theory, formulas: topic.formulas, examples: topic.examples })
-    })
-      .then(r => r.json())
-      .then(data => {
-        if (data.questions) {
-          setQuiz(data.questions)
-          setQuizAnswers(new Array(data.questions.length).fill(null))
-        }
-      })
-      .finally(() => setQuizLoading(false))
+    loadQuiz()
   }, [topic])
+
+  async function loadQuiz() {
+    if (!topic) return
+    setQuizLoading(true)
+    setQuizError(false)
+    try {
+      const res = await fetch('/api/quiz', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ topicName: topic.name, theory: topic.theory, formulas: topic.formulas, examples: topic.examples })
+      })
+      const data = await res.json()
+      if (data.questions && data.questions.length > 0) {
+        setQuiz(data.questions)
+        setQuizAnswers(new Array(data.questions.length).fill(null))
+      } else {
+        setQuizError(true)
+      }
+    } catch {
+      setQuizError(true)
+    }
+    setQuizLoading(false)
+  }
 
   async function loadData() {
     const { data: { user } } = await supabase.auth.getUser()
@@ -342,6 +353,15 @@ export default function TopicPage() {
               <div style={{ textAlign: 'center', color: '#888', padding: '40px 0' }}>
                 <div style={{ fontSize: 32, marginBottom: 12 }}>⏳</div>
                 AI генерирует вопросы...
+              </div>
+            )}
+            {!quizLoading && quizError && (
+              <div style={{ textAlign: 'center', padding: '30px 0' }}>
+                <div style={{ fontSize: 32, marginBottom: 12 }}>😕</div>
+                <div style={{ color: '#888', marginBottom: 16, fontSize: 14 }}>Не удалось загрузить вопросы</div>
+                <button onClick={loadQuiz} style={{ padding: '10px 24px', borderRadius: 10, border: 'none', background: 'linear-gradient(135deg,#667eea,#764ba2)', color: '#fff', fontWeight: 700, cursor: 'pointer', fontSize: 14 }}>
+                  🔄 Попробовать снова
+                </button>
               </div>
             )}
             {!quizLoading && quiz && quiz.map((q, qi) => (
