@@ -16,7 +16,7 @@ export default function ProgressPage() {
 
   async function loadData() {
     const { data: { user } } = await supabase.auth.getUser()
-    const { data: profilesData } = await supabase.from('profiles').select('*').order('total_xp', { ascending: false })
+    const { data: profilesData } = await supabase.from('profiles').select('*').eq('role', 'student').order('total_xp', { ascending: false })
     if (profilesData) setProfiles(profilesData)
     if (user && profilesData) {
       const me = profilesData.find(p => p.id === user.id)

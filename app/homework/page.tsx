@@ -25,8 +25,11 @@ export default function HomeworkPage() {
     if (!user) { router.push('/login'); return }
     setUserId(user.id)
 
-    const { data: profile } = await supabase.from('profiles').select('full_name, email, grade').eq('id', user.id).single()
+    const { data: profile } = await supabase.from('profiles').select('full_name, email, grade, role').eq('id', user.id).single()
     if (profile) { setUserName(profile.full_name || profile.email); setUserGrade(profile.grade) }
+
+    // Учителей перенаправляем на панель учителя
+    if (profile?.role === 'teacher') { router.push('/teacher'); return }
 
     const { data: hw } = await supabase.from('homework').select('*').eq('class_name', profile?.grade || '').order('created_at', { ascending: false })
     if (hw) setHomeworks(hw)
