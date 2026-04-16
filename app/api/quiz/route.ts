@@ -20,18 +20,20 @@ ${content}
 
 "correct" — индекс правильного ответа (0, 1, 2 или 3).`
 
-    const apiKey = process.env.GEMINI_API_KEY
-    const res = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${apiKey}`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: prompt }] }],
-          generationConfig: { temperature: 0.7, maxOutputTokens: 1024 }
-        })
-      }
-    )
+    const apiKey = process.env.GROQ_API_KEY
+    const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${apiKey}`
+      },
+      body: JSON.stringify({
+        model: 'llama-3.1-8b-instant',
+        messages: [{ role: 'user', content: prompt }],
+        max_tokens: 1024,
+        temperature: 0.7
+      })
+    })
 
     if (!res.ok) {
       const err = await res.text()
@@ -39,7 +41,7 @@ ${content}
     }
 
     const data = await res.json()
-    const text = data.candidates?.[0]?.content?.parts?.[0]?.text || ''
+    const text = data.choices?.[0]?.message?.content || ''
 
     const jsonMatch = text.match(/\[[\s\S]*\]/)
     if (!jsonMatch) {
