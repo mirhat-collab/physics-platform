@@ -1,12 +1,12 @@
 'use client'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 
 type Profile = { id: string; full_name: string; email: string; grade: string; total_xp: number; streak: number; role: string }
 type ClassStat = { name: string; students: Profile[]; avg_xp: number; completed_topics: number; total_topics: number }
-type Homework = { id: number; title: string; description: string; class_name: string; due_date: string; created_at: string }
-type Submission = { id: number; homework_id: number; student_name: string; answer: string; submitted_at: string; grade: string }
+type Homework = { id: number; title: string; description: string; class_name: string; due_date: string; created_at: string; media_urls?: string[] }
+type Submission = { id: number; homework_id: number; student_name: string; answer: string; submitted_at: string; grade: string; media_url?: string }
 type Tournament = { id: number; title: string; class_name: string; status: string; ends_at: string; created_at: string }
 
 export default function TeacherPage() {
@@ -25,10 +25,14 @@ export default function TeacherPage() {
   const [hwDesc, setHwDesc] = useState('')
   const [hwClass, setHwClass] = useState('')
   const [hwDue, setHwDue] = useState('')
+  const [hwMediaFiles, setHwMediaFiles] = useState<File[]>([])
+  const [hwMediaPreviews, setHwMediaPreviews] = useState<string[]>([])
+  const [hwUploading, setHwUploading] = useState(false)
   const [savingHw, setSavingHw] = useState(false)
   const [selectedHw, setSelectedHw] = useState<number | null>(null)
   const [gradingId, setGradingId] = useState<number | null>(null)
   const [gradeValue, setGradeValue] = useState('')
+  const hwFileRef = useRef<HTMLInputElement>(null)
 
   // Турниры
   const [tournaments, setTournaments] = useState<Tournament[]>([])
@@ -75,15 +79,44 @@ export default function TeacherPage() {
     setLoading(false)
   }
 
+  function handleHwMedia(files: FileList | null) {
+    if (!files) return
+    const newFiles = Array.from(files)
+    setHwMediaFiles(prev => [...prev, ...newFiles])
+    newFiles.forEach(f => {
+      const url = URL.createObjectURL(f)
+      setHwMediaPreviews(prev => [...prev, url])
+    })
+  }
+
   async function createHomework() {
     if (!hwTitle.trim() || !hwClass || !teacher) return
     setSavingHw(true)
+
+    // Загружаем медиа файлы
+    const mediaUrls: string[] = []
+    if (hwMediaFiles.length > 0) {
+      setHwUploading(true)
+      for (const file of hwMediaFiles) {
+        const ext = file.name.split('.').pop()
+        const path = `homework/${teacher.id}_${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`
+        const { error } = await supabase.storage.from('homework-media').upload(path, file)
+        if (!error) {
+          const { data: urlData } = supabase.storage.from('homework-media').getPublicUrl(path)
+          mediaUrls.push(urlData.publicUrl)
+        }
+      }
+      setHwUploading(false)
+    }
+
     const { data } = await supabase.from('homework').insert({
       title: hwTitle, description: hwDesc, class_name: hwClass,
-      due_date: hwDue || null, created_by: teacher.id
+      due_date: hwDue || null, created_by: teacher.id,
+      media_urls: mediaUrls.length > 0 ? mediaUrls : null
     }).select().single()
     if (data) setHomeworks([data, ...homeworks])
     setHwTitle(''); setHwDesc(''); setHwClass(''); setHwDue('')
+    setHwMediaFiles([]); setHwMediaPreviews([])
     setSavingHw(false)
   }
 
@@ -281,9 +314,33 @@ export default function TeacherPage() {
                 </select>
                 <input style={{ ...inputStyle, marginBottom: 0 }} type="date" value={hwDue} onChange={e => setHwDue(e.target.value)} />
               </div>
-              <button onClick={createHomework} disabled={savingHw || !hwTitle.trim() || !hwClass}
+
+              {/* Загрузка медиа */}
+              <input ref={hwFileRef} type="file" accept="image/*,video/*" multiple style={{ display: 'none' }} onChange={e => handleHwMedia(e.target.files)} />
+              <div onClick={() => hwFileRef.current?.click()}
+                style={{ border: '2px dashed #2a2a4e', borderRadius: 12, padding: '14px', textAlign: 'center', cursor: 'pointer', color: '#888', fontSize: 13, background: '#0a0a18', marginBottom: 10 }}
+                onMouseEnter={e => (e.currentTarget.style.borderColor = '#10b981')}
+                onMouseLeave={e => (e.currentTarget.style.borderColor = '#2a2a4e')}>
+                📎 Прикрепить фото или видео к заданию
+              </div>
+              {hwMediaPreviews.length > 0 && (
+                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 10 }}>
+                  {hwMediaPreviews.map((preview, i) => (
+                    <div key={i} style={{ position: 'relative', width: 80, height: 64, borderRadius: 8, overflow: 'hidden', border: '1px solid #2a2a3e' }}>
+                      {hwMediaFiles[i]?.type.startsWith('video')
+                        ? <video src={preview} style={{ width: '100%', height: '100%', objectFit: 'cover' }} muted />
+                        : <img src={preview} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                      }
+                      <button onClick={e => { e.stopPropagation(); setHwMediaFiles(p => p.filter((_, idx) => idx !== i)); setHwMediaPreviews(p => p.filter((_, idx) => idx !== i)) }}
+                        style={{ position: 'absolute', top: 2, right: 2, width: 18, height: 18, borderRadius: '50%', background: '#f5576c', border: 'none', color: '#fff', fontSize: 11, cursor: 'pointer', padding: 0, lineHeight: '18px' }}>×</button>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              <button onClick={createHomework} disabled={savingHw || hwUploading || !hwTitle.trim() || !hwClass}
                 style={{ padding: '10px 24px', borderRadius: 10, border: 'none', background: hwTitle && hwClass ? 'linear-gradient(135deg,#10b981,#059669)' : '#2a2a3e', color: '#fff', fontWeight: 700, cursor: 'pointer', fontSize: 14 }}>
-                {savingHw ? 'Создаём...' : '✅ Создать задание'}
+                {hwUploading ? '⏳ Загружаю файлы...' : savingHw ? 'Создаём...' : '✅ Создать задание'}
               </button>
             </div>
 
@@ -313,7 +370,12 @@ export default function TeacherPage() {
                               <span style={{ fontWeight: 600, color: '#a78bfa', fontSize: 13 }}>{sub.student_name}</span>
                               <span style={{ color: '#555', fontSize: 12 }}>{new Date(sub.submitted_at).toLocaleDateString('ru-RU')}</span>
                             </div>
-                            <p style={{ color: '#ccc', fontSize: 14, margin: '0 0 10px' }}>{sub.answer}</p>
+                            {sub.answer && <p style={{ color: '#ccc', fontSize: 14, margin: '0 0 10px' }}>{sub.answer}</p>}
+                            {sub.media_url && (
+                              sub.media_url.match(/\.(mp4|webm|mov)$/i)
+                                ? <video src={sub.media_url} controls style={{ maxWidth: '100%', borderRadius: 8, marginBottom: 10 }} />
+                                : <img src={sub.media_url} alt="Работа ученика" style={{ maxWidth: '100%', maxHeight: 200, borderRadius: 8, marginBottom: 10, objectFit: 'cover' }} />
+                            )}
                             {sub.grade ? (
                               <span style={{ background: 'rgba(16,185,129,0.15)', color: '#10b981', padding: '3px 10px', borderRadius: 999, fontSize: 12, fontWeight: 600 }}>Оценка: {sub.grade}</span>
                             ) : gradingId === sub.id ? (
