@@ -171,7 +171,7 @@ export default function HomeworkPage() {
 
                     {preview ? (
                       <div style={{ position: 'relative', marginBottom: 10, display: 'inline-block' }}>
-                        {file?.type.startsWith('video')
+                        {file?.type?.startsWith('video')
                           ? <video src={preview} style={{ maxWidth: '100%', maxHeight: 180, borderRadius: 10, border: '1px solid #2a2a3e' }} muted />
                           : <img src={preview} alt="" style={{ maxWidth: '100%', maxHeight: 180, borderRadius: 10, border: '1px solid #2a2a3e', objectFit: 'cover' }} />
                         }

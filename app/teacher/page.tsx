@@ -137,8 +137,10 @@ export default function TeacherPage() {
   }
 
   async function gradeSubmission(subId: number) {
-    await supabase.from('homework_submissions').update({ grade: gradeValue }).eq('id', subId)
-    setSubmissions(submissions.map(s => s.id === subId ? { ...s, grade: gradeValue } : s))
+    if (!gradeValue.trim()) return
+    const { error } = await supabase.from('homework_submissions').update({ grade: gradeValue.trim() }).eq('id', subId)
+    if (error) { console.error('Grade error:', error); return }
+    setSubmissions(submissions.map(s => s.id === subId ? { ...s, grade: gradeValue.trim() } : s))
     setGradingId(null); setGradeValue('')
   }
 

@@ -30,10 +30,14 @@ export default function TopicsPage() {
 
   useEffect(() => {
     load()
-    const recent = JSON.parse(localStorage.getItem('recentTopics') || '[]')
-    setRecentIds(recent)
-    const bookmarks = JSON.parse(localStorage.getItem('bookmarks') || '[]')
-    setBookmarkIds(new Set(bookmarks))
+    try {
+      const recent = JSON.parse(localStorage.getItem('recentTopics') || '[]')
+      setRecentIds(Array.isArray(recent) ? recent : [])
+    } catch { setRecentIds([]) }
+    try {
+      const bookmarks = JSON.parse(localStorage.getItem('bookmarks') || '[]')
+      setBookmarkIds(new Set(Array.isArray(bookmarks) ? bookmarks : []))
+    } catch { setBookmarkIds(new Set()) }
   }, [])
 
   async function load() {
@@ -203,9 +207,11 @@ export default function TopicsPage() {
             return (
               <Link key={topic.id} href={`/topics/${topic.id}`} style={{ textDecoration: 'none' }}
                 onClick={() => {
-                  const recent: string[] = JSON.parse(localStorage.getItem('recentTopics') || '[]')
-                  const updated = [topic.id, ...recent.filter(id => id !== topic.id)].slice(0, 20)
-                  localStorage.setItem('recentTopics', JSON.stringify(updated))
+                  try {
+                    const recent: string[] = JSON.parse(localStorage.getItem('recentTopics') || '[]')
+                    const updated = [topic.id, ...(Array.isArray(recent) ? recent : []).filter(id => id !== topic.id)].slice(0, 20)
+                    localStorage.setItem('recentTopics', JSON.stringify(updated))
+                  } catch {}
                 }}
               >
                 <div

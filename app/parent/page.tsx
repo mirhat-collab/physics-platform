@@ -37,7 +37,7 @@ export default function ParentPage() {
     if (!linkEmail.trim()) return
     setLinking(true)
     setLinkMsg('')
-    const { data: student } = await supabase.from('profiles').select('*').eq('email', linkEmail.trim()).eq('role', 'student').single()
+    const { data: student } = await supabase.from('profiles').select('*').eq('email', linkEmail.trim()).eq('role', 'student').maybeSingle()
     if (!student) { setLinkMsg('❌ Ученик с таким email не найден'); setLinking(false); return }
     const { data: existing } = await supabase.from('parent_links').select('id').eq('parent_id', userId).eq('student_id', student.id).maybeSingle()
     if (existing) { setLinkMsg('Этот ученик уже привязан'); setLinking(false); return }

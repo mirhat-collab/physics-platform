@@ -193,7 +193,7 @@ export default function TournamentPage() {
                               }} />
                             {mediaPreviews[t.id] ? (
                               <div style={{ position: 'relative', marginBottom: 10, display: 'inline-block' }}>
-                                {mediaFiles[t.id]?.type.startsWith('video')
+                                {mediaFiles[t.id]?.type?.startsWith('video')
                                   ? <video src={mediaPreviews[t.id]} style={{ maxWidth: '100%', maxHeight: 180, borderRadius: 10 }} muted />
                                   : <img src={mediaPreviews[t.id]} alt="" style={{ maxWidth: '100%', maxHeight: 180, borderRadius: 10, objectFit: 'cover' }} />}
                                 <button onClick={() => { setMediaFiles(p => ({ ...p, [t.id]: null })); setMediaPreviews(p => ({ ...p, [t.id]: '' })) }}

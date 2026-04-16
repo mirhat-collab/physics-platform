@@ -51,7 +51,7 @@ export default function LoginPage() {
 
       if (data.user) {
         const now = new Date().toISOString()
-        await supabase.from('profiles').upsert({
+        const { error: profileError } = await supabase.from('profiles').upsert({
           id: data.user.id,
           email,
           full_name: fullName,
@@ -62,6 +62,11 @@ export default function LoginPage() {
           created_at: now,
           last_visit: now.split('T')[0],
         })
+        if (profileError) {
+          setError('Ошибка создания профиля. Попробуй снова.')
+          setLoading(false)
+          return
+        }
       }
       router.push(role === 'teacher' ? '/teacher' : role === 'parent' ? '/parent' : '/dashboard')
 

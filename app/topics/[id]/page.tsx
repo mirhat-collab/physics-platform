@@ -66,12 +66,15 @@ export default function TopicPage() {
 
   useEffect(() => {
     if (!id) return
-    const saved: string[] = JSON.parse(localStorage.getItem('bookmarks') || '[]')
-    setBookmarked(saved.includes(String(id)))
+    try {
+      const saved: string[] = JSON.parse(localStorage.getItem('bookmarks') || '[]')
+      setBookmarked(Array.isArray(saved) && saved.includes(String(id)))
+    } catch { setBookmarked(false) }
   }, [id])
 
   function toggleBookmark() {
-    const saved: string[] = JSON.parse(localStorage.getItem('bookmarks') || '[]')
+    let saved: string[] = []
+    try { saved = JSON.parse(localStorage.getItem('bookmarks') || '[]'); if (!Array.isArray(saved)) saved = [] } catch { saved = [] }
     let updated: string[]
     if (bookmarked) {
       updated = saved.filter(b => b !== String(id))
@@ -139,7 +142,7 @@ export default function TopicPage() {
   }
 
   async function sendComment() {
-    if (!commentText.trim() || !userId) return
+    if (!commentText.trim() || !userId || !id) return
     setSendingComment(true)
     await supabase.from('comments').insert({
       topic_id: String(id),
