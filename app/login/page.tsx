@@ -4,7 +4,6 @@ import { supabase } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
 
 const GRADES = ['7', '8', '9', '10', '11']
-const TEACHER_PASSWORD = 'Mirhateacher@dostyp'
 
 function getActualGrade(grade: string, createdAt: string): string {
   const now = new Date()
@@ -37,8 +36,14 @@ export default function LoginPage() {
     if (isSignUp) {
       if (!fullName) { setError('Введи своё имя!'); setLoading(false); return }
       if (role === 'student' && !grade) { setError('Выбери класс!'); setLoading(false); return }
-      if (role === 'teacher' && teacherCode !== TEACHER_PASSWORD) {
-        setError('Неверный код учителя!'); setLoading(false); return
+      if (role === 'teacher') {
+        const res = await fetch('/api/check-teacher-code', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ code: teacherCode })
+        })
+        const { valid } = await res.json()
+        if (!valid) { setError('Неверный код учителя!'); setLoading(false); return }
       }
 
       const { data, error } = await supabase.auth.signUp({ email, password })

@@ -2,7 +2,6 @@
 import { useEffect, useState, useRef } from 'react'
 import { supabase } from '../../lib/supabase'
 
-const ADMIN_PASSWORD = 'Mirha2010@2010Mirha'
 
 type Class = { id: number; name: string; program: string; total_topics: number }
 type MediaItem = { url: string; type: 'image' | 'video'; name: string }
@@ -101,12 +100,17 @@ export default function AdminPage() {
 
   useEffect(() => {
     const saved = sessionStorage.getItem('admin_auth')
-    if (saved === ADMIN_PASSWORD) setAuth(true)
+    if (saved === 'true') setAuth(true)
   }, [])
 
-  function handleLogin() {
-    if (passwordInput === ADMIN_PASSWORD) {
-      sessionStorage.setItem('admin_auth', ADMIN_PASSWORD)
+  async function handleLogin() {
+    const res = await fetch('/api/admin-auth', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ password: passwordInput })
+    })
+    if (res.ok) {
+      sessionStorage.setItem('admin_auth', 'true')
       setAuth(true)
       setAuthError('')
     } else {
@@ -119,6 +123,7 @@ export default function AdminPage() {
     sessionStorage.removeItem('admin_auth')
     setAuth(false)
   }
+
 
   useEffect(() => { if (auth) loadData() }, [auth])
 

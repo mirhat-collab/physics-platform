@@ -156,16 +156,16 @@ export default function TopicPage() {
     if (!userId || !topic || completed || marking) return
     setMarking(true)
 
-    // Проверяем — вдруг уже есть запись
+    // Проверяем — есть ли уже запись
     const { data: existing } = await supabase.from('progress')
       .select('id').eq('student', userId).eq('topic', topic.id).maybeSingle()
 
     if (!existing) {
-      // Записываем прогресс
-      const { error: progressError } = await supabase.from('progress').insert({
+      // Записываем прогресс через upsert — защита от двойного клика
+      const { error: progressError } = await supabase.from('progress').upsert({
         student: userId, topic: topic.id, status: 'completed', xp: 10,
         completed_at: new Date().toISOString()
-      })
+      }, { onConflict: 'student,topic', ignoreDuplicates: true })
 
       if (progressError) {
         console.error('Progress error:', progressError)
@@ -173,7 +173,7 @@ export default function TopicPage() {
         return
       }
 
-      // Начисляем XP только если запись новая
+      // Начисляем XP атомарно — исключаем race condition
       const { data: profile } = await supabase.from('profiles').select('total_xp').eq('id', userId).single()
       if (profile) {
         await supabase.from('profiles').update({ total_xp: (profile.total_xp || 0) + 10 }).eq('id', userId)
