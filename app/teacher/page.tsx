@@ -7,7 +7,8 @@ type Profile = { id: string; full_name: string; email: string; grade: string; to
 type ClassStat = { name: string; students: Profile[]; avg_xp: number; completed_topics: number; total_topics: number }
 type Homework = { id: number; title: string; description: string; class_name: string; due_date: string; created_at: string; media_urls?: string[] }
 type Submission = { id: number; homework_id: number; student_name: string; answer: string; submitted_at: string; grade: string; media_url?: string }
-type Tournament = { id: number; title: string; class_name: string; status: string; ends_at: string; created_at: string }
+type Tournament = { id: number; title: string; description?: string; type?: string; class_name: string; status: string; ends_at: string; created_at: string; media_url?: string; prize?: string }
+type TournamentSub = { id: number; tournament_id: number; student_name: string; text_answer: string; media_url?: string; place?: number; teacher_comment?: string; submitted_at: string }
 
 export default function TeacherPage() {
   const router = useRouter()
@@ -36,10 +37,22 @@ export default function TeacherPage() {
 
   // Турниры
   const [tournaments, setTournaments] = useState<Tournament[]>([])
+  const [tournamentSubs, setTournamentSubs] = useState<TournamentSub[]>([])
   const [tTitle, setTTitle] = useState('')
+  const [tDesc, setTDesc] = useState('')
+  const [tType, setTType] = useState('essay')
   const [tClass, setTClass] = useState('')
   const [tEnds, setTEnds] = useState('')
+  const [tPrize, setTPrize] = useState('')
+  const [tMediaFile, setTMediaFile] = useState<File | null>(null)
+  const [tMediaPreview, setTMediaPreview] = useState('')
+  const [tUploading, setTUploading] = useState(false)
   const [savingT, setSavingT] = useState(false)
+  const [selectedT, setSelectedT] = useState<number | null>(null)
+  const [placingId, setPlacingId] = useState<number | null>(null)
+  const [placeValue, setPlaceValue] = useState('')
+  const [placeComment, setPlaceComment] = useState('')
+  const tMediaRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => { loadData() }, [])
 
@@ -75,6 +88,9 @@ export default function TeacherPage() {
 
     const { data: t } = await supabase.from('tournaments').select('*').eq('created_by', user.id).order('created_at', { ascending: false })
     if (t) setTournaments(t)
+
+    const { data: tsubs } = await supabase.from('tournament_submissions').select('*').order('submitted_at', { ascending: false })
+    if (tsubs) setTournamentSubs(tsubs)
 
     setLoading(false)
   }
@@ -129,18 +145,38 @@ export default function TeacherPage() {
   async function createTournament() {
     if (!tTitle.trim() || !tClass || !teacher) return
     setSavingT(true)
+    let mediaUrl = ''
+    if (tMediaFile) {
+      setTUploading(true)
+      const ext = tMediaFile.name.split('.').pop()
+      const path = `tournaments/${teacher.id}_${Date.now()}.${ext}`
+      const { error } = await supabase.storage.from('homework-media').upload(path, tMediaFile)
+      if (!error) {
+        const { data: urlData } = supabase.storage.from('homework-media').getPublicUrl(path)
+        mediaUrl = urlData.publicUrl
+      }
+      setTUploading(false)
+    }
     const { data } = await supabase.from('tournaments').insert({
-      title: tTitle, class_name: tClass, status: 'active',
-      ends_at: tEnds || null, created_by: teacher.id
+      title: tTitle, description: tDesc, type: tType, class_name: tClass,
+      status: 'active', ends_at: tEnds || null, created_by: teacher.id,
+      prize: tPrize || null, media_url: mediaUrl || null
     }).select().single()
     if (data) setTournaments([data, ...tournaments])
-    setTTitle(''); setTClass(''); setTEnds('')
+    setTTitle(''); setTDesc(''); setTType('essay'); setTClass(''); setTEnds(''); setTPrize('')
+    setTMediaFile(null); setTMediaPreview('')
     setSavingT(false)
   }
 
   async function endTournament(id: number) {
     await supabase.from('tournaments').update({ status: 'ended' }).eq('id', id)
     setTournaments(tournaments.map(t => t.id === id ? { ...t, status: 'ended' } : t))
+  }
+
+  async function savePlace(subId: number) {
+    await supabase.from('tournament_submissions').update({ place: parseInt(placeValue) || null, teacher_comment: placeComment }).eq('id', subId)
+    setTournamentSubs(tournamentSubs.map(s => s.id === subId ? { ...s, place: parseInt(placeValue) || undefined, teacher_comment: placeComment } : s))
+    setPlacingId(null); setPlaceValue(''); setPlaceComment('')
   }
 
   if (loading) return (
@@ -405,44 +441,155 @@ export default function TeacherPage() {
         {/* ТУРНИРЫ */}
         {tab === 'tournament' && (
           <div>
+            {/* Форма создания */}
             <div style={{ background: '#1a1a2e', borderRadius: 16, padding: '20px', border: '1px solid #2a2a3e', marginBottom: 24 }}>
               <h3 style={{ margin: '0 0 16px', fontWeight: 700 }}>🏆 Новый турнир</h3>
-              <input style={inputStyle} placeholder="Название турнира (напр. «Осенний турнир»)" value={tTitle} onChange={e => setTTitle(e.target.value)} />
+              <input style={inputStyle} placeholder="Название турнира (напр. «Осенний турнир по эссе»)" value={tTitle} onChange={e => setTTitle(e.target.value)} />
+
+              {/* Тип турнира */}
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8, marginBottom: 10 }}>
+                {[
+                  { val: 'essay', label: '📝 Эссе' },
+                  { val: 'model', label: '🏗️ Макет' },
+                  { val: 'photo', label: '📸 Фото' },
+                  { val: 'video', label: '🎥 Видео' },
+                  { val: 'experiment', label: '🔬 Опыт' },
+                  { val: 'other', label: '🏆 Другое' },
+                ].map(t => (
+                  <button key={t.val} onClick={() => setTType(t.val)} style={{
+                    padding: '8px', borderRadius: 10, border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 600,
+                    background: tType === t.val ? 'linear-gradient(135deg,#f59e0b,#d97706)' : '#0f0f1a',
+                    color: tType === t.val ? '#fff' : '#888',
+                    outline: tType === t.val ? '2px solid #f59e0b' : '1px solid #2a2a3e',
+                  }}>{t.label}</button>
+                ))}
+              </div>
+
+              <textarea style={{ ...inputStyle, resize: 'vertical' as const }} rows={3} placeholder="Описание задания для учеников..." value={tDesc} onChange={e => setTDesc(e.target.value)} />
+              <input style={inputStyle} placeholder="Приз победителю (необязательно, напр. «+50 XP + грамота»)" value={tPrize} onChange={e => setTPrize(e.target.value)} />
+
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 10 }}>
                 <select style={{ ...inputStyle, marginBottom: 0 }} value={tClass} onChange={e => setTClass(e.target.value)}>
                   <option value="">Выбери класс</option>
                   {classNames.map(c => <option key={c} value={c}>{c}</option>)}
                 </select>
-                <input style={{ ...inputStyle, marginBottom: 0 }} type="date" value={tEnds} onChange={e => setTEnds(e.target.value)} placeholder="Дата окончания" />
+                <input style={{ ...inputStyle, marginBottom: 0 }} type="date" value={tEnds} onChange={e => setTEnds(e.target.value)} />
               </div>
-              <button onClick={createTournament} disabled={savingT || !tTitle.trim() || !tClass}
+
+              {/* Медиа */}
+              <input ref={tMediaRef} type="file" accept="image/*,video/*" style={{ display: 'none' }} onChange={e => {
+                const f = e.target.files?.[0]; if (!f) return
+                setTMediaFile(f); setTMediaPreview(URL.createObjectURL(f))
+              }} />
+              {tMediaPreview ? (
+                <div style={{ position: 'relative', marginBottom: 10, display: 'inline-block' }}>
+                  {tMediaFile?.type.startsWith('video')
+                    ? <video src={tMediaPreview} style={{ maxWidth: '100%', maxHeight: 160, borderRadius: 10 }} muted />
+                    : <img src={tMediaPreview} alt="" style={{ maxWidth: '100%', maxHeight: 160, borderRadius: 10, objectFit: 'cover' }} />}
+                  <button onClick={() => { setTMediaFile(null); setTMediaPreview('') }}
+                    style={{ position: 'absolute', top: 4, right: 4, width: 22, height: 22, borderRadius: '50%', background: '#f5576c', border: 'none', color: '#fff', fontSize: 13, cursor: 'pointer' }}>×</button>
+                </div>
+              ) : (
+                <div onClick={() => tMediaRef.current?.click()}
+                  style={{ border: '2px dashed #2a2a4e', borderRadius: 12, padding: '12px', textAlign: 'center', cursor: 'pointer', color: '#888', fontSize: 13, background: '#0a0a18', marginBottom: 10 }}>
+                  📎 Прикрепить фото/видео к заданию (необязательно)
+                </div>
+              )}
+
+              <button onClick={createTournament} disabled={savingT || tUploading || !tTitle.trim() || !tClass}
                 style={{ padding: '10px 24px', borderRadius: 10, border: 'none', background: tTitle && tClass ? 'linear-gradient(135deg,#f59e0b,#d97706)' : '#2a2a3e', color: '#fff', fontWeight: 700, cursor: 'pointer', fontSize: 14 }}>
-                {savingT ? 'Создаём...' : '🚀 Запустить турнир'}
+                {tUploading ? '⏳ Загружаю...' : savingT ? 'Создаём...' : '🚀 Запустить турнир'}
               </button>
-              <p style={{ color: '#666', fontSize: 12, marginTop: 10 }}>После запуска ученики класса увидят турнир и смогут соревноваться — чем больше тем пройдут, тем выше XP и место в таблице</p>
             </div>
 
+            {/* Список турниров */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
               {tournaments.length === 0 && <div style={{ color: '#555', textAlign: 'center', padding: 40 }}>Турниров пока нет</div>}
-              {tournaments.map(t => (
-                <div key={t.id} style={{ background: '#1a1a2e', borderRadius: 14, padding: '16px 20px', border: `1px solid ${t.status === 'active' ? '#f59e0b44' : '#2a2a3e'}` }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                    <div>
-                      <div style={{ fontWeight: 700, fontSize: 16 }}>{t.title}</div>
-                      <div style={{ color: '#888', fontSize: 12, marginTop: 4 }}>
-                        {t.class_name} · {t.status === 'active' ? '🟢 Активный' : '⚫ Завершён'}
-                        {t.ends_at ? ` · до ${new Date(t.ends_at).toLocaleDateString('ru-RU')}` : ''}
+              {tournaments.map(t => {
+                const tSubs = tournamentSubs.filter(s => s.tournament_id === t.id)
+                const isOpen = selectedT === t.id
+                const typeLabels: Record<string, string> = { essay: '📝 Эссе', model: '🏗️ Макет', photo: '📸 Фото', video: '🎥 Видео', experiment: '🔬 Опыт', other: '🏆 Другое' }
+                return (
+                  <div key={t.id} style={{ background: '#1a1a2e', borderRadius: 14, border: `1px solid ${t.status === 'active' ? '#f59e0b44' : '#2a2a3e'}`, overflow: 'hidden' }}>
+                    <div style={{ padding: '16px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer' }}
+                      onClick={() => setSelectedT(isOpen ? null : t.id)}>
+                      <div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+                          <span style={{ background: '#f59e0b22', color: '#f59e0b', padding: '2px 8px', borderRadius: 999, fontSize: 11, fontWeight: 600 }}>{typeLabels[t.type || 'other']}</span>
+                          <span style={{ fontWeight: 700 }}>{t.title}</span>
+                        </div>
+                        <div style={{ color: '#888', fontSize: 12 }}>
+                          {t.class_name} · {t.status === 'active' ? '🟢 Активный' : '⚫ Завершён'} · {tSubs.length} работ
+                          {t.ends_at ? ` · до ${new Date(t.ends_at).toLocaleDateString('ru-RU')}` : ''}
+                        </div>
+                      </div>
+                      <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                        {t.status === 'active' && (
+                          <button onClick={e => { e.stopPropagation(); endTournament(t.id) }}
+                            style={{ padding: '5px 12px', borderRadius: 8, border: 'none', background: '#2a2a3e', color: '#888', cursor: 'pointer', fontSize: 12 }}>
+                            Завершить
+                          </button>
+                        )}
+                        <span style={{ color: '#555' }}>{isOpen ? '▲' : '▼'}</span>
                       </div>
                     </div>
-                    {t.status === 'active' && (
-                      <button onClick={() => endTournament(t.id)}
-                        style={{ padding: '6px 14px', borderRadius: 8, border: 'none', background: '#2a2a3e', color: '#888', cursor: 'pointer', fontSize: 12 }}>
-                        Завершить
-                      </button>
+
+                    {isOpen && (
+                      <div style={{ borderTop: '1px solid #2a2a3e', padding: '16px 20px' }}>
+                        {t.description && <p style={{ color: '#aaa', fontSize: 14, marginBottom: 12 }}>{t.description}</p>}
+                        {t.prize && <div style={{ background: '#f59e0b22', border: '1px solid #f59e0b44', borderRadius: 8, padding: '8px 12px', fontSize: 13, color: '#f59e0b', marginBottom: 12 }}>🎁 Приз: {t.prize}</div>}
+                        {t.media_url && (t.media_url.match(/\.(mp4|webm|mov)$/i)
+                          ? <video src={t.media_url} controls style={{ maxWidth: '100%', borderRadius: 8, marginBottom: 12 }} />
+                          : <img src={t.media_url} alt="" style={{ maxWidth: '100%', maxHeight: 200, borderRadius: 8, marginBottom: 12, objectFit: 'cover' }} />
+                        )}
+                        <div style={{ fontWeight: 600, fontSize: 13, color: '#888', marginBottom: 10 }}>Работы учеников ({tSubs.length}):</div>
+                        {tSubs.length === 0 && <div style={{ color: '#555', fontSize: 14 }}>Работ пока нет</div>}
+                        {tSubs.map((sub, i) => (
+                          <div key={sub.id} style={{ background: '#0f0f1a', borderRadius: 10, padding: '12px 16px', marginBottom: 10, border: `1px solid ${sub.place === 1 ? '#f59e0b44' : sub.place === 2 ? '#88888844' : sub.place === 3 ? '#cd7f3244' : '#2a2a3e'}` }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                                {sub.place === 1 && <span style={{ fontSize: 18 }}>🥇</span>}
+                                {sub.place === 2 && <span style={{ fontSize: 18 }}>🥈</span>}
+                                {sub.place === 3 && <span style={{ fontSize: 18 }}>🥉</span>}
+                                <span style={{ fontWeight: 600, color: '#a78bfa', fontSize: 13 }}>{sub.student_name}</span>
+                              </div>
+                              <span style={{ color: '#555', fontSize: 12 }}>{new Date(sub.submitted_at).toLocaleDateString('ru-RU')}</span>
+                            </div>
+                            {sub.text_answer && <p style={{ color: '#ccc', fontSize: 14, margin: '0 0 10px' }}>{sub.text_answer}</p>}
+                            {sub.media_url && (sub.media_url.match(/\.(mp4|webm|mov)$/i)
+                              ? <video src={sub.media_url} controls style={{ maxWidth: '100%', borderRadius: 8, marginBottom: 10 }} />
+                              : <img src={sub.media_url} alt="" style={{ maxWidth: '100%', maxHeight: 200, borderRadius: 8, marginBottom: 10, objectFit: 'cover' }} />
+                            )}
+                            {sub.teacher_comment && <div style={{ background: '#f59e0b11', border: '1px solid #f59e0b33', borderRadius: 8, padding: '6px 10px', fontSize: 12, color: '#f59e0b', marginBottom: 8 }}>💬 {sub.teacher_comment}</div>}
+                            {placingId === sub.id ? (
+                              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                                <div style={{ display: 'flex', gap: 6 }}>
+                                  {[1,2,3].map(p => (
+                                    <button key={p} onClick={() => setPlaceValue(String(p))} style={{ flex: 1, padding: '6px', borderRadius: 8, border: 'none', cursor: 'pointer', fontSize: 14, fontWeight: 700, background: placeValue === String(p) ? '#f59e0b' : '#2a2a3e', color: '#fff' }}>
+                                      {p === 1 ? '🥇' : p === 2 ? '🥈' : '🥉'}
+                                    </button>
+                                  ))}
+                                </div>
+                                <input style={{ width: '100%', padding: '6px 10px', borderRadius: 8, border: '1px solid #2a2a3e', background: '#1a1a2e', color: '#fff', fontSize: 13, boxSizing: 'border-box' as const, outline: 'none' }}
+                                  placeholder="Комментарий (необязательно)" value={placeComment} onChange={e => setPlaceComment(e.target.value)} />
+                                <div style={{ display: 'flex', gap: 6 }}>
+                                  <button onClick={() => savePlace(sub.id)} style={{ flex: 1, padding: '6px', borderRadius: 8, border: 'none', background: '#10b981', color: '#fff', cursor: 'pointer', fontSize: 13, fontWeight: 600 }}>Сохранить</button>
+                                  <button onClick={() => setPlacingId(null)} style={{ padding: '6px 12px', borderRadius: 8, border: 'none', background: '#2a2a3e', color: '#fff', cursor: 'pointer', fontSize: 13 }}>✕</button>
+                                </div>
+                              </div>
+                            ) : (
+                              <button onClick={() => { setPlacingId(sub.id); setPlaceValue(String(sub.place || '')); setPlaceComment(sub.teacher_comment || '') }}
+                                style={{ padding: '4px 12px', borderRadius: 8, border: '1px solid #2a2a3e', background: 'transparent', color: '#888', cursor: 'pointer', fontSize: 12 }}>
+                                {sub.place ? '✏️ Изменить место' : '🏅 Присвоить место'}
+                              </button>
+                            )}
+                          </div>
+                        ))}
+                      </div>
                     )}
                   </div>
-                </div>
-              ))}
+                )
+              })}
             </div>
           </div>
         )}

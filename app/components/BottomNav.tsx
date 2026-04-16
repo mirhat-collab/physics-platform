@@ -9,7 +9,7 @@ export default function BottomNav() {
     { href: '/dashboard', icon: '🏠', label: 'Главная' },
     { href: '/topics', icon: '📚', label: 'Темы' },
     { href: '/homework', icon: '📝', label: 'Задания' },
-    { href: '/progress', icon: '🏆', label: 'Рейтинг' },
+    { href: '/tournament', icon: '🏆', label: 'Турниры' },
     { href: '/profile', icon: '👤', label: 'Профиль' },
   ]
 
