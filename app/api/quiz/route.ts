@@ -1,6 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server'
 
+// Rate limiting: максимум 20 запросов с одного IP в час
+const requests = new Map<string, { count: number; resetAt: number }>()
+
 export async function POST(req: NextRequest) {
+  const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown'
+  const now = Date.now()
+
+  const req_data = requests.get(ip)
+  if (req_data && now < req_data.resetAt) {
+    if (req_data.count >= 20) {
+      return NextResponse.json({ error: 'Слишком много запросов. Попробуй позже.' }, { status: 429 })
+    }
+    req_data.count++
+  } else {
+    requests.set(ip, { count: 1, resetAt: now + 60 * 60 * 1000 })
+  }
+
   try {
     const { topicName, theory, formulas, examples } = await req.json()
 
@@ -36,8 +52,8 @@ ${content}
     })
 
     if (!res.ok) {
-      const err = await res.text()
-      return NextResponse.json({ error: err }, { status: 500 })
+      console.error('Groq API error:', res.status) // Логируем на сервере, не отдаём клиенту
+      return NextResponse.json({ error: 'Не удалось сгенерировать вопросы' }, { status: 500 })
     }
 
     const data = await res.json()
@@ -52,7 +68,7 @@ ${content}
     return NextResponse.json({ questions })
 
   } catch (err: any) {
-    console.error('Quiz API error:', err)
-    return NextResponse.json({ error: err.message || 'Ошибка генерации вопросов' }, { status: 500 })
+    console.error('Quiz API error:', err) // Только на сервере
+    return NextResponse.json({ error: 'Ошибка генерации вопросов' }, { status: 500 })
   }
 }

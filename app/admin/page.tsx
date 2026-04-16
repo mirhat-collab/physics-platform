@@ -99,8 +99,13 @@ export default function AdminPage() {
   const [editMedia, setEditMedia] = useState<MediaItem[]>([])
 
   useEffect(() => {
-    const saved = sessionStorage.getItem('admin_auth')
-    if (saved === 'true') setAuth(true)
+    const token = sessionStorage.getItem('admin_token')
+    if (!token) return
+    // Проверяем токен на сервере
+    fetch('/api/admin-auth', { headers: { 'x-admin-token': token } })
+      .then(r => r.json())
+      .then(d => { if (d.valid) setAuth(true) })
+      .catch(() => sessionStorage.removeItem('admin_token'))
   }, [])
 
   async function handleLogin() {
@@ -110,9 +115,13 @@ export default function AdminPage() {
       body: JSON.stringify({ password: passwordInput })
     })
     if (res.ok) {
-      sessionStorage.setItem('admin_auth', 'true')
+      const { token } = await res.json()
+      sessionStorage.setItem('admin_token', token) // Храним настоящий токен
       setAuth(true)
       setAuthError('')
+    } else if (res.status === 429) {
+      setAuthError('Слишком много попыток. Подожди 15 минут.')
+      setPasswordInput('')
     } else {
       setAuthError('Неверный пароль!')
       setPasswordInput('')
@@ -120,7 +129,7 @@ export default function AdminPage() {
   }
 
   function handleLogout() {
-    sessionStorage.removeItem('admin_auth')
+    sessionStorage.removeItem('admin_token')
     setAuth(false)
   }
 
