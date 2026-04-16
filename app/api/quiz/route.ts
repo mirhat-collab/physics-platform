@@ -1,7 +1,4 @@
-import Anthropic from '@anthropic-ai/sdk'
 import { NextRequest, NextResponse } from 'next/server'
-
-const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 
 export async function POST(req: NextRequest) {
   try {
@@ -14,12 +11,7 @@ export async function POST(req: NextRequest) {
       examples && `Примеры: ${examples?.slice(0, 300)}`,
     ].filter(Boolean).join('\n\n')
 
-    const message = await client.messages.create({
-      model: 'claude-haiku-4-5-20251001',
-      max_tokens: 1024,
-      messages: [{
-        role: 'user',
-        content: `На основе этого материала по физике составь 4 вопроса с вариантами ответа. Отвечай ТОЛЬКО в формате JSON массива (без лишнего текста, без markdown):
+    const prompt = `На основе этого материала по физике составь 4 вопроса с вариантами ответа. Отвечай ТОЛЬКО в формате JSON массива (без лишнего текста, без markdown):
 
 ${content}
 
@@ -27,10 +19,28 @@ ${content}
 [{"question":"Вопрос?","options":["А","Б","В","Г"],"correct":0}]
 
 "correct" — индекс правильного ответа (0, 1, 2 или 3).`
-      }]
-    })
 
-    const text = (message.content[0] as { text: string }).text
+    const apiKey = process.env.GEMINI_API_KEY
+    const res = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: prompt }] }],
+          generationConfig: { temperature: 0.7, maxOutputTokens: 1024 }
+        })
+      }
+    )
+
+    if (!res.ok) {
+      const err = await res.text()
+      return NextResponse.json({ error: err }, { status: 500 })
+    }
+
+    const data = await res.json()
+    const text = data.candidates?.[0]?.content?.parts?.[0]?.text || ''
+
     const jsonMatch = text.match(/\[[\s\S]*\]/)
     if (!jsonMatch) {
       return NextResponse.json({ error: 'Не удалось разобрать ответ AI' }, { status: 500 })
@@ -41,9 +51,6 @@ ${content}
 
   } catch (err: any) {
     console.error('Quiz API error:', err)
-    return NextResponse.json({
-      error: err.message || 'Ошибка генерации вопросов',
-      detail: err?.status || err?.code || String(err)
-    }, { status: 500 })
+    return NextResponse.json({ error: err.message || 'Ошибка генерации вопросов' }, { status: 500 })
   }
 }
