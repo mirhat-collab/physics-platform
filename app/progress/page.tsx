@@ -22,7 +22,8 @@ export default function ProgressPage() {
       const me = profilesData.find(p => p.id === user.id)
       if (me) setCurrentUser(me)
     }
-    const { data: classes } = await supabase.from('classes').select('id, name, total_topics')
+    const { data: classes } = await supabase.from('classes').select('id, name')
+    const { data: topics } = await supabase.from('topics').select('id, grade')
     const { data: progress } = await supabase.from('progress').select('student, topic, status').eq('status', 'completed')
     if (classes && profilesData && progress) {
       const stats: ClassStat[] = classes.map(cls => {
@@ -31,7 +32,8 @@ export default function ProgressPage() {
         const completedByClass = progress.filter(p => studentIds.includes(p.student))
         const uniqueTopics = new Set(completedByClass.map(p => p.topic))
         const avgXp = students.length > 0 ? Math.round(students.reduce((sum, s) => sum + s.total_xp, 0) / students.length) : 0
-        return { name: cls.name, total_topics: cls.total_topics || 0, completed_topics: uniqueTopics.size, avg_xp: avgXp, student_count: students.length }
+        const totalTopics = topics ? topics.filter(t => t.grade === cls.name).length : 0
+        return { name: cls.name, total_topics: totalTopics, completed_topics: uniqueTopics.size, avg_xp: avgXp, student_count: students.length }
       })
       setClassStats(stats)
     }
@@ -48,8 +50,6 @@ export default function ProgressPage() {
 
   return (
     <div style={{ minHeight: '100vh', background: '#0f0f1a', color: '#fff' }}>
-
-      {/* Красивая шапка */}
       <div style={{ background: 'linear-gradient(135deg, #1a1a3e 0%, #0f0f1a 100%)', borderBottom: '1px solid #2a2a3e', padding: '2rem 2rem 1.5rem' }}>
         <div style={{ maxWidth: 800, margin: '0 auto' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 16 }}>
@@ -62,7 +62,6 @@ export default function ProgressPage() {
             </div>
           </div>
 
-          {/* Карточка текущего пользователя */}
           {currentUser && (
             <div style={{ background: 'linear-gradient(135deg, #667eea, #764ba2)', borderRadius: 16, padding: '16px 20px', marginBottom: 16 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12 }}>
@@ -89,7 +88,6 @@ export default function ProgressPage() {
             </div>
           )}
 
-          {/* Табы */}
           <div style={{ display: 'flex', gap: 8 }}>
             <button onClick={() => setTab('leaderboard')} style={{ padding: '8px 18px', borderRadius: 999, border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 600, background: tab === 'leaderboard' ? '#667eea' : '#1a1a2e', color: '#fff', transition: 'all 0.2s' }}>
               👤 Ученики
@@ -102,8 +100,6 @@ export default function ProgressPage() {
       </div>
 
       <div style={{ maxWidth: 800, margin: '0 auto', padding: '1.5rem 2rem' }}>
-
-        {/* Рейтинг учеников */}
         {tab === 'leaderboard' && (
           <div style={{ background: '#1a1a2e', borderRadius: 20, border: '1px solid #2a2a3e', overflow: 'hidden' }}>
             {profiles.length === 0 && (
@@ -134,7 +130,6 @@ export default function ProgressPage() {
           </div>
         )}
 
-        {/* Прогресс по классам */}
         {tab === 'classes' && (
           <div style={{ display: 'grid', gap: 12 }}>
             {classStats.map((cls) => {
@@ -170,7 +165,6 @@ export default function ProgressPage() {
             })}
           </div>
         )}
-
       </div>
     </div>
   )
