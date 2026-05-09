@@ -27,12 +27,13 @@ export default function ProgressPage() {
     const { data: progress } = await supabase.from('progress').select('student, topic, status').eq('status', 'completed')
     if (classes && profilesData && progress) {
       const stats: ClassStat[] = classes.map(cls => {
-        const students = profilesData.filter(p => p.grade === cls.name)
+        const gradeNum = cls.name.replace(/\D/g, '')
+        const students = profilesData.filter(p => p.grade === gradeNum || p.grade === cls.name)
         const studentIds = students.map(s => s.id)
         const completedByClass = progress.filter(p => studentIds.includes(p.student))
         const uniqueTopics = new Set(completedByClass.map(p => p.topic))
         const avgXp = students.length > 0 ? Math.round(students.reduce((sum, s) => sum + s.total_xp, 0) / students.length) : 0
-        const totalTopics = topics ? topics.filter(t => t.grade === cls.name).length : 0
+        const totalTopics = topics ? topics.filter(t => t.grade === gradeNum || t.grade === cls.name).length : 0
         return { name: cls.name, total_topics: totalTopics, completed_topics: uniqueTopics.size, avg_xp: avgXp, student_count: students.length }
       })
       setClassStats(stats)
