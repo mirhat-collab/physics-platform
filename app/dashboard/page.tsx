@@ -7,6 +7,8 @@ import { supabase } from '@/lib/supabase'
 type Profile = { id: string; full_name: string; email: string; grade: string; total_xp: number; streak: number }
 type Topic = { id: string; name: string; grade: string }
 
+const VALID_GRADES = ['7', '8', '9', '10', '11']
+
 export default function DashboardPage() {
   const router = useRouter()
   const [profile, setProfile] = useState<Profile | null>(null)
@@ -23,8 +25,11 @@ export default function DashboardPage() {
     const { data: p } = await supabase.from('profiles').select('*').eq('id', user.id).single()
     if (p) setProfile(p)
 
-    const { data: t } = await supabase.from('topics').select('*').eq('grade', p?.grade)
-    if (t) setTopics(t)
+    const safeGrade = p?.grade && VALID_GRADES.includes(p.grade) ? p.grade : null
+    if (safeGrade) {
+      const { data: t } = await supabase.from('topics').select('*').eq('grade', safeGrade)
+      if (t) setTopics(t)
+    }
 
     const { data: prog } = await supabase
       .from('progress').select('topic')
@@ -40,6 +45,7 @@ export default function DashboardPage() {
     </div>
   )
 
+  const gradeDisplay = profile?.grade && VALID_GRADES.includes(profile.grade) ? `${profile.grade} класс` : 'Класс не указан'
   const percent = topics.length > 0 ? Math.round((completed.filter(c => topics.find(t => t.id === c)).length / topics.length) * 100) : 0
   const nextTopic = topics.find(t => !completed.includes(t.id))
   const level = Math.floor((profile?.total_xp || 0) / 100) + 1
@@ -49,15 +55,12 @@ export default function DashboardPage() {
     <div style={{ minHeight: '100vh', background: '#0f0f1a', color: '#fff', padding: '1.5rem' }}>
       <div style={{ maxWidth: 800, margin: '0 auto' }}>
 
-        {/* Приветствие */}
         <div style={{ background: 'linear-gradient(135deg, #667eea, #764ba2)', borderRadius: 24, padding: '28px 32px', marginBottom: 20 }}>
           <div style={{ fontSize: 13, opacity: 0.8, marginBottom: 6 }}>Добро пожаловать 👋</div>
           <h1 style={{ fontSize: '1.8rem', fontWeight: 800, margin: '0 0 4px' }}>
             {profile?.full_name || profile?.email}
           </h1>
-          <div style={{ opacity: 0.8, fontSize: 14 }}>{profile?.grade} · Уровень {level}</div>
-
-          {/* XP бар */}
+          <div style={{ opacity: 0.8, fontSize: 14 }}>{gradeDisplay} · Уровень {level}</div>
           <div style={{ marginTop: 16 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, opacity: 0.8, marginBottom: 6 }}>
               <span>XP до следующего уровня</span>
@@ -69,7 +72,6 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* Статистика */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12, marginBottom: 20 }}>
           <div style={{ background: '#1a1a2e', borderRadius: 16, padding: '16px', border: '1px solid #2a2a3e', textAlign: 'center' }}>
             <div style={{ fontSize: 28, fontWeight: 800, color: '#a78bfa' }}>{profile?.total_xp}</div>
@@ -85,7 +87,6 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* Прогресс класса */}
         <div style={{ background: '#1a1a2e', borderRadius: 20, padding: '20px 24px', marginBottom: 20, border: '1px solid #2a2a3e' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 12 }}>
             <span style={{ fontWeight: 600 }}>📚 Прогресс класса</span>
@@ -96,7 +97,6 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* Следующая тема */}
         {nextTopic && (
           <div style={{ marginBottom: 20 }}>
             <h2 style={{ fontSize: '1rem', fontWeight: 700, marginBottom: 12, color: '#888' }}>▶ СЛЕДУЮЩАЯ ТЕМА</h2>
@@ -109,7 +109,6 @@ export default function DashboardPage() {
           </div>
         )}
 
-        {/* Кнопки */}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
           <Link href="/topics" style={{ textDecoration: 'none' }}>
             <div style={{ background: '#1a1a2e', border: '1px solid #2a2a3e', borderRadius: 16, padding: '18px', textAlign: 'center', cursor: 'pointer' }}>

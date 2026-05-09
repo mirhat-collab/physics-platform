@@ -6,6 +6,8 @@ import { useRouter } from 'next/navigation'
 const GRADES = ['7', '8', '9', '10', '11']
 
 function getActualGrade(grade: string, createdAt: string): string {
+  const gradeNum = parseInt(grade)
+  if (isNaN(gradeNum)) return grade
   const now = new Date()
   const created = new Date(createdAt)
   const currentYear = now.getFullYear()
@@ -14,9 +16,8 @@ function getActualGrade(grade: string, createdAt: string): string {
     const sep = new Date(y, 8, 1)
     if (sep > created && sep <= now) yearsPassedSinceSep++
   }
-  return Math.min(parseInt(grade) + yearsPassedSinceSep, 11).toString()
+  return Math.min(gradeNum + yearsPassedSinceSep, 11).toString()
 }
-
 export default function LoginPage() {
   const router = useRouter()
   const [isSignUp, setIsSignUp] = useState(false)
