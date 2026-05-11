@@ -1,10 +1,8 @@
-﻿[
-  {
-    "relation": ["delegate_permission/common.handle_all_urls"],
-    "target": {
-      "namespace": "android_app",
-      "package_name": "REPLACE_WITH_YOUR_PACKAGE_NAME",
-      "sha256_cert_fingerprints": ["REPLACE_WITH_YOUR_SHA256_FINGERPRINT"]
-    }
+﻿[{
+  "relation": ["delegate_permission/common.handle_all_urls"],
+  "target": {
+    "namespace": "android_app",
+    "package_name": "app.vercel.physics_platform_liart.twa",
+    "sha256_cert_fingerprints": ["77:91:55:9D:99:DF:B3:B5:29:57:F2:9A:11:7E:D5:98:4A:E4:75:8F:CF:15:A3:F8:69:53:D7:19:35:56:EA:99"]
   }
-]
+}]
