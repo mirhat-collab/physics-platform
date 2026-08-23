@@ -88,6 +88,7 @@ export default function RootLayout({
         <meta name="apple-mobile-web-app-title" content="Mirha_Edu" />
         <link rel="canonical" href="https://physics-platform-liart.vercel.app" />
         <link rel="manifest" href="/manifest.json" />
+        <link rel="icon" href="/icon-192.png" type="image/png" />
         <link rel="apple-touch-icon" href="/icon-192.png" />
       </head>
       <body className={manrope.variable} style={{ margin: 0, fontFamily: 'var(--font-body), sans-serif', background: '#0f0f1a', paddingBottom: 64 }}>

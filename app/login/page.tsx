@@ -114,6 +114,8 @@ export default function LoginPage() {
       <div style={{ position: 'absolute', top: '-15%', left: '50%', transform: 'translateX(-50%)', width: 600, height: 600, borderRadius: '50%', background: 'radial-gradient(circle, rgba(102,126,234,0.15) 0%, transparent 70%)', pointerEvents: 'none' }} />
       <div className="animate-scale-in" style={{ background: '#1a1a2e', borderRadius: 20, padding: 40, width: '100%', maxWidth: 440, border: '1px solid #2a2a3e', boxShadow: 'var(--shadow-lg)', position: 'relative' }}>
 
+        <img src="/logo-mark.png" alt="Mirha_Edu" style={{ width: 56, height: 56, objectFit: 'contain', display: 'block', margin: '0 auto 12px' }} />
+
         <h1 style={{ color: '#fff', fontSize: '1.8rem', fontWeight: 800, marginBottom: 8, textAlign: 'center' }}>
           {isSignUp ? '🚀 Регистрация' : '⚡ Вход'}
         </h1>

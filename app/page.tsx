@@ -27,9 +27,12 @@ export default function LobbyPage() {
       {/* Декоративное свечение на фоне */}
       <div style={{ position: 'absolute', top: '-10%', left: '50%', transform: 'translateX(-50%)', width: 500, height: 500, borderRadius: '50%', background: 'radial-gradient(circle, rgba(102,126,234,0.18) 0%, transparent 70%)', pointerEvents: 'none' }} />
 
-      <div className="animate-float" style={{ width: 80, height: 80, borderRadius: 24, background: 'linear-gradient(135deg, #667eea, #764ba2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 40, marginBottom: 24, boxShadow: '0 8px 32px rgba(102,126,234,0.4)', position: 'relative' }}>
-        ⚡
-      </div>
+      <img
+        src="/logo-mark.png"
+        alt="Mirha_Edu"
+        className="animate-float"
+        style={{ width: 96, height: 96, objectFit: 'contain', marginBottom: 20, filter: 'drop-shadow(0 8px 24px rgba(102,126,234,0.45))', position: 'relative' }}
+      />
 
       <h1 className="animate-fade-in-up" style={{ fontSize: '2.6rem', fontWeight: 900, margin: '0 0 12px', textAlign: 'center', background: 'linear-gradient(135deg, #a78bfa, #667eea)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', position: 'relative' }}>
         Физика с нуля
