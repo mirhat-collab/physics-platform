@@ -228,7 +228,7 @@ export default function AdminPage() {
 
   if (!auth) {
     return (
-      <div style={{ minHeight: '100vh', background: '#0f0f1a', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
+      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
         <div style={{ background: '#1a1a2e', borderRadius: 24, padding: 48, width: '100%', maxWidth: 400, border: '1px solid #2a2a3e', textAlign: 'center' }}>
           <div style={{ fontSize: 48, marginBottom: 16 }}>🔐</div>
           <h1 style={{ color: '#fff', fontSize: '1.6rem', fontWeight: 800, marginBottom: 8 }}>Панель админа</h1>
@@ -242,7 +242,7 @@ export default function AdminPage() {
   }
 
   return (
-    <div style={{ minHeight: '100vh', background: '#0f0f1a', padding: '2rem', color: '#fff' }}>
+    <div style={{ minHeight: '100vh', padding: '2rem', color: '#fff' }}>
       <div style={{ maxWidth: 900, margin: '0 auto' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
           <h1 style={{ fontSize: '2rem', fontWeight: 800, margin: 0 }}>⚙️ Панель админа</h1>

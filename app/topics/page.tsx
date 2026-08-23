@@ -94,13 +94,13 @@ export default function TopicsPage() {
   const progressPercent = topics.length > 0 ? Math.round((completedIds.size / topics.length) * 100) : 0
 
   if (loading) return (
-    <div style={{ minHeight: '100vh', background: '#0f0f1a', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
       <div style={{ color: '#fff', fontSize: 18 }}>Загрузка...</div>
     </div>
   )
 
   return (
-    <main style={{ minHeight: '100vh', background: '#0f0f1a', color: '#fff' }}>
+    <main style={{ minHeight: '100vh', color: '#fff' }}>
 
       {/* Шапка */}
       <div className="animate-fade-in-up" style={{ background: 'linear-gradient(135deg, #1a1a3e 0%, #0f0f1a 100%)', borderBottom: '1px solid #2a2a3e', padding: '2rem 2rem 1.5rem' }}>

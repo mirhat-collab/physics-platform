@@ -56,7 +56,7 @@ export default function ParentPage() {
   }
 
   if (loading) return (
-    <div style={{ minHeight: '100vh', background: '#0f0f1a', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
       <div style={{ color: '#fff' }}>Загрузка...</div>
     </div>
   )
@@ -64,7 +64,7 @@ export default function ParentPage() {
   const level = (xp: number) => Math.floor(xp / 100) + 1
 
   return (
-    <div style={{ minHeight: '100vh', background: '#0f0f1a', color: '#fff', padding: '2rem' }}>
+    <div style={{ minHeight: '100vh', color: '#fff', padding: '2rem' }}>
       <div style={{ maxWidth: 700, margin: '0 auto' }}>
         <div style={{ background: 'linear-gradient(135deg, #1a1a3e, #0f0f1a)', borderRadius: 20, padding: '24px', marginBottom: 24, border: '1px solid #2a2a3e' }}>
           <h1 style={{ fontSize: '1.8rem', fontWeight: 800, margin: '0 0 4px' }}>👨‍👩‍👧 Родительский доступ</h1>

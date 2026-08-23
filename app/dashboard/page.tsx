@@ -40,7 +40,7 @@ export default function DashboardPage() {
   }
 
   if (loading) return (
-    <div style={{ minHeight: '100vh', background: '#0f0f1a', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
       <div style={{ color: '#fff', fontSize: 18 }}>Загрузка...</div>
     </div>
   )
@@ -52,7 +52,7 @@ export default function DashboardPage() {
   const xpInLevel = (profile?.total_xp || 0) % 100
 
   return (
-    <div style={{ minHeight: '100vh', background: '#0f0f1a', color: '#fff', padding: '1.5rem' }}>
+    <div style={{ minHeight: '100vh', color: '#fff', padding: '1.5rem' }}>
       <div className="animate-fade-in-up" style={{ maxWidth: 800, margin: '0 auto' }}>
 
         <div style={{ background: 'linear-gradient(135deg, #667eea, #764ba2)', borderRadius: 24, padding: '28px 32px', marginBottom: 20, boxShadow: 'var(--shadow-md)' }}>

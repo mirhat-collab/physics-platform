@@ -182,7 +182,7 @@ export default function TeacherPage() {
   }
 
   if (loading) return (
-    <div style={{ minHeight: '100vh', background: '#0f0f1a', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
       <div style={{ color: '#fff', fontSize: 18 }}>Загрузка...</div>
     </div>
   )
@@ -197,7 +197,7 @@ export default function TeacherPage() {
   }
 
   return (
-    <div style={{ minHeight: '100vh', background: '#0f0f1a', color: '#fff' }}>
+    <div style={{ minHeight: '100vh', color: '#fff' }}>
       {/* Шапка */}
       <div style={{ background: 'linear-gradient(135deg, #0a2a1a, #0f0f1a)', borderBottom: '1px solid #2a2a3e', padding: '1.5rem 2rem' }}>
         <div style={{ maxWidth: 900, margin: '0 auto' }}>

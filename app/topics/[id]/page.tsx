@@ -215,19 +215,19 @@ export default function TopicPage() {
   const quizScore = quiz ? quiz.filter((q, i) => quizAnswers[i] === q.correct).length : 0
 
   if (loading) return (
-    <div style={{ minHeight: '100vh', background: '#0f0f1a', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
       <div style={{ color: '#fff', fontSize: 18 }}>Загрузка...</div>
     </div>
   )
 
   if (!topic) return (
-    <div style={{ minHeight: '100vh', background: '#0f0f1a', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
       <div style={{ color: '#fff' }}>Тема не найдена</div>
     </div>
   )
 
   return (
-    <div style={{ minHeight: '100vh', background: '#0f0f1a', color: '#fff', padding: '2rem' }}>
+    <div style={{ minHeight: '100vh', color: '#fff', padding: '2rem' }}>
       <div style={{ maxWidth: 800, margin: '0 auto' }}>
 
         <Link href="/topics" style={{ color: '#666', textDecoration: 'none', fontSize: 14, display: 'inline-flex', alignItems: 'center', gap: 6, marginBottom: 32 }}>

@@ -27,7 +27,7 @@ export default async function ClassesPage() {
           transform: translateY(-4px) scale(1.01);
         }
       `}</style>
-      <main style={{ minHeight: '100vh', padding: '2rem', background: '#0f0f1a' }}>
+      <main style={{ minHeight: '100vh', padding: '2rem' }}>
         <div style={{ maxWidth: 900, margin: '0 auto' }}>
           <h1 style={{ fontSize: '2.5rem', fontWeight: 800, color: '#fff', marginBottom: 8 }}>
             ⚡ Классы физики

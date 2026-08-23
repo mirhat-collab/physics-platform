@@ -78,7 +78,7 @@ export default function TournamentPage() {
   }
 
   if (loading) return (
-    <div style={{ minHeight: '100vh', background: '#0f0f1a', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
       <div style={{ color: '#fff' }}>Загрузка...</div>
     </div>
   )
@@ -87,7 +87,7 @@ export default function TournamentPage() {
   const ended = tournaments.filter(t => t.status !== 'active')
 
   return (
-    <div style={{ minHeight: '100vh', background: '#0f0f1a', color: '#fff', padding: '1.5rem', paddingBottom: 80 }}>
+    <div style={{ minHeight: '100vh', color: '#fff', padding: '1.5rem', paddingBottom: 80 }}>
       <div style={{ maxWidth: 700, margin: '0 auto' }}>
 
         <div style={{ background: 'linear-gradient(135deg, #2a1a0e, #1a1000)', border: '1px solid #f59e0b33', borderRadius: 20, padding: '24px', marginBottom: 24 }}>

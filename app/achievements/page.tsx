@@ -75,7 +75,7 @@ export default function AchievementsPage() {
   }
 
   if (loading) return (
-    <div style={{ minHeight: '100vh', background: '#0f0f1a', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
       <div style={{ color: '#fff', fontSize: 18 }}>Загрузка...</div>
     </div>
   )
@@ -85,7 +85,7 @@ export default function AchievementsPage() {
   const categories = [...new Set(ACHIEVEMENTS.map(a => a.category))]
 
   return (
-    <div style={{ minHeight: '100vh', background: '#0f0f1a', color: '#fff', padding: '1.5rem', paddingBottom: 80 }}>
+    <div style={{ minHeight: '100vh', color: '#fff', padding: '1.5rem', paddingBottom: 80 }}>
       <div style={{ maxWidth: 500, margin: '0 auto' }}>
 
         <h1 style={{ fontSize: '1.8rem', fontWeight: 800, marginBottom: 4 }}>🏅 Достижения</h1>
