@@ -52,17 +52,13 @@ export default function LoginPage() {
 
       if (data.user) {
         const now = new Date().toISOString()
-        const { error: profileError } = await supabase.from('profiles').upsert({
-          id: data.user.id,
+        const { error: profileError } = await supabase.from('profiles').update({
           email,
           full_name: fullName,
           grade: role === 'teacher' ? 'Учитель' : grade,
           role,
-          total_xp: 0,
-          streak: 0,
-          created_at: now,
           last_visit: now.split('T')[0],
-        })
+        }).eq('id', data.user.id)
         if (profileError) {
           setError('Ошибка создания профиля. Попробуй снова.')
           setLoading(false)
@@ -114,8 +110,9 @@ export default function LoginPage() {
   }
 
   return (
-    <div style={{ minHeight: '100vh', background: '#0f0f1a', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
-      <div style={{ background: '#1a1a2e', borderRadius: 20, padding: 40, width: '100%', maxWidth: 440, border: '1px solid #2a2a3e' }}>
+    <div style={{ minHeight: '100vh', background: '#0f0f1a', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16, position: 'relative', overflow: 'hidden' }}>
+      <div style={{ position: 'absolute', top: '-15%', left: '50%', transform: 'translateX(-50%)', width: 600, height: 600, borderRadius: '50%', background: 'radial-gradient(circle, rgba(102,126,234,0.15) 0%, transparent 70%)', pointerEvents: 'none' }} />
+      <div className="animate-scale-in" style={{ background: '#1a1a2e', borderRadius: 20, padding: 40, width: '100%', maxWidth: 440, border: '1px solid #2a2a3e', boxShadow: 'var(--shadow-lg)', position: 'relative' }}>
 
         <h1 style={{ color: '#fff', fontSize: '1.8rem', fontWeight: 800, marginBottom: 8, textAlign: 'center' }}>
           {isSignUp ? '🚀 Регистрация' : '⚡ Вход'}
@@ -211,18 +208,21 @@ export default function LoginPage() {
         <input style={input} type="password" placeholder="Пароль (минимум 6 символов)" value={password} onChange={e => setPassword(e.target.value)} />
 
         {error && (
-          <div style={{ background: '#2d1a1a', border: '1px solid #f5576c', borderRadius: 8, padding: '10px 14px', color: '#f5576c', fontSize: 14, marginBottom: 12 }}>
+          <div className="animate-scale-in" style={{ background: '#2d1a1a', border: '1px solid #f5576c', borderRadius: 8, padding: '10px 14px', color: '#f5576c', fontSize: 14, marginBottom: 12 }}>
             ❌ {error}
           </div>
         )}
 
-        <button onClick={handleSubmit} disabled={loading} style={{
+        <button onClick={handleSubmit} disabled={loading} className="btn-glow" style={{
           width: '100%', padding: '14px', borderRadius: 10, border: 'none',
           background: role === 'teacher' && isSignUp
             ? 'linear-gradient(135deg, #10b981, #059669)'
             : 'linear-gradient(135deg, #667eea, #764ba2)',
-          color: '#fff', fontSize: 16, fontWeight: 700, cursor: 'pointer', marginBottom: 16
+          color: '#fff', fontSize: 16, fontWeight: 700, cursor: loading ? 'default' : 'pointer', marginBottom: 16,
+          opacity: loading ? 0.75 : 1,
+          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
         }}>
+          {loading && <span className="spin" style={{ width: 16, height: 16, borderRadius: '50%', border: '2px solid rgba(255,255,255,0.35)', borderTopColor: '#fff', display: 'inline-block' }} />}
           {loading ? 'Загрузка...' : isSignUp
             ? (role === 'teacher' ? '👨‍🏫 Зарегистрироваться как учитель' : '🎓 Зарегистрироваться')
             : '⚡ Войти'}

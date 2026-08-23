@@ -1,12 +1,19 @@
 import type { Metadata } from "next";
+import { Manrope } from "next/font/google";
 import "./globals.css";
 import BottomNav from "./components/BottomNav";
 import StreakTracker from "./components/StreakTracker";
 import StreakAlert from "./components/StreakAlert";
 import PwaInstall from "./components/PwaInstall";
 
+const manrope = Manrope({
+  subsets: ["latin", "cyrillic"],
+  weight: ["400", "500", "600", "700", "800"],
+  variable: "--font-body",
+});
+
 export const metadata: Metadata = {
-  title: "Physics Platform — Физика онлайн 7-11 класс Казахстан",
+  title: "Mirha_Edu — Физика онлайн 7-11 класс Казахстан",
   description: "Бесплатная образовательная платформа по физике для учеников 7-11 классов Казахстана. Теория, формулы, задачи, XP система и рейтинг. Учи физику онлайн!",
   keywords: [
     "физика онлайн",
@@ -35,9 +42,9 @@ export const metadata: Metadata = {
     "физика платформа",
     "образование Казахстан",
   ],
-  authors: [{ name: "Physics Platform" }],
-  creator: "Physics Platform",
-  publisher: "Physics Platform",
+  authors: [{ name: "Mirha_Edu" }],
+  creator: "Mirha_Edu",
+  publisher: "Mirha_Edu",
   robots: {
     index: true,
     follow: true,
@@ -47,16 +54,16 @@ export const metadata: Metadata = {
     },
   },
   openGraph: {
-    title: "Physics Platform — Физика онлайн 7-11 класс",
+    title: "Mirha_Edu — Физика онлайн 7-11 класс",
     description: "Учи физику онлайн! Теория, формулы, задачи для 7-11 классов Казахстана. Зарабатывай XP и соревнуйся с классом.",
     url: "https://physics-platform-liart.vercel.app",
-    siteName: "Physics Platform",
+    siteName: "Mirha_Edu",
     locale: "ru_RU",
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Physics Platform — Физика онлайн 7-11 класс",
+    title: "Mirha_Edu — Физика онлайн 7-11 класс",
     description: "Учи физику онлайн! Теория, формулы, задачи для 7-11 классов Казахстана.",
   },
   alternates: {
@@ -78,12 +85,12 @@ export default function RootLayout({
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-        <meta name="apple-mobile-web-app-title" content="Физика" />
+        <meta name="apple-mobile-web-app-title" content="Mirha_Edu" />
         <link rel="canonical" href="https://physics-platform-liart.vercel.app" />
         <link rel="manifest" href="/manifest.json" />
         <link rel="apple-touch-icon" href="/icon-192.png" />
       </head>
-      <body style={{ margin: 0, fontFamily: 'sans-serif', background: '#0f0f1a', paddingBottom: 64 }}>
+      <body className={manrope.variable} style={{ margin: 0, fontFamily: 'var(--font-body), sans-serif', background: '#0f0f1a', paddingBottom: 64 }}>
         <StreakTracker />
         <StreakAlert />
         <PwaInstall />

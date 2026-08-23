@@ -60,9 +60,15 @@ export default function TopicsPage() {
     setLoading(false)
   }
 
-  const grades = ['all', ...GRADE_ORDER.filter(g =>
+  const knownGrades = GRADE_ORDER.filter(g =>
     topics.some(t => t.grade === g || t.grade === `${g}th Grade`)
-  )]
+  )
+  const otherGrades = Array.from(new Set(
+    topics
+      .map(t => t.grade?.replace('th Grade', ''))
+      .filter((g): g is string => !!g && !GRADE_ORDER.includes(g))
+  )).sort()
+  const grades = ['all', ...knownGrades, ...otherGrades]
 
   let filtered = gradeFilter === 'all'
     ? topics
@@ -97,7 +103,7 @@ export default function TopicsPage() {
     <main style={{ minHeight: '100vh', background: '#0f0f1a', color: '#fff' }}>
 
       {/* Шапка */}
-      <div style={{ background: 'linear-gradient(135deg, #1a1a3e 0%, #0f0f1a 100%)', borderBottom: '1px solid #2a2a3e', padding: '2rem 2rem 1.5rem' }}>
+      <div className="animate-fade-in-up" style={{ background: 'linear-gradient(135deg, #1a1a3e 0%, #0f0f1a 100%)', borderBottom: '1px solid #2a2a3e', padding: '2rem 2rem 1.5rem' }}>
         <div style={{ maxWidth: 900, margin: '0 auto' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 8 }}>
             <div style={{ width: 48, height: 48, borderRadius: 14, background: 'linear-gradient(135deg, #667eea, #764ba2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24 }}>
@@ -198,7 +204,7 @@ export default function TopicsPage() {
             {search ? `😕 Ничего не найдено по запросу "${search}"` : statusFilter === 'completed' ? '😅 Ты ещё не изучил ни одной темы' : statusFilter === 'bookmarked' ? '🔖 Нет сохранённых тем — нажми 📌 на странице темы' : '😅 Нет недавно открытых тем'}
           </div>
         )}
-        <div style={{ display: 'grid', gap: 12 }}>
+        <div className="stagger-children" style={{ display: 'grid', gap: 12 }}>
           {filtered.map((topic) => {
             const grade = topic.grade.replace('th Grade', '')
             const color = gradeColors[grade] || '#667eea'

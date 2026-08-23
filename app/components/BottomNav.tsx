@@ -20,7 +20,7 @@ export default function BottomNav() {
   if (isLanding) {
     return (
       <div style={{ background: '#0a0a14', borderTop: '1px solid #2a2a3e', padding: '20px 24px', textAlign: 'center' }}>
-        <div style={{ marginBottom: 12, fontWeight: 600, color: '#fff', fontSize: 14 }}>⚡ Physics Platform</div>
+        <div style={{ marginBottom: 12, fontWeight: 600, color: '#fff', fontSize: 14 }}>⚡ Mirha_Edu</div>
         <div style={{ display: 'flex', justifyContent: 'center', gap: 16, flexWrap: 'wrap' }}>
           <a href="https://wa.me/77083528305" target="_blank" rel="noopener noreferrer"
             style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#4ade80', textDecoration: 'none', fontWeight: 500, fontSize: 13 }}>
@@ -31,7 +31,7 @@ export default function BottomNav() {
             ✉️ sultanovmirhat@gmail.com
           </a>
         </div>
-        <div style={{ marginTop: 12, fontSize: 11, color: '#555' }}>© 2025 Physics Platform · Все права защищены</div>
+        <div style={{ marginTop: 12, fontSize: 11, color: '#555' }}>© 2025 Mirha_Edu · Все права защищены</div>
       </div>
     )
   }
@@ -52,12 +52,12 @@ export default function BottomNav() {
             textDecoration: 'none', gap: 2,
             background: 'transparent', position: 'relative',
           }}>
-            <span style={{ fontSize: 22 }}>{item.icon}</span>
+            <span style={{ fontSize: 22, display: 'inline-block', transform: active ? 'scale(1.15) translateY(-1px)' : 'scale(1)', transition: 'transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1)' }}>{item.icon}</span>
             <span style={{ fontSize: 10, fontWeight: 600, color: active ? '#a78bfa' : '#555', transition: 'color 0.2s' }}>
               {item.label}
             </span>
             {active && (
-              <div style={{ position: 'absolute', bottom: 0, width: 32, height: 3, background: '#a78bfa', borderRadius: '3px 3px 0 0' }} />
+              <div className="animate-scale-in" style={{ position: 'absolute', bottom: 0, width: 32, height: 3, background: 'linear-gradient(90deg,#667eea,#a78bfa)', borderRadius: '3px 3px 0 0', boxShadow: '0 0 8px rgba(167,139,250,0.6)' }} />
             )}
           </Link>
         )

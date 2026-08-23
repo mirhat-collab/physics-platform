@@ -57,7 +57,7 @@ export default function InstallPage() {
 
           {[
             { num: 1, text: 'Открой Safari — именно Safari, не Chrome!' },
-            { num: 2, text: 'Зайди на сайт physics-platform-liart.vercel.app' },
+            { num: 2, text: 'Зайди на этот сайт в Safari' },
             { num: 3, text: 'Нажми кнопку "Поделиться" — квадрат со стрелкой вверх ↑ внизу экрана' },
             { num: 4, text: 'Прокрути список вниз → нажми "На экран Домой"' },
             { num: 5, text: 'Нажми "Добавить" — иконка появится на рабочем столе!' },
@@ -88,7 +88,7 @@ export default function InstallPage() {
           onClick={() => {
             if (navigator.share) {
               navigator.share({
-                title: 'Physics Platform — установи приложение!',
+                title: 'Mirha_Edu — установи приложение!',
                 text: 'Учи физику онлайн — установи бесплатное приложение',
                 url: window.location.origin + '/install',
               })

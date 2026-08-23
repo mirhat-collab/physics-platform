@@ -4,8 +4,16 @@ import { supabase } from '../../lib/supabase'
 
 
 type Class = { id: number; name: string; program: string; total_topics: number }
-type MediaItem = { url: string; type: 'image' | 'video'; name: string }
+type MediaItem = { url: string; type: 'image' | 'video' | 'file'; name: string }
 type Topic = { id: number; name: string; theory: string; formulas: string; examples: string; tasks: string; resource: string; grade: string; media: MediaItem[] }
+
+function fileIcon(name: string): string {
+  const ext = name.split('.').pop()?.toLowerCase() || ''
+  if (ext === 'pdf') return '📕'
+  if (ext === 'doc' || ext === 'docx') return '📘'
+  if (ext === 'ppt' || ext === 'pptx') return '📙'
+  return '📄'
+}
 
 function MediaUploader({ existing, onDone }: { existing: MediaItem[]; onDone: (items: MediaItem[]) => void }) {
   const [items, setItems] = useState<MediaItem[]>(existing || [])
@@ -25,7 +33,11 @@ function MediaUploader({ existing, onDone }: { existing: MediaItem[]; onDone: (i
       const { error } = await supabase.storage.from('topic-media').upload(path, file)
       if (error) { setMsg('Ошибка: ' + error.message); continue }
       const { data: urlData } = supabase.storage.from('topic-media').getPublicUrl(path)
-      const type = file.type.startsWith('video') ? 'video' : 'image'
+      const type: MediaItem['type'] = file.type.startsWith('video')
+        ? 'video'
+        : file.type.startsWith('image')
+        ? 'image'
+        : 'file'
       newItems.push({ url: urlData.publicUrl, type, name: file.name })
     }
     const updated = [...items, ...newItems]
@@ -55,10 +67,17 @@ function MediaUploader({ existing, onDone }: { existing: MediaItem[]; onDone: (i
         onMouseEnter={e => (e.currentTarget.style.borderColor = '#667eea')}
         onMouseLeave={e => (e.currentTarget.style.borderColor = '#2a2a4e')}
       >
-        {uploading ? '⏳ Загружаю...' : '📎 Нажми чтобы добавить фото или видео'}
-        <div style={{ fontSize: 12, marginTop: 4, color: '#555' }}>JPG, PNG, GIF, MP4, WebM</div>
+        {uploading ? '⏳ Загружаю...' : '📎 Нажми чтобы добавить фото, видео, PDF или конспект'}
+        <div style={{ fontSize: 12, marginTop: 4, color: '#555' }}>JPG, PNG, GIF, MP4, WebM, PDF, DOC(X), PPT(X)</div>
       </div>
-      <input ref={fileRef} type="file" accept="image/*,video/*" multiple style={{ display: 'none' }} onChange={handleFiles} />
+      <input
+        ref={fileRef}
+        type="file"
+        accept="image/*,video/*,.pdf,.doc,.docx,.ppt,.pptx"
+        multiple
+        style={{ display: 'none' }}
+        onChange={handleFiles}
+      />
       {msg && <div style={{ color: '#4ade80', fontSize: 13, marginBottom: 8 }}>{msg}</div>}
       {items.length > 0 && (
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, marginTop: 6 }}>
@@ -66,14 +85,21 @@ function MediaUploader({ existing, onDone }: { existing: MediaItem[]; onDone: (i
             <div key={i} style={{ position: 'relative', width: 100, height: 80, borderRadius: 8, overflow: 'hidden', border: '1px solid #2a2a3e' }}>
               {item.type === 'image'
                 ? <img src={item.url} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt={item.name} />
-                : <video src={item.url} style={{ width: '100%', height: '100%', objectFit: 'cover' }} muted />
+                : item.type === 'video'
+                ? <video src={item.url} style={{ width: '100%', height: '100%', objectFit: 'cover' }} muted />
+                : (
+                  <div style={{ width: '100%', height: '100%', background: '#151530', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 6, textAlign: 'center' }}>
+                    <div style={{ fontSize: 22 }}>{fileIcon(item.name)}</div>
+                    <div style={{ fontSize: 9, color: '#aaa', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', width: '100%' }}>{item.name}</div>
+                  </div>
+                )
               }
               <button
                 onClick={() => remove(i)}
                 style={{ position: 'absolute', top: 3, right: 3, width: 20, height: 20, borderRadius: '50%', background: '#f5576c', border: 'none', color: '#fff', fontSize: 12, cursor: 'pointer', padding: 0, lineHeight: '20px' }}
               >×</button>
               <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, background: 'rgba(0,0,0,.6)', fontSize: 9, color: '#ccc', padding: '2px 4px', textAlign: 'center' }}>
-                {item.type === 'video' ? '▶ видео' : '🖼 фото'}
+                {item.type === 'video' ? '▶ видео' : item.type === 'image' ? '🖼 фото' : '📄 файл'}
               </div>
             </div>
           ))}
@@ -337,7 +363,7 @@ export default function AdminPage() {
                             <div key={i} style={{ width: 48, height: 36, borderRadius: 6, overflow: 'hidden', border: '1px solid #2a2a3e' }}>
                               {m.type === 'image'
                                 ? <img src={m.url} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                                : <div style={{ width: '100%', height: '100%', background: '#1a1a3e', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14 }}>▶</div>
+                                : <div style={{ width: '100%', height: '100%', background: '#1a1a3e', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14 }}>{m.type === 'video' ? '▶' : fileIcon(m.name)}</div>
                               }
                             </div>
                           ))}

@@ -53,9 +53,9 @@ export default function DashboardPage() {
 
   return (
     <div style={{ minHeight: '100vh', background: '#0f0f1a', color: '#fff', padding: '1.5rem' }}>
-      <div style={{ maxWidth: 800, margin: '0 auto' }}>
+      <div className="animate-fade-in-up" style={{ maxWidth: 800, margin: '0 auto' }}>
 
-        <div style={{ background: 'linear-gradient(135deg, #667eea, #764ba2)', borderRadius: 24, padding: '28px 32px', marginBottom: 20 }}>
+        <div style={{ background: 'linear-gradient(135deg, #667eea, #764ba2)', borderRadius: 24, padding: '28px 32px', marginBottom: 20, boxShadow: 'var(--shadow-md)' }}>
           <div style={{ fontSize: 13, opacity: 0.8, marginBottom: 6 }}>Добро пожаловать 👋</div>
           <h1 style={{ fontSize: '1.8rem', fontWeight: 800, margin: '0 0 4px' }}>
             {profile?.full_name || profile?.email}
@@ -72,16 +72,16 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12, marginBottom: 20 }}>
-          <div style={{ background: '#1a1a2e', borderRadius: 16, padding: '16px', border: '1px solid #2a2a3e', textAlign: 'center' }}>
+        <div className="stagger-children" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12, marginBottom: 20 }}>
+          <div className="hover-lift" style={{ background: '#1a1a2e', borderRadius: 16, padding: '16px', border: '1px solid #2a2a3e', textAlign: 'center' }}>
             <div style={{ fontSize: 28, fontWeight: 800, color: '#a78bfa' }}>{profile?.total_xp}</div>
             <div style={{ color: '#888', fontSize: 12, marginTop: 4 }}>Всего XP</div>
           </div>
-          <div style={{ background: '#1a1a2e', borderRadius: 16, padding: '16px', border: '1px solid #2a2a3e', textAlign: 'center' }}>
+          <div className="hover-lift" style={{ background: '#1a1a2e', borderRadius: 16, padding: '16px', border: '1px solid #2a2a3e', textAlign: 'center' }}>
             <div style={{ fontSize: 28, fontWeight: 800, color: '#f59e0b' }}>🔥{profile?.streak}</div>
             <div style={{ color: '#888', fontSize: 12, marginTop: 4 }}>Дней подряд</div>
           </div>
-          <div style={{ background: '#1a1a2e', borderRadius: 16, padding: '16px', border: '1px solid #2a2a3e', textAlign: 'center' }}>
+          <div className="hover-lift" style={{ background: '#1a1a2e', borderRadius: 16, padding: '16px', border: '1px solid #2a2a3e', textAlign: 'center' }}>
             <div style={{ fontSize: 28, fontWeight: 800, color: '#10b981' }}>{percent}%</div>
             <div style={{ color: '#888', fontSize: 12, marginTop: 4 }}>Прогресс</div>
           </div>
@@ -101,7 +101,7 @@ export default function DashboardPage() {
           <div style={{ marginBottom: 20 }}>
             <h2 style={{ fontSize: '1rem', fontWeight: 700, marginBottom: 12, color: '#888' }}>▶ СЛЕДУЮЩАЯ ТЕМА</h2>
             <Link href={`/topics/${nextTopic.id}`} style={{ textDecoration: 'none' }}>
-              <div style={{ background: 'linear-gradient(135deg, #1a1a2e, #16213e)', border: '1px solid #667eea', borderRadius: 16, padding: '20px 24px', cursor: 'pointer' }}>
+              <div className="hover-lift animate-pulse-glow" style={{ background: 'linear-gradient(135deg, #1a1a2e, #16213e)', border: '1px solid #667eea', borderRadius: 16, padding: '20px 24px', cursor: 'pointer' }}>
                 <div style={{ fontWeight: 700, fontSize: 16, marginBottom: 6 }}>{nextTopic.name}</div>
                 <div style={{ color: '#667eea', fontSize: 13, fontWeight: 600 }}>Начать → +10 XP</div>
               </div>
@@ -109,15 +109,15 @@ export default function DashboardPage() {
           </div>
         )}
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+        <div className="stagger-children" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
           <Link href="/topics" style={{ textDecoration: 'none' }}>
-            <div style={{ background: '#1a1a2e', border: '1px solid #2a2a3e', borderRadius: 16, padding: '18px', textAlign: 'center', cursor: 'pointer' }}>
+            <div className="hover-lift" style={{ background: '#1a1a2e', border: '1px solid #2a2a3e', borderRadius: 16, padding: '18px', textAlign: 'center', cursor: 'pointer' }}>
               <div style={{ fontSize: 28 }}>📚</div>
               <div style={{ fontWeight: 600, marginTop: 8 }}>Все темы</div>
             </div>
           </Link>
           <Link href="/progress" style={{ textDecoration: 'none' }}>
-            <div style={{ background: '#1a1a2e', border: '1px solid #2a2a3e', borderRadius: 16, padding: '18px', textAlign: 'center', cursor: 'pointer' }}>
+            <div className="hover-lift" style={{ background: '#1a1a2e', border: '1px solid #2a2a3e', borderRadius: 16, padding: '18px', textAlign: 'center', cursor: 'pointer' }}>
               <div style={{ fontSize: 28 }}>🏆</div>
               <div style={{ fontWeight: 600, marginTop: 8 }}>Рейтинг</div>
             </div>

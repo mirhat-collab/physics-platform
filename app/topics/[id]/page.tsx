@@ -6,7 +6,15 @@ import { supabase } from '@/lib/supabase'
 import katex from 'katex'
 import 'katex/dist/katex.min.css'
 
-type MediaItem = { url: string; type: 'image' | 'video'; name: string }
+type MediaItem = { url: string; type: 'image' | 'video' | 'file'; name: string }
+
+function fileIcon(name: string): string {
+  const ext = name.split('.').pop()?.toLowerCase() || ''
+  if (ext === 'pdf') return '📕'
+  if (ext === 'doc' || ext === 'docx') return '📘'
+  if (ext === 'ppt' || ext === 'pptx') return '📙'
+  return '📄'
+}
 
 type Topic = {
   id: string
@@ -286,7 +294,18 @@ export default function TopicPage() {
                 <div key={i} style={{ borderRadius: 12, overflow: 'hidden', border: '1px solid #2a2a3e', background: '#0a0a14' }}>
                   {item.type === 'image'
                     ? <img src={item.url} style={{ width: '100%', display: 'block' }} alt={item.name} />
-                    : <video src={item.url} controls style={{ width: '100%', display: 'block' }} />
+                    : item.type === 'video'
+                    ? <video src={item.url} controls style={{ width: '100%', display: 'block' }} />
+                    : (
+                      <a href={item.url} target="_blank" rel="noopener noreferrer" download={item.name} style={{
+                        display: 'flex', alignItems: 'center', gap: 10, padding: '14px 16px',
+                        color: '#e5e5f0', textDecoration: 'none', fontSize: 13,
+                      }}>
+                        <span style={{ fontSize: 22 }}>{fileIcon(item.name)}</span>
+                        <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.name}</span>
+                        <span style={{ marginLeft: 'auto', color: '#888', fontSize: 12 }}>Скачать ↓</span>
+                      </a>
+                    )
                   }
                 </div>
               ))}
