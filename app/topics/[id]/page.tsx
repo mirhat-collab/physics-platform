@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
 import katex from 'katex'
 import 'katex/dist/katex.min.css'
+import ProtectedFileViewer from '@/app/components/ProtectedFileViewer'
 
 type MediaItem = { url: string; type: 'image' | 'video' | 'file'; name: string }
 
@@ -69,6 +70,7 @@ export default function TopicPage() {
   const [commentText, setCommentText] = useState('')
   const [sendingComment, setSendingComment] = useState(false)
   const [userName, setUserName] = useState('')
+  const [viewerItem, setViewerItem] = useState<MediaItem | null>(null)
 
   useEffect(() => { loadData() }, [id])
 
@@ -291,26 +293,31 @@ export default function TopicPage() {
           <Section icon="🖼" title="Материалы" color="#a78bfa" bg="rgba(167,139,250,0.08)">
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 12 }}>
               {topic.media.map((item, i) => (
-                <div key={i} style={{ borderRadius: 12, overflow: 'hidden', border: '1px solid #2a2a3e', background: '#0a0a14' }}>
-                  {item.type === 'image'
-                    ? <img src={item.url} style={{ width: '100%', display: 'block' }} alt={item.name} />
-                    : item.type === 'video'
-                    ? <video src={item.url} controls style={{ width: '100%', display: 'block' }} />
-                    : (
-                      <a href={item.url} target="_blank" rel="noopener noreferrer" download={item.name} style={{
-                        display: 'flex', alignItems: 'center', gap: 10, padding: '14px 16px',
-                        color: '#e5e5f0', textDecoration: 'none', fontSize: 13,
-                      }}>
-                        <span style={{ fontSize: 22 }}>{fileIcon(item.name)}</span>
-                        <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.name}</span>
-                        <span style={{ marginLeft: 'auto', color: '#888', fontSize: 12 }}>Скачать ↓</span>
-                      </a>
-                    )
-                  }
-                </div>
+                <button
+                  key={i}
+                  onClick={() => setViewerItem(item)}
+                  style={{
+                    borderRadius: 12, overflow: 'hidden', border: '1px solid #2a2a3e', background: '#0a0a14',
+                    display: 'flex', alignItems: 'center', gap: 10, padding: '14px 16px',
+                    color: '#e5e5f0', fontSize: 13, cursor: 'pointer', textAlign: 'left', width: '100%',
+                  }}
+                >
+                  <span style={{ fontSize: 22 }}>{item.type === 'image' ? '🖼' : item.type === 'video' ? '🎬' : fileIcon(item.name)}</span>
+                  <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.name}</span>
+                  <span style={{ marginLeft: 'auto', color: '#888', fontSize: 12 }}>Открыть ↗</span>
+                </button>
               ))}
             </div>
           </Section>
+        )}
+
+        {viewerItem && (
+          <ProtectedFileViewer
+            fileUrl={viewerItem.url}
+            fileName={viewerItem.name}
+            watermarkLabel={`${userName || 'Ученик'} · ${new Date().toLocaleString('ru-RU')}`}
+            onClose={() => setViewerItem(null)}
+          />
         )}
 
         <div style={{ marginTop: 40, textAlign: 'center', position: 'relative', paddingBottom: 60 }}>
