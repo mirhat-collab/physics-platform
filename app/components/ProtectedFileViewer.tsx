@@ -33,8 +33,8 @@ export default function ProtectedFileViewer({ fileUrl, fileName, watermarkLabel,
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ path }),
         })
-        const data = await res.json()
-        if (!res.ok) throw new Error(data.error || 'Ошибка загрузки файла')
+        const data = await res.json().catch(() => null)
+        if (!res.ok || !data) throw new Error(data?.error || 'Ошибка загрузки файла')
         if (!cancelled) setSignedUrl(data.url)
       } catch (e) {
         if (!cancelled) setError(e instanceof Error ? e.message : 'Ошибка загрузки файла')
