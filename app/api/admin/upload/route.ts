@@ -4,31 +4,32 @@ import { requireAdmin } from '@/lib/admin-auth'
 
 const BUCKET = 'topic-media'
 
-// Загрузка файлов темы только отсюда, через service role — у бакета
-// topic-media больше нет публичной политики на запись напрямую с anon-ключа.
+// Файл больше не проходит телом через этот serverless-роут — у Vercel
+// жёсткий лимит на размер запроса (4.5MB), в который не помещается
+// презентация или видео. Вместо этого отдаём клиенту подписанную ссылку
+// на загрузку (service role создаёт её даже для приватного бакета), и
+// браузер грузит файл напрямую в Supabase Storage, минуя наш сервер.
 export async function POST(req: NextRequest) {
   const denied = await requireAdmin()
   if (denied) return denied
   try {
-    const form = await req.formData().catch(() => null)
-    const file = form?.get('file')
-    if (!file || !(file instanceof File)) {
-      return NextResponse.json({ error: 'Файл не передан' }, { status: 400 })
+    const { name } = await req.json().catch(() => ({ name: null }))
+    if (!name || typeof name !== 'string') {
+      return NextResponse.json({ error: 'Не указано имя файла' }, { status: 400 })
     }
 
-    const ext = file.name.split('.').pop()
+    const ext = name.split('.').pop()
     const path = `topics/${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`
 
     const admin = createSupabaseAdmin()
-    const { error } = await admin.storage.from(BUCKET).upload(path, file)
-    if (error) throw error
+    const { data, error } = await admin.storage.from(BUCKET).createSignedUploadUrl(path)
+    if (error || !data) throw error || new Error('Не удалось создать подписанную ссылку')
 
     const { data: urlData } = admin.storage.from(BUCKET).getPublicUrl(path)
-    const type = file.type.startsWith('video') ? 'video' : file.type.startsWith('image') ? 'image' : 'file'
-    return NextResponse.json({ url: urlData.publicUrl, type, name: file.name })
+    return NextResponse.json({ token: data.token, path, url: urlData.publicUrl })
   } catch (err) {
     console.error('Admin upload error:', err)
-    return NextResponse.json({ error: 'Не удалось загрузить файл' }, { status: 500 })
+    return NextResponse.json({ error: 'Не удалось подготовить загрузку файла' }, { status: 500 })
   }
 }
 
