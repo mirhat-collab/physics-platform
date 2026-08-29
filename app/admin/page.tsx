@@ -1,5 +1,8 @@
 'use client'
 import { useEffect, useState, useRef } from 'react'
+import { extractStoragePath } from '@/lib/file-protect'
+
+const BUCKET = 'topic-media'
 
 
 type Class = { id: number; name: string; program: string; total_topics: number }
@@ -47,10 +50,18 @@ function MediaUploader({ existing, onDone, adminToken }: { existing: MediaItem[]
     if (fileRef.current) fileRef.current.value = ''
   }
 
-  function remove(i: number) {
+  async function remove(i: number) {
+    const item = items[i]
     const updated = items.filter((_, idx) => idx !== i)
     setItems(updated)
     onDone(updated)
+
+    const path = extractStoragePath(item.url, BUCKET)
+    if (!path) return
+    await fetch(`/api/admin/upload?path=${encodeURIComponent(path)}`, {
+      method: 'DELETE',
+      headers: { 'x-admin-token': adminToken },
+    }).catch(() => {})
   }
 
   return (

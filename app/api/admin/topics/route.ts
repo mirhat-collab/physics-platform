@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createSupabaseAdmin } from '@/lib/supabase-admin'
 import { requireAdmin } from '@/lib/admin-token'
+import { extractStoragePath } from '@/lib/file-protect'
+
+const BUCKET = 'topic-media'
 
 export async function GET(req: NextRequest) {
   const denied = requireAdmin(req)
@@ -56,6 +59,14 @@ export async function DELETE(req: NextRequest) {
     const id = new URL(req.url).searchParams.get('id')
     if (!id) return NextResponse.json({ error: 'Не указан id темы' }, { status: 400 })
     const admin = createSupabaseAdmin()
+
+    // Забираем медиа темы, чтобы не оставлять висячие файлы в Storage.
+    const { data: topic } = await admin.from('topics').select('media').eq('id', id).single()
+    const paths = (topic?.media || [])
+      .map((m: { url: string }) => extractStoragePath(m.url, BUCKET))
+      .filter((p: string | null): p is string => !!p)
+    if (paths.length) await admin.storage.from(BUCKET).remove(paths)
+
     const { error } = await admin.from('topics').delete().eq('id', id)
     if (error) throw error
     return NextResponse.json({ ok: true })

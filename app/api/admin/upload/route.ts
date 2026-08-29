@@ -31,3 +31,23 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Не удалось загрузить файл' }, { status: 500 })
   }
 }
+
+// Удаление файла из бакета, когда его убирают из темы в админке —
+// иначе объекты в Storage копятся без дела навсегда.
+export async function DELETE(req: NextRequest) {
+  const denied = requireAdmin(req)
+  if (denied) return denied
+  try {
+    const path = new URL(req.url).searchParams.get('path')
+    if (!path || !path.startsWith('topics/')) {
+      return NextResponse.json({ error: 'Некорректный путь к файлу' }, { status: 400 })
+    }
+    const admin = createSupabaseAdmin()
+    const { error } = await admin.storage.from(BUCKET).remove([path])
+    if (error) throw error
+    return NextResponse.json({ ok: true })
+  } catch (err) {
+    console.error('Admin upload delete error:', err)
+    return NextResponse.json({ error: 'Не удалось удалить файл' }, { status: 500 })
+  }
+}
