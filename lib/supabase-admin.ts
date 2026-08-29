@@ -7,10 +7,14 @@ export function createSupabaseAdmin() {
   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
 
   if (!url || !serviceKey) {
+    const missing = [
+      !url && 'NEXT_PUBLIC_SUPABASE_URL',
+      !serviceKey && 'SUPABASE_SERVICE_ROLE_KEY',
+    ].filter(Boolean).join(', ')
     throw new Error(
-      'Не заданы NEXT_PUBLIC_SUPABASE_URL или SUPABASE_SERVICE_ROLE_KEY. ' +
-      'Добавь SUPABASE_SERVICE_ROLE_KEY в .env.local и в переменные окружения Vercel ' +
-      '(Project Settings → API → service_role secret в Supabase).'
+      `Не задана переменная окружения: ${missing}. ` +
+      'Добавь её в .env.local и в переменные окружения Vercel для Production ' +
+      '(Project Settings → Environment Variables; значение service_role — из Supabase Project Settings → API).'
     )
   }
 
