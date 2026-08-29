@@ -110,7 +110,7 @@ export default function TopicPage() {
       const res = await fetch('/api/quiz', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ topicName: topic.name, theory: topic.theory, formulas: topic.formulas, examples: topic.examples })
+        body: JSON.stringify({ topicId: topic.id, topicName: topic.name, theory: topic.theory, formulas: topic.formulas, examples: topic.examples })
       })
       const data = await res.json()
       if (data.questions && data.questions.length > 0) {

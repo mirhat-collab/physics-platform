@@ -1,5 +1,10 @@
 'use client'
 import { useEffect, useState, useRef } from 'react'
+import { useRouter } from 'next/navigation'
+import { supabase } from '@/lib/supabase'
+import { extractStoragePath } from '@/lib/file-protect'
+
+const BUCKET = 'topic-media'
 
 
 type Class = { id: number; name: string; program: string; total_topics: number }
@@ -14,7 +19,7 @@ function fileIcon(name: string): string {
   return '📄'
 }
 
-function MediaUploader({ existing, onDone, adminToken }: { existing: MediaItem[]; onDone: (items: MediaItem[]) => void; adminToken: string }) {
+function MediaUploader({ existing, onDone }: { existing: MediaItem[]; onDone: (items: MediaItem[]) => void }) {
   const [items, setItems] = useState<MediaItem[]>(existing || [])
   const [uploading, setUploading] = useState(false)
   const [msg, setMsg] = useState('')
@@ -29,11 +34,7 @@ function MediaUploader({ existing, onDone, adminToken }: { existing: MediaItem[]
     for (const file of files) {
       const formData = new FormData()
       formData.append('file', file)
-      const res = await fetch('/api/admin/upload', {
-        method: 'POST',
-        headers: { 'x-admin-token': adminToken },
-        body: formData,
-      })
+      const res = await fetch('/api/admin/upload', { method: 'POST', body: formData })
       const data = await res.json().catch(() => null)
       if (!res.ok || !data) { setMsg('Ошибка: ' + (data?.error || 'не удалось загрузить')); continue }
       newItems.push({ url: data.url, type: data.type, name: data.name })
@@ -47,10 +48,15 @@ function MediaUploader({ existing, onDone, adminToken }: { existing: MediaItem[]
     if (fileRef.current) fileRef.current.value = ''
   }
 
-  function remove(i: number) {
+  async function remove(i: number) {
+    const item = items[i]
     const updated = items.filter((_, idx) => idx !== i)
     setItems(updated)
     onDone(updated)
+
+    const path = extractStoragePath(item.url, BUCKET)
+    if (!path) return
+    await fetch(`/api/admin/upload?path=${encodeURIComponent(path)}`, { method: 'DELETE' }).catch(() => {})
   }
 
   return (
@@ -108,10 +114,9 @@ function MediaUploader({ existing, onDone, adminToken }: { existing: MediaItem[]
 }
 
 export default function AdminPage() {
-  const [auth, setAuth] = useState(false)
-  const [adminToken, setAdminToken] = useState('')
-  const [passwordInput, setPasswordInput] = useState('')
-  const [authError, setAuthError] = useState('')
+  const router = useRouter()
+  const [checking, setChecking] = useState(true)
+  const [isAdmin, setIsAdmin] = useState(false)
   const [classes, setClasses] = useState<Class[]>([])
   const [topics, setTopics] = useState<Topic[]>([])
   const [tab, setTab] = useState<'classes' | 'topics'>('classes')
@@ -124,49 +129,25 @@ export default function AdminPage() {
   const [editMedia, setEditMedia] = useState<MediaItem[]>([])
 
   useEffect(() => {
-    const token = sessionStorage.getItem('admin_token')
-    if (!token) return
-    // Проверяем токен на сервере
-    fetch('/api/admin-auth', { headers: { 'x-admin-token': token } })
-      .then(r => r.json())
-      .then(d => { if (d.valid) { setAdminToken(token); setAuth(true) } })
-      .catch(() => sessionStorage.removeItem('admin_token'))
+    supabase.auth.getUser().then(async ({ data: { user } }) => {
+      if (!user) { setChecking(false); return }
+      const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
+      setIsAdmin(profile?.role === 'admin')
+      setChecking(false)
+    })
   }, [])
 
-  async function handleLogin() {
-    const res = await fetch('/api/admin-auth', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ password: passwordInput })
-    })
-    if (res.ok) {
-      const { token } = await res.json()
-      sessionStorage.setItem('admin_token', token) // Храним настоящий токен
-      setAdminToken(token)
-      setAuth(true)
-      setAuthError('')
-    } else if (res.status === 429) {
-      setAuthError('Слишком много попыток. Подожди 15 минут.')
-      setPasswordInput('')
-    } else {
-      setAuthError('Неверный пароль!')
-      setPasswordInput('')
-    }
+  async function handleLogout() {
+    await supabase.auth.signOut()
+    router.push('/login')
   }
 
-  function handleLogout() {
-    sessionStorage.removeItem('admin_token')
-    setAdminToken('')
-    setAuth(false)
-  }
-
-
-  useEffect(() => { if (auth) loadData() }, [auth])
+  useEffect(() => { if (isAdmin) loadData() }, [isAdmin])
 
   async function loadData() {
     const [cRes, tRes] = await Promise.all([
-      fetch('/api/admin/classes', { headers: { 'x-admin-token': adminToken } }),
-      fetch('/api/admin/topics', { headers: { 'x-admin-token': adminToken } }),
+      fetch('/api/admin/classes'),
+      fetch('/api/admin/topics'),
     ])
     const c = await cRes.json().catch(() => null)
     const t = await tRes.json().catch(() => null)
@@ -178,7 +159,7 @@ export default function AdminPage() {
     if (!newClass.name) return
     await fetch('/api/admin/classes', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'x-admin-token': adminToken },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(newClass),
     })
     setNewClass({ name: '', program: '', total_topics: 0 })
@@ -189,7 +170,7 @@ export default function AdminPage() {
     if (!newTopic.name) return
     await fetch('/api/admin/topics', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'x-admin-token': adminToken },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ ...newTopic, media: newMedia }),
     })
     setNewTopic(emptyTopic)
@@ -199,13 +180,13 @@ export default function AdminPage() {
 
   async function deleteClass(id: number) {
     if (!confirm('Удалить класс?')) return
-    await fetch(`/api/admin/classes?id=${id}`, { method: 'DELETE', headers: { 'x-admin-token': adminToken } })
+    await fetch(`/api/admin/classes?id=${id}`, { method: 'DELETE' })
     loadData()
   }
 
   async function deleteTopic(id: number) {
     if (!confirm('Удалить тему?')) return
-    await fetch(`/api/admin/topics?id=${id}`, { method: 'DELETE', headers: { 'x-admin-token': adminToken } })
+    await fetch(`/api/admin/topics?id=${id}`, { method: 'DELETE' })
     loadData()
   }
 
@@ -213,7 +194,7 @@ export default function AdminPage() {
     if (!editClass) return
     await fetch('/api/admin/classes', {
       method: 'PATCH',
-      headers: { 'Content-Type': 'application/json', 'x-admin-token': adminToken },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(editClass),
     })
     setEditClass(null)
@@ -224,7 +205,7 @@ export default function AdminPage() {
     if (!editTopic) return
     await fetch('/api/admin/topics', {
       method: 'PATCH',
-      headers: { 'Content-Type': 'application/json', 'x-admin-token': adminToken },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ ...editTopic, media: editMedia }),
     })
     setEditTopic(null)
@@ -247,16 +228,22 @@ export default function AdminPage() {
   const btn = (color: string): React.CSSProperties => ({ padding: '9px 18px', borderRadius: 10, border: 'none', background: color, color: '#fff', cursor: 'pointer', fontWeight: 600, fontSize: 14 })
   const label: React.CSSProperties = { display: 'block', color: '#888', fontSize: 12, marginBottom: 4, marginTop: 4, fontWeight: 600, letterSpacing: 0.5 }
 
-  if (!auth) {
+  if (checking) {
+    return (
+      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#888' }}>
+        Проверяю доступ…
+      </div>
+    )
+  }
+
+  if (!isAdmin) {
     return (
       <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
         <div style={{ background: '#1a1a2e', borderRadius: 24, padding: 48, width: '100%', maxWidth: 400, border: '1px solid #2a2a3e', textAlign: 'center' }}>
-          <div style={{ fontSize: 48, marginBottom: 16 }}>🔐</div>
-          <h1 style={{ color: '#fff', fontSize: '1.6rem', fontWeight: 800, marginBottom: 8 }}>Панель админа</h1>
-          <p style={{ color: '#666', marginBottom: 32, fontSize: 14 }}>Введи пароль для входа</p>
-          <input style={{ ...input, textAlign: 'center', fontSize: 18, letterSpacing: 4, marginBottom: 16 }} type="password" placeholder="••••••••" value={passwordInput} onChange={e => setPasswordInput(e.target.value)} onKeyDown={e => e.key === 'Enter' && handleLogin()} />
-          {authError && <div style={{ background: '#2d1a1a', border: '1px solid #f5576c', borderRadius: 10, padding: '10px 14px', color: '#f5576c', fontSize: 14, marginBottom: 16 }}>❌ {authError}</div>}
-          <button onClick={handleLogin} style={{ width: '100%', padding: '14px', borderRadius: 12, border: 'none', background: 'linear-gradient(135deg, #667eea, #764ba2)', color: '#fff', fontSize: 16, fontWeight: 700, cursor: 'pointer' }}>Войти</button>
+          <div style={{ fontSize: 48, marginBottom: 16 }}>🔒</div>
+          <h1 style={{ color: '#fff', fontSize: '1.6rem', fontWeight: 800, marginBottom: 8 }}>Доступ запрещён</h1>
+          <p style={{ color: '#666', marginBottom: 32, fontSize: 14 }}>Эта страница только для администраторов. Войди под аккаунтом с ролью admin.</p>
+          <button onClick={() => router.push('/login')} style={{ width: '100%', padding: '14px', borderRadius: 12, border: 'none', background: 'linear-gradient(135deg, #667eea, #764ba2)', color: '#fff', fontSize: 16, fontWeight: 700, cursor: 'pointer' }}>Войти</button>
         </div>
       </div>
     )
@@ -341,7 +328,7 @@ export default function AdminPage() {
               <span style={label}>🌐 Ссылка на ресурс</span>
               <input style={input} placeholder="https://..." value={newTopic.resource} onChange={e => setNewTopic({ ...newTopic, resource: e.target.value })} />
               <span style={label}>🖼 Фото и видео</span>
-              <MediaUploader existing={newMedia} onDone={setNewMedia} adminToken={adminToken} />
+              <MediaUploader existing={newMedia} onDone={setNewMedia} />
               <button onClick={addTopic} style={{ ...btn('#43e97b'), marginTop: 16 }}>✅ Добавить тему</button>
             </div>
 
@@ -366,7 +353,7 @@ export default function AdminPage() {
                     <span style={label}>🌐 Ссылка на ресурс</span>
                     <input style={input} value={editTopic.resource || ''} onChange={e => setEditTopic({ ...editTopic, resource: e.target.value })} />
                     <span style={label}>🖼 Фото и видео</span>
-                    <MediaUploader existing={editMedia} onDone={setEditMedia} adminToken={adminToken} />
+                    <MediaUploader existing={editMedia} onDone={setEditMedia} />
                     <div style={{ display: 'flex', gap: 8, marginTop: 16 }}>
                       <button onClick={saveEditTopic} style={btn('#43e97b')}>💾 Сохранить</button>
                       <button onClick={() => setEditTopic(null)} style={btn('#555')}>Отмена</button>
