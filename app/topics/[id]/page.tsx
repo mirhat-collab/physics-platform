@@ -315,7 +315,7 @@ export default function TopicPage() {
           <ProtectedFileViewer
             fileUrl={viewerItem.url}
             fileName={viewerItem.name}
-            watermarkLabel={`${userName || 'Ученик'} · ${new Date().toLocaleString('ru-RU')}`}
+            watermarkLabel={`Mirha_Edu · ${userName || 'Ученик'} · ${new Date().toLocaleString('ru-RU')}`}
             onClose={() => setViewerItem(null)}
           />
         )}

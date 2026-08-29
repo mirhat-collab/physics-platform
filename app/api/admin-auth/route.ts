@@ -1,9 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { randomUUID } from 'crypto'
-
-// Хранилище токенов в памяти (сбрасывается при деплое — это нормально)
-const validTokens = new Map<string, number>()
-const TOKEN_TTL = 8 * 60 * 60 * 1000 // 8 часов
+import { signAdminToken, verifyAdminToken } from '@/lib/admin-token'
 
 // Rate limiting: максимум 5 попыток с одного IP за 15 минут
 const attempts = new Map<string, { count: number; resetAt: number }>()
@@ -29,14 +25,8 @@ export async function POST(req: NextRequest) {
   try {
     const { password } = await req.json()
     if (password && password === process.env.ADMIN_PASSWORD) {
-      // Чистим старые токены
-      for (const [t, exp] of validTokens.entries()) {
-        if (now > exp) validTokens.delete(t)
-      }
-      const token = randomUUID()
-      validTokens.set(token, now + TOKEN_TTL)
       attempts.delete(ip) // Сбрасываем счётчик при успехе
-      return NextResponse.json({ ok: true, token })
+      return NextResponse.json({ ok: true, token: signAdminToken() })
     }
   } catch {}
 
@@ -46,8 +36,5 @@ export async function POST(req: NextRequest) {
 // Проверка токена
 export async function GET(req: NextRequest) {
   const token = req.headers.get('x-admin-token')
-  if (!token) return NextResponse.json({ valid: false }, { status: 401 })
-  const exp = validTokens.get(token)
-  const valid = exp !== undefined && Date.now() < exp
-  return NextResponse.json({ valid })
+  return NextResponse.json({ valid: verifyAdminToken(token) })
 }
