@@ -43,7 +43,9 @@ export async function PATCH(req: NextRequest) {
     if (!body?.id) return NextResponse.json({ error: 'Не указан id темы' }, { status: 400 })
     const { id, ...fields } = body
     const admin = createSupabaseAdmin()
-    const { error } = await admin.from('topics').update(fields).eq('id', id)
+    // Материал темы изменился — сбрасываем закэшированный квиз, чтобы он
+    // перегенерировался под новый контент при следующем открытии темы.
+    const { error } = await admin.from('topics').update({ ...fields, quiz: null }).eq('id', id)
     if (error) throw error
     return NextResponse.json({ ok: true })
   } catch (err) {
