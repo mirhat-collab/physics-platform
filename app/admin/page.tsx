@@ -32,12 +32,21 @@ function MediaUploader({ existing, onDone }: { existing: MediaItem[]; onDone: (i
     setMsg('Загружаю...')
     const newItems: MediaItem[] = []
     for (const file of files) {
-      const formData = new FormData()
-      formData.append('file', file)
-      const res = await fetch('/api/admin/upload', { method: 'POST', body: formData })
+      // Сервер только выдаёт подписанную ссылку — сам файл идёт напрямую
+      // в Supabase Storage из браузера, в обход лимита Vercel на размер тела запроса.
+      const res = await fetch('/api/admin/upload', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: file.name }),
+      })
       const data = await res.json().catch(() => null)
       if (!res.ok || !data) { setMsg('Ошибка: ' + (data?.error || 'не удалось загрузить')); continue }
-      newItems.push({ url: data.url, type: data.type, name: data.name })
+
+      const { error: uploadError } = await supabase.storage.from(BUCKET).uploadToSignedUrl(data.path, data.token, file)
+      if (uploadError) { setMsg('Ошибка: ' + uploadError.message); continue }
+
+      const type = file.type.startsWith('video') ? 'video' : file.type.startsWith('image') ? 'image' : 'file'
+      newItems.push({ url: data.url, type, name: file.name })
     }
     const updated = [...items, ...newItems]
     setItems(updated)
