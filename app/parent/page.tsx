@@ -19,6 +19,29 @@ export default function ParentPage() {
 
   useEffect(() => { loadData() }, [])
 
+  // Живые обновления: XP/стрик ученика и новые пройденные темы — без
+  // перезагрузки страницы.
+  useEffect(() => {
+    if (students.length === 0) return
+    const ids = students.map(s => s.id)
+
+    const channel = supabase
+      .channel('parent-live-updates')
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'profiles' }, payload => {
+        const updated = payload.new as Student
+        if (!ids.includes(updated.id)) return
+        setStudents(prev => prev.map(s => s.id === updated.id ? { ...s, ...updated } : s))
+      })
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'progress' }, payload => {
+        const row = payload.new as { student: string; topic: string; status: string; completed_at: string }
+        if (row.status !== 'completed' || selectedStudent?.id !== row.student) return
+        setProgress(prev => [{ topic: row.topic, completed_at: row.completed_at }, ...prev])
+      })
+      .subscribe()
+
+    return () => { supabase.removeChannel(channel) }
+  }, [students, selectedStudent])
+
   async function loadData() {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) { router.push('/login'); return }

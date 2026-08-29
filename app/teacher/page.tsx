@@ -56,6 +56,23 @@ export default function TeacherPage() {
 
   useEffect(() => { loadData() }, [])
 
+  // Живые обновления: новые ответы на ДЗ и работы на турнир появляются
+  // сразу, без ручного обновления страницы. RLS сама отфильтрует события
+  // до тех, что реально принадлежат заданиям/турнирам этого учителя.
+  useEffect(() => {
+    const channel = supabase
+      .channel('teacher-live-updates')
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'homework_submissions' }, payload => {
+        setSubmissions(prev => prev.some(s => s.id === (payload.new as Submission).id) ? prev : [payload.new as Submission, ...prev])
+      })
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'tournament_submissions' }, payload => {
+        setTournamentSubs(prev => prev.some(s => s.id === (payload.new as TournamentSub).id) ? prev : [payload.new as TournamentSub, ...prev])
+      })
+      .subscribe()
+
+    return () => { supabase.removeChannel(channel) }
+  }, [])
+
   async function loadData() {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) { router.push('/login'); return }
