@@ -1,6 +1,5 @@
 'use client'
 import { useEffect, useState, useRef } from 'react'
-import { supabase } from '../../lib/supabase'
 
 
 type Class = { id: number; name: string; program: string; total_topics: number }
@@ -15,7 +14,7 @@ function fileIcon(name: string): string {
   return '📄'
 }
 
-function MediaUploader({ existing, onDone }: { existing: MediaItem[]; onDone: (items: MediaItem[]) => void }) {
+function MediaUploader({ existing, onDone, adminToken }: { existing: MediaItem[]; onDone: (items: MediaItem[]) => void; adminToken: string }) {
   const [items, setItems] = useState<MediaItem[]>(existing || [])
   const [uploading, setUploading] = useState(false)
   const [msg, setMsg] = useState('')
@@ -28,17 +27,16 @@ function MediaUploader({ existing, onDone }: { existing: MediaItem[]; onDone: (i
     setMsg('Загружаю...')
     const newItems: MediaItem[] = []
     for (const file of files) {
-      const ext = file.name.split('.').pop()
-      const path = `topics/${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`
-      const { error } = await supabase.storage.from('topic-media').upload(path, file)
-      if (error) { setMsg('Ошибка: ' + error.message); continue }
-      const { data: urlData } = supabase.storage.from('topic-media').getPublicUrl(path)
-      const type: MediaItem['type'] = file.type.startsWith('video')
-        ? 'video'
-        : file.type.startsWith('image')
-        ? 'image'
-        : 'file'
-      newItems.push({ url: urlData.publicUrl, type, name: file.name })
+      const formData = new FormData()
+      formData.append('file', file)
+      const res = await fetch('/api/admin/upload', {
+        method: 'POST',
+        headers: { 'x-admin-token': adminToken },
+        body: formData,
+      })
+      const data = await res.json().catch(() => null)
+      if (!res.ok || !data) { setMsg('Ошибка: ' + (data?.error || 'не удалось загрузить')); continue }
+      newItems.push({ url: data.url, type: data.type, name: data.name })
     }
     const updated = [...items, ...newItems]
     setItems(updated)
@@ -111,6 +109,7 @@ function MediaUploader({ existing, onDone }: { existing: MediaItem[]; onDone: (i
 
 export default function AdminPage() {
   const [auth, setAuth] = useState(false)
+  const [adminToken, setAdminToken] = useState('')
   const [passwordInput, setPasswordInput] = useState('')
   const [authError, setAuthError] = useState('')
   const [classes, setClasses] = useState<Class[]>([])
@@ -130,7 +129,7 @@ export default function AdminPage() {
     // Проверяем токен на сервере
     fetch('/api/admin-auth', { headers: { 'x-admin-token': token } })
       .then(r => r.json())
-      .then(d => { if (d.valid) setAuth(true) })
+      .then(d => { if (d.valid) { setAdminToken(token); setAuth(true) } })
       .catch(() => sessionStorage.removeItem('admin_token'))
   }, [])
 
@@ -143,6 +142,7 @@ export default function AdminPage() {
     if (res.ok) {
       const { token } = await res.json()
       sessionStorage.setItem('admin_token', token) // Храним настоящий токен
+      setAdminToken(token)
       setAuth(true)
       setAuthError('')
     } else if (res.status === 429) {
@@ -156,6 +156,7 @@ export default function AdminPage() {
 
   function handleLogout() {
     sessionStorage.removeItem('admin_token')
+    setAdminToken('')
     setAuth(false)
   }
 
@@ -163,22 +164,34 @@ export default function AdminPage() {
   useEffect(() => { if (auth) loadData() }, [auth])
 
   async function loadData() {
-    const { data: c } = await supabase.from('classes').select('*')
-    const { data: t } = await supabase.from('topics').select('*')
-    if (c) setClasses(c)
-    if (t) setTopics(t)
+    const [cRes, tRes] = await Promise.all([
+      fetch('/api/admin/classes', { headers: { 'x-admin-token': adminToken } }),
+      fetch('/api/admin/topics', { headers: { 'x-admin-token': adminToken } }),
+    ])
+    const c = await cRes.json().catch(() => null)
+    const t = await tRes.json().catch(() => null)
+    if (c?.classes) setClasses(c.classes)
+    if (t?.topics) setTopics(t.topics)
   }
 
   async function addClass() {
     if (!newClass.name) return
-    await supabase.from('classes').insert(newClass)
+    await fetch('/api/admin/classes', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-admin-token': adminToken },
+      body: JSON.stringify(newClass),
+    })
     setNewClass({ name: '', program: '', total_topics: 0 })
     loadData()
   }
 
   async function addTopic() {
     if (!newTopic.name) return
-    await supabase.from('topics').insert({ ...newTopic, media: newMedia })
+    await fetch('/api/admin/topics', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-admin-token': adminToken },
+      body: JSON.stringify({ ...newTopic, media: newMedia }),
+    })
     setNewTopic(emptyTopic)
     setNewMedia([])
     loadData()
@@ -186,26 +199,34 @@ export default function AdminPage() {
 
   async function deleteClass(id: number) {
     if (!confirm('Удалить класс?')) return
-    await supabase.from('classes').delete().eq('id', id)
+    await fetch(`/api/admin/classes?id=${id}`, { method: 'DELETE', headers: { 'x-admin-token': adminToken } })
     loadData()
   }
 
   async function deleteTopic(id: number) {
     if (!confirm('Удалить тему?')) return
-    await supabase.from('topics').delete().eq('id', id)
+    await fetch(`/api/admin/topics?id=${id}`, { method: 'DELETE', headers: { 'x-admin-token': adminToken } })
     loadData()
   }
 
   async function saveEditClass() {
     if (!editClass) return
-    await supabase.from('classes').update(editClass).eq('id', editClass.id)
+    await fetch('/api/admin/classes', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json', 'x-admin-token': adminToken },
+      body: JSON.stringify(editClass),
+    })
     setEditClass(null)
     loadData()
   }
 
   async function saveEditTopic() {
     if (!editTopic) return
-    await supabase.from('topics').update({ ...editTopic, media: editMedia }).eq('id', editTopic.id)
+    await fetch('/api/admin/topics', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json', 'x-admin-token': adminToken },
+      body: JSON.stringify({ ...editTopic, media: editMedia }),
+    })
     setEditTopic(null)
     loadData()
   }
@@ -320,7 +341,7 @@ export default function AdminPage() {
               <span style={label}>🌐 Ссылка на ресурс</span>
               <input style={input} placeholder="https://..." value={newTopic.resource} onChange={e => setNewTopic({ ...newTopic, resource: e.target.value })} />
               <span style={label}>🖼 Фото и видео</span>
-              <MediaUploader existing={newMedia} onDone={setNewMedia} />
+              <MediaUploader existing={newMedia} onDone={setNewMedia} adminToken={adminToken} />
               <button onClick={addTopic} style={{ ...btn('#43e97b'), marginTop: 16 }}>✅ Добавить тему</button>
             </div>
 
@@ -345,7 +366,7 @@ export default function AdminPage() {
                     <span style={label}>🌐 Ссылка на ресурс</span>
                     <input style={input} value={editTopic.resource || ''} onChange={e => setEditTopic({ ...editTopic, resource: e.target.value })} />
                     <span style={label}>🖼 Фото и видео</span>
-                    <MediaUploader existing={editMedia} onDone={setEditMedia} />
+                    <MediaUploader existing={editMedia} onDone={setEditMedia} adminToken={adminToken} />
                     <div style={{ display: 'flex', gap: 8, marginTop: 16 }}>
                       <button onClick={saveEditTopic} style={btn('#43e97b')}>💾 Сохранить</button>
                       <button onClick={() => setEditTopic(null)} style={btn('#555')}>Отмена</button>
