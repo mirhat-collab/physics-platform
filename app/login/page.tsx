@@ -93,7 +93,12 @@ export default function LoginPage() {
             grade: actualGrade,
           }).eq('id', user.id)
 
-          router.push(profile.role === 'teacher' ? '/teacher' : profile.role === 'parent' ? '/parent' : '/dashboard')
+          router.push(
+            profile.role === 'admin' ? '/admin'
+            : profile.role === 'teacher' ? '/teacher'
+            : profile.role === 'parent' ? '/parent'
+            : '/dashboard'
+          )
         } else {
           router.push('/dashboard')
         }

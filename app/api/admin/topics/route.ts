@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createSupabaseAdmin } from '@/lib/supabase-admin'
-import { requireAdmin } from '@/lib/admin-token'
+import { requireAdmin } from '@/lib/admin-auth'
 import { extractStoragePath } from '@/lib/file-protect'
 
 const BUCKET = 'topic-media'
 
-export async function GET(req: NextRequest) {
-  const denied = requireAdmin(req)
+export async function GET() {
+  const denied = await requireAdmin()
   if (denied) return denied
   try {
     const admin = createSupabaseAdmin()
@@ -20,7 +20,7 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
-  const denied = requireAdmin(req)
+  const denied = await requireAdmin()
   if (denied) return denied
   try {
     const body = await req.json().catch(() => null)
@@ -36,7 +36,7 @@ export async function POST(req: NextRequest) {
 }
 
 export async function PATCH(req: NextRequest) {
-  const denied = requireAdmin(req)
+  const denied = await requireAdmin()
   if (denied) return denied
   try {
     const body = await req.json().catch(() => null)
@@ -55,7 +55,7 @@ export async function PATCH(req: NextRequest) {
 }
 
 export async function DELETE(req: NextRequest) {
-  const denied = requireAdmin(req)
+  const denied = await requireAdmin()
   if (denied) return denied
   try {
     const id = new URL(req.url).searchParams.get('id')

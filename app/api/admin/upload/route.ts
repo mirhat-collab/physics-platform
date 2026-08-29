@@ -1,13 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createSupabaseAdmin } from '@/lib/supabase-admin'
-import { requireAdmin } from '@/lib/admin-token'
+import { requireAdmin } from '@/lib/admin-auth'
 
 const BUCKET = 'topic-media'
 
 // Загрузка файлов темы только отсюда, через service role — у бакета
 // topic-media больше нет публичной политики на запись напрямую с anon-ключа.
 export async function POST(req: NextRequest) {
-  const denied = requireAdmin(req)
+  const denied = await requireAdmin()
   if (denied) return denied
   try {
     const form = await req.formData().catch(() => null)
@@ -35,7 +35,7 @@ export async function POST(req: NextRequest) {
 // Удаление файла из бакета, когда его убирают из темы в админке —
 // иначе объекты в Storage копятся без дела навсегда.
 export async function DELETE(req: NextRequest) {
-  const denied = requireAdmin(req)
+  const denied = await requireAdmin()
   if (denied) return denied
   try {
     const path = new URL(req.url).searchParams.get('path')
