@@ -22,10 +22,13 @@ export default function ClassPage() {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) { router.push('/login'); return }
 
+    // RLS прячет закрытые классы от учеников без доступа — cls будет null,
+    // если класс закрыт и ученику доступ не выдан.
     const { data: cls } = await supabase.from('classes').select('*').eq('id', id).single()
-    if (cls) setClassData(cls)
+    if (!cls) { setClassData(null); setLoading(false); return }
+    setClassData(cls)
 
-    const { data: t } = await supabase.from('topics').select('*').eq('grade', cls?.name)
+    const { data: t } = await supabase.from('topics').select('*').eq('grade', cls.name)
     if (t) setTopics(t)
 
     const { data: prog } = await supabase
@@ -39,6 +42,17 @@ export default function ClassPage() {
   if (loading) return (
     <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
       <div style={{ color: '#fff', fontSize: 18 }}>Загрузка...</div>
+    </div>
+  )
+
+  if (!classData) return (
+    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
+      <div style={{ background: '#1a1a2e', borderRadius: 24, padding: 48, width: '100%', maxWidth: 400, border: '1px solid #2a2a3e', textAlign: 'center' }}>
+        <div style={{ fontSize: 48, marginBottom: 16 }}>🔒</div>
+        <h1 style={{ color: '#fff', fontSize: '1.4rem', fontWeight: 800, marginBottom: 8 }}>Класс закрыт</h1>
+        <p style={{ color: '#666', marginBottom: 32, fontSize: 14 }}>У тебя нет доступа к этому классу. Обратись к администратору.</p>
+        <Link href="/classes" style={{ display: 'inline-block', width: '100%', boxSizing: 'border-box', padding: '14px', borderRadius: 12, background: 'linear-gradient(135deg, #667eea, #764ba2)', color: '#fff', fontSize: 16, fontWeight: 700, textDecoration: 'none' }}>← Все классы</Link>
+      </div>
     </div>
   )
 
