@@ -47,12 +47,12 @@ export default function ClassPage() {
   )
 
   if (!classData) return (
-    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
-      <div style={{ background: '#1a1a2e', borderRadius: 24, padding: 48, width: '100%', maxWidth: 400, border: '1px solid #2a2a3e', textAlign: 'center' }}>
+    <div className="animate-fade-in-up" style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
+      <div className="glass-card" style={{ padding: 48, width: '100%', maxWidth: 400, textAlign: 'center' }}>
         <div style={{ fontSize: 48, marginBottom: 16 }}>🔒</div>
         <h1 style={{ color: '#fff', fontSize: '1.4rem', fontWeight: 800, marginBottom: 8 }}>Класс закрыт</h1>
-        <p style={{ color: '#666', marginBottom: 32, fontSize: 14 }}>У тебя нет доступа к этому классу. Обратись к администратору.</p>
-        <Link href="/classes" style={{ display: 'inline-block', width: '100%', boxSizing: 'border-box', padding: '14px', borderRadius: 12, background: 'linear-gradient(135deg, #667eea, #764ba2)', color: '#fff', fontSize: 16, fontWeight: 700, textDecoration: 'none' }}>← Все классы</Link>
+        <p style={{ color: 'var(--c-text-dim)', marginBottom: 32, fontSize: 14 }}>У тебя нет доступа к этому классу. Обратись к администратору.</p>
+        <Link href="/classes" style={{ display: 'inline-block', width: '100%', boxSizing: 'border-box', padding: '14px', borderRadius: 12, background: 'var(--gradient-brand)', color: '#fff', fontSize: 16, fontWeight: 700, textDecoration: 'none' }}>← Все классы</Link>
       </div>
     </div>
   )
@@ -60,15 +60,16 @@ export default function ClassPage() {
   const percent = topics.length > 0 ? Math.round((completed.filter(c => topics.find(t => t.id === c)).length / topics.length) * 100) : 0
 
   return (
-    <div style={{ minHeight: '100vh', color: '#fff', padding: '2rem' }}>
+    <div className="animate-fade-in-up" style={{ minHeight: '100vh', color: '#fff', padding: '2rem' }}>
       <div style={{ maxWidth: 800, margin: '0 auto' }}>
 
-        <Link href="/classes" style={{ color: '#666', textDecoration: 'none', fontSize: 14, display: 'inline-flex', alignItems: 'center', gap: 6, marginBottom: 32 }}>
+        <Link href="/classes" style={{ color: 'var(--c-text-dim)', textDecoration: 'none', fontSize: 14, display: 'inline-flex', alignItems: 'center', gap: 6, marginBottom: 32 }}>
           ← Все классы
         </Link>
 
         {/* Шапка класса */}
-        <div style={{ background: 'linear-gradient(135deg, #667eea, #764ba2)', borderRadius: 24, padding: '32px 36px', marginBottom: 28 }}>
+        <div className="glass-card" style={{ position: 'relative', overflow: 'hidden', padding: '32px 36px', marginBottom: 28 }}>
+          <div aria-hidden style={{ position: 'absolute', inset: 0, background: 'var(--gradient-brand)', opacity: 0.85, zIndex: -1 }} />
           <div style={{ fontSize: 13, opacity: 0.8, marginBottom: 8 }}>{classData?.program}</div>
           <h1 style={{ fontSize: '2.2rem', fontWeight: 800, margin: '0 0 20px' }}>{classData?.name}</h1>
 
@@ -87,10 +88,10 @@ export default function ClassPage() {
         <h2 style={{ fontSize: '1.2rem', fontWeight: 700, marginBottom: 16 }}>📚 Темы</h2>
 
         {topics.length === 0 && (
-          <div style={{ color: '#888', textAlign: 'center', padding: 40 }}>Темы ещё не добавлены</div>
+          <div className="glass-card" style={{ color: 'var(--c-text-dim)', textAlign: 'center', padding: 40 }}>Темы ещё не добавлены</div>
         )}
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+        <div className="stagger-children" style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
           {topics.map((topic, index) => {
             const isDone = completed.includes(topic.id)
             const isHov = hovered === topic.id
@@ -99,23 +100,24 @@ export default function ClassPage() {
                 <div
                   onMouseEnter={() => setHovered(topic.id)}
                   onMouseLeave={() => setHovered(null)}
+                  className="glass-card"
                   style={{
-                    background: isHov ? '#20203e' : '#1a1a2e',
-                    border: `1px solid ${isDone ? '#10b981' : '#2a2a3e'}`,
+                    borderColor: isDone ? 'rgba(16,185,129,0.4)' : 'var(--c-border-soft)',
                     borderLeft: `4px solid ${isDone ? '#10b981' : '#667eea'}`,
                     borderRadius: 16, padding: '18px 22px',
                     cursor: 'pointer', transition: 'all 0.2s ease',
                     display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                    background: isHov ? 'rgba(32,32,62,0.7)' : undefined,
                     transform: isHov ? 'translateX(4px)' : 'none',
                   }}
                 >
                   <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
                     <div style={{
                       width: 32, height: 32, borderRadius: '50%',
-                      background: isDone ? '#10b981' : '#2a2a3e',
+                      background: isDone ? '#10b981' : 'rgba(255,255,255,0.06)',
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
                       fontSize: 14, fontWeight: 700, flexShrink: 0,
-                      color: isDone ? '#fff' : '#666',
+                      color: isDone ? '#fff' : 'var(--c-text-dim)',
                     }}>
                       {isDone ? '✓' : index + 1}
                     </div>
@@ -123,12 +125,12 @@ export default function ClassPage() {
                       <div style={{ fontWeight: 600, fontSize: 15, color: isDone ? '#4ade80' : '#fff' }}>
                         {topic.name}
                       </div>
-                      <div style={{ color: '#666', fontSize: 12, marginTop: 3 }}>
+                      <div style={{ color: 'var(--c-text-faint)', fontSize: 12, marginTop: 3 }}>
                         {topic.theory?.slice(0, 60)}...
                       </div>
                     </div>
                   </div>
-                  <div style={{ color: isDone ? '#10b981' : '#444', fontSize: 20, flexShrink: 0 }}>
+                  <div style={{ color: isDone ? '#10b981' : 'var(--c-text-faint)', fontSize: 20, flexShrink: 0 }}>
                     {isDone ? '✅' : '→'}
                   </div>
                 </div>

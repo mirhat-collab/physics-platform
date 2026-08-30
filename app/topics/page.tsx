@@ -103,41 +103,41 @@ export default function TopicsPage() {
     <main style={{ minHeight: '100vh', color: '#fff' }}>
 
       {/* Шапка */}
-      <div className="animate-fade-in-up" style={{ background: 'linear-gradient(135deg, #1a1a3e 0%, #0f0f1a 100%)', borderBottom: '1px solid #2a2a3e', padding: '2rem 2rem 1.5rem' }}>
+      <div className="animate-fade-in-up glass-card" style={{ borderRadius: 0, borderTop: 'none', borderLeft: 'none', borderRight: 'none', padding: '2rem 2rem 1.5rem' }}>
         <div style={{ maxWidth: 900, margin: '0 auto' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 8 }}>
-            <div style={{ width: 48, height: 48, borderRadius: 14, background: 'linear-gradient(135deg, #667eea, #764ba2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24 }}>
+            <div style={{ width: 48, height: 48, borderRadius: 14, background: 'var(--gradient-brand)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24 }}>
               📚
             </div>
             <div>
               <h1 style={{ fontSize: '1.9rem', fontWeight: 800, margin: 0 }}>Темы</h1>
-              <p style={{ color: '#888', margin: 0, fontSize: 14 }}>Выбери тему и начни изучать</p>
+              <p style={{ color: 'var(--c-text-dim)', margin: 0, fontSize: 14 }}>Выбери тему и начни изучать</p>
             </div>
           </div>
 
           {/* Статистика */}
           <div style={{ display: 'flex', gap: 12, marginTop: 16, flexWrap: 'wrap' }}>
-            <div style={{ background: 'rgba(102,126,234,0.1)', border: '1px solid rgba(102,126,234,0.2)', borderRadius: 10, padding: '8px 16px', fontSize: 13 }}>
+            <div className="pill" style={{ background: 'rgba(102,126,234,0.1)', border: '1px solid rgba(102,126,234,0.2)', padding: '8px 16px' }}>
               <span style={{ color: '#a78bfa', fontWeight: 700 }}>{topics.length}</span>
-              <span style={{ color: '#888', marginLeft: 6 }}>тем всего</span>
+              <span style={{ color: 'var(--c-text-dim)' }}>тем всего</span>
             </div>
-            <div style={{ background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.2)', borderRadius: 10, padding: '8px 16px', fontSize: 13 }}>
+            <div className="pill" style={{ background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.2)', padding: '8px 16px' }}>
               <span style={{ color: '#10b981', fontWeight: 700 }}>{completedIds.size}</span>
-              <span style={{ color: '#888', marginLeft: 6 }}>изучено</span>
+              <span style={{ color: 'var(--c-text-dim)' }}>изучено</span>
             </div>
-            <div style={{ background: 'rgba(245,158,11,0.1)', border: '1px solid rgba(245,158,11,0.2)', borderRadius: 10, padding: '8px 16px', fontSize: 13 }}>
+            <div className="pill" style={{ background: 'rgba(245,158,11,0.1)', border: '1px solid rgba(245,158,11,0.2)', padding: '8px 16px' }}>
               <span style={{ color: '#f59e0b', fontWeight: 700 }}>{grades.length - 1}</span>
-              <span style={{ color: '#888', marginLeft: 6 }}>классов</span>
+              <span style={{ color: 'var(--c-text-dim)' }}>классов</span>
             </div>
           </div>
 
           {/* Прогресс-бар */}
-          <div style={{ marginTop: 16, background: '#1a1a2e', borderRadius: 12, padding: '12px 16px', border: '1px solid #2a2a3e' }}>
+          <div className="stat-tile" style={{ marginTop: 16, textAlign: 'left', padding: '12px 16px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, marginBottom: 8 }}>
-              <span style={{ color: '#888' }}>Твой прогресс</span>
+              <span style={{ color: 'var(--c-text-dim)' }}>Твой прогресс</span>
               <span style={{ color: '#a78bfa', fontWeight: 700 }}>{completedIds.size} / {topics.length} тем ({progressPercent}%)</span>
             </div>
-            <div style={{ background: '#0f0f1a', borderRadius: 999, height: 8 }}>
+            <div style={{ background: 'rgba(0,0,0,0.3)', borderRadius: 999, height: 8 }}>
               <div style={{
                 height: '100%', width: `${progressPercent}%`,
                 background: 'linear-gradient(90deg, #667eea, #10b981)',
@@ -148,15 +148,15 @@ export default function TopicsPage() {
 
           {/* Поиск */}
           <div style={{ marginTop: 12, position: 'relative' }}>
-            <span style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', fontSize: 16, color: '#555' }}>🔍</span>
+            <span style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', fontSize: 16, color: 'var(--c-text-faint)' }}>🔍</span>
             <input
               value={search}
               onChange={e => setSearch(e.target.value)}
               placeholder="Поиск темы..."
               style={{
                 width: '100%', padding: '10px 16px 10px 40px',
-                borderRadius: 12, border: '1px solid #2a2a3e',
-                background: '#1a1a2e', color: '#fff', fontSize: 14,
+                borderRadius: 12, border: '1px solid var(--c-border-soft)',
+                background: 'rgba(255,255,255,0.04)', color: '#fff', fontSize: 14,
                 outline: 'none', boxSizing: 'border-box',
               }}
             />
@@ -166,9 +166,9 @@ export default function TopicsPage() {
           <div style={{ display: 'flex', gap: 8, marginTop: 12, flexWrap: 'wrap' }}>
             {grades.map(g => (
               <button key={g} onClick={() => setGradeFilter(g)} style={{
-                padding: '6px 14px', borderRadius: 999, border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 600, transition: 'all 0.2s',
-                background: gradeFilter === g ? (gradeColors[g] || '#667eea') : '#1a1a2e',
-                color: gradeFilter === g ? '#fff' : '#888',
+                padding: '6px 14px', borderRadius: 999, border: '1px solid transparent', cursor: 'pointer', fontSize: 13, fontWeight: 600, transition: 'all 0.2s',
+                background: gradeFilter === g ? (gradeColors[g] || '#667eea') : 'rgba(255,255,255,0.04)',
+                color: gradeFilter === g ? '#fff' : 'var(--c-text-dim)',
                 boxShadow: gradeFilter === g ? `0 0 12px ${gradeColors[g] || '#667eea'}44` : 'none',
               }}>
                 {g === 'all' ? '✦ Все' : `${g} класс`}
@@ -187,7 +187,7 @@ export default function TopicsPage() {
               <button key={key} onClick={() => setStatusFilter(key as typeof statusFilter)} style={{
                 padding: '6px 14px', borderRadius: 999, cursor: 'pointer', fontSize: 12, fontWeight: 600, transition: 'all 0.2s',
                 background: statusFilter === key ? '#2a2a4e' : 'transparent',
-                color: statusFilter === key ? '#a78bfa' : '#555',
+                color: statusFilter === key ? '#a78bfa' : 'var(--c-text-faint)',
                 border: statusFilter === key ? '1px solid #667eea55' : '1px solid transparent',
               }}>
                 {label}
@@ -200,11 +200,11 @@ export default function TopicsPage() {
       {/* Список тем */}
       <div style={{ maxWidth: 900, margin: '0 auto', padding: '1.5rem 2rem' }}>
         {filtered.length === 0 && (
-          <div style={{ textAlign: 'center', color: '#555', padding: '60px 0', fontSize: 15 }}>
+          <div style={{ textAlign: 'center', color: 'var(--c-text-faint)', padding: '60px 0', fontSize: 15 }}>
             {search ? `😕 Ничего не найдено по запросу "${search}"` : statusFilter === 'completed' ? '😅 Ты ещё не изучил ни одной темы' : statusFilter === 'bookmarked' ? '🔖 Нет сохранённых тем — нажми 📌 на странице темы' : '😅 Нет недавно открытых тем'}
           </div>
         )}
-        <div className="stagger-children" style={{ display: 'grid', gap: 12 }}>
+        <div className="stagger-children" style={{ display: 'grid', gap: 10 }}>
           {filtered.map((topic) => {
             const grade = topic.grade.replace('th Grade', '')
             const color = gradeColors[grade] || '#667eea'
@@ -223,13 +223,13 @@ export default function TopicsPage() {
                 <div
                   onMouseEnter={() => setHovered(topic.id)}
                   onMouseLeave={() => setHovered(null)}
+                  className="glass-card"
                   style={{
-                    background: isHovered ? '#20203e' : '#1a1a2e',
-                    border: '1px solid #2a2a3e',
                     borderLeft: `4px solid ${isDone ? '#10b981' : color}`,
                     borderRadius: 16, padding: '18px 22px',
                     cursor: 'pointer', transition: 'all 0.2s ease',
                     display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 16,
+                    background: isHovered ? 'rgba(32,32,62,0.7)' : undefined,
                     transform: isHovered ? 'translateX(6px)' : 'translateX(0)',
                     boxShadow: isHovered ? `0 0 20px ${color}22` : 'none',
                   }}
@@ -246,9 +246,9 @@ export default function TopicsPage() {
                         </span>
                       )}
                     </div>
-                    <p style={{ margin: 0, color: '#666', fontSize: 13 }}>{topic.theory?.slice(0, 100)}...</p>
+                    <p style={{ margin: 0, color: 'var(--c-text-faint)', fontSize: 13 }}>{topic.theory?.slice(0, 100)}...</p>
                   </div>
-                  <div style={{ color: isHovered ? '#fff' : '#444', fontSize: 20, flexShrink: 0, transition: 'color 0.2s' }}>→</div>
+                  <div style={{ color: isHovered ? '#fff' : 'var(--c-text-faint)', fontSize: 20, flexShrink: 0, transition: 'color 0.2s' }}>→</div>
                 </div>
               </Link>
             )

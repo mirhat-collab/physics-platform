@@ -232,11 +232,11 @@ export default function TopicPage() {
     <div style={{ minHeight: '100vh', color: '#fff', padding: '2rem' }}>
       <div style={{ maxWidth: 800, margin: '0 auto' }}>
 
-        <Link href="/topics" style={{ color: '#666', textDecoration: 'none', fontSize: 14, display: 'inline-flex', alignItems: 'center', gap: 6, marginBottom: 32 }}>
+        <Link href="/topics" style={{ color: 'var(--c-text-dim)', textDecoration: 'none', fontSize: 14, display: 'inline-flex', alignItems: 'center', gap: 6, marginBottom: 32 }}>
           ← Все темы
         </Link>
 
-        <div style={{ background: 'linear-gradient(135deg, #1a1a2e, #16213e)', border: '1px solid #2a2a3e', borderRadius: 24, padding: '32px 36px', marginBottom: 24 }}>
+        <div className="glass-card" style={{ padding: '32px 36px', marginBottom: 24 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 16 }}>
             <div style={{ flex: 1 }}>
               {topic.grade && (
@@ -248,7 +248,7 @@ export default function TopicPage() {
             </div>
             <button onClick={toggleBookmark} style={{
               background: bookmarked ? 'rgba(245,158,11,0.15)' : 'rgba(255,255,255,0.05)',
-              border: bookmarked ? '1px solid rgba(245,158,11,0.4)' : '1px solid #2a2a3e',
+              border: bookmarked ? '1px solid rgba(245,158,11,0.4)' : '1px solid var(--c-border-soft)',
               borderRadius: 12, padding: '10px 14px', cursor: 'pointer',
               fontSize: 20, transition: 'all 0.2s', flexShrink: 0
             }} title={bookmarked ? 'Убрать из закладок' : 'Добавить в закладки'}>
@@ -376,7 +376,7 @@ export default function TopicPage() {
 
         {/* Квиз */}
         {showQuiz && (
-          <div style={{ background: '#1a1a2e', borderRadius: 20, padding: '28px', border: '1px solid #2a2a3e', marginBottom: 40 }}>
+          <div className="glass-card" style={{ padding: '28px', marginBottom: 40 }}>
             <h2 style={{ margin: '0 0 20px', fontSize: '1.2rem', fontWeight: 800 }}>🧠 Мини-тест по теме</h2>
             {quizLoading && (
               <div style={{ textAlign: 'center', color: '#888', padding: '40px 0' }}>
@@ -452,7 +452,7 @@ export default function TopicPage() {
         )}
 
         {/* Комментарии */}
-        <div style={{ background: '#1a1a2e', borderRadius: 20, padding: '24px', border: '1px solid #2a2a3e', marginBottom: 40 }}>
+        <div className="glass-card" style={{ padding: '24px', marginBottom: 40 }}>
           <h2 style={{ margin: '0 0 20px', fontSize: '1.1rem', fontWeight: 800 }}>💬 Вопросы и комментарии</h2>
 
           {/* Форма отправки */}
@@ -522,7 +522,7 @@ function Section({ icon, title, color, bg, children }: {
   children: React.ReactNode
 }) {
   return (
-    <div style={{ background: bg, border: '1px solid #2a2a3e', borderLeft: `4px solid ${color}`, borderRadius: 20, padding: '24px 28px', marginBottom: 18 }}>
+    <div className="glass-card" style={{ background: bg, borderLeft: `4px solid ${color}`, padding: '24px 28px', marginBottom: 18 }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
         <span style={{ fontSize: 22 }}>{icon}</span>
         <h2 style={{ margin: 0, fontSize: '1rem', fontWeight: 700, color: color }}>{title}</h2>
