@@ -131,7 +131,7 @@ export default function AdminPage() {
   const [classes, setClasses] = useState<Class[]>([])
   const [topics, setTopics] = useState<Topic[]>([])
   const [tab, setTab] = useState<'classes' | 'topics'>('classes')
-  const [newClass, setNewClass] = useState({ name: '', program: '', total_topics: 0 })
+  const [newClass, setNewClass] = useState({ name: '', program: '' })
   const [accessClass, setAccessClass] = useState<Class | null>(null)
   const [accessGrants, setAccessGrants] = useState<AccessGrant[]>([])
   const [accessQuery, setAccessQuery] = useState('')
@@ -177,7 +177,7 @@ export default function AdminPage() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(newClass),
     })
-    setNewClass({ name: '', program: '', total_topics: 0 })
+    setNewClass({ name: '', program: '' })
     loadData()
   }
 
@@ -203,6 +203,12 @@ export default function AdminPage() {
     if (!confirm('Удалить тему?')) return
     await fetch(`/api/admin/topics?id=${id}`, { method: 'DELETE' })
     loadData()
+  }
+
+  // Реальное число тем считаем от данных topics — раньше показывали
+  // вручную вбитое classes.total_topics, которое расходилось с фактом.
+  function topicCount(gradeName: string) {
+    return topics.filter(t => t.grade === gradeName).length
   }
 
   async function openAccess(cls: Class) {
@@ -342,8 +348,6 @@ export default function AdminPage() {
               <input style={input} placeholder="Например: 10А" value={newClass.name} onChange={e => setNewClass({ ...newClass, name: e.target.value })} />
               <span style={label}>Программа</span>
               <input style={input} placeholder="Физика базовый уровень" value={newClass.program} onChange={e => setNewClass({ ...newClass, program: e.target.value })} />
-              <span style={label}>Количество тем</span>
-              <input style={input} type="number" placeholder="20" value={newClass.total_topics || ''} onChange={e => setNewClass({ ...newClass, total_topics: +e.target.value })} />
               <button onClick={addClass} style={btn('#43e97b')}>✅ Добавить класс</button>
             </div>
             <h2 style={{ marginBottom: 16 }}>📋 Все классы</h2>
@@ -355,8 +359,6 @@ export default function AdminPage() {
                     <input style={input} value={editClass.name} onChange={e => setEditClass({ ...editClass, name: e.target.value })} />
                     <span style={label}>Программа</span>
                     <input style={input} value={editClass.program} onChange={e => setEditClass({ ...editClass, program: e.target.value })} />
-                    <span style={label}>Количество тем</span>
-                    <input style={input} type="number" value={editClass.total_topics} onChange={e => setEditClass({ ...editClass, total_topics: +e.target.value })} />
                     <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
                       <button onClick={saveEditClass} style={btn('#43e97b')}>💾 Сохранить</button>
                       <button onClick={() => setEditClass(null)} style={btn('#555')}>Отмена</button>
@@ -373,7 +375,7 @@ export default function AdminPage() {
                           </span>
                         )}
                       </div>
-                      <div style={{ color: '#aaa', fontSize: 13, marginTop: 4 }}>{cls.program} · {cls.total_topics} тем</div>
+                      <div style={{ color: '#aaa', fontSize: 13, marginTop: 4 }}>{cls.program} · {topicCount(cls.name)} тем</div>
                     </div>
                     <div style={{ display: 'flex', gap: 8 }}>
                       <button onClick={() => toggleLock(cls)} style={btn(cls.is_locked ? '#43e97b' : '#555')}>

@@ -84,6 +84,7 @@ export default function TeacherPage() {
     if (allStudents) setStudents(allStudents)
 
     const { data: classes } = await supabase.from('classes').select('*')
+    const { data: topics } = await supabase.from('topics').select('id, grade')
     const { data: progress } = await supabase.from('progress').select('*').eq('status', 'completed')
     if (classes && allStudents && progress) {
       const stats: ClassStat[] = classes.map(cls => {
@@ -92,7 +93,8 @@ export default function TeacherPage() {
         const clsProgress = progress.filter(p => studentIds.includes(p.student))
         const uniqueTopics = new Set(clsProgress.map(p => p.topic))
         const avgXp = clsStudents.length > 0 ? Math.round(clsStudents.reduce((sum, s) => sum + s.total_xp, 0) / clsStudents.length) : 0
-        return { name: cls.name, students: clsStudents, avg_xp: avgXp, completed_topics: uniqueTopics.size, total_topics: cls.total_topics || 0 }
+        const totalTopics = topics ? topics.filter(t => t.grade === cls.name).length : 0
+        return { name: cls.name, students: clsStudents, avg_xp: avgXp, completed_topics: uniqueTopics.size, total_topics: totalTopics }
       })
       setClassStats(stats)
     }

@@ -12,6 +12,8 @@ const gradeColors: Record<string, { bg: string; accent: string; icon: string }> 
 export default async function ClassesPage() {
   const supabase = await createSupabaseServer()
   const { data: classes } = await supabase.from('classes').select('*')
+  const { data: topics } = await supabase.from('topics').select('grade')
+  const topicCount = (grade: string) => topics?.filter(t => t.grade === grade).length ?? 0
   return (
     <>
       <style>{`
@@ -44,7 +46,7 @@ export default async function ClassesPage() {
                     <div style={{ background: s.bg, padding: '1.5rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                       <span style={{ fontSize: '2.5rem' }}>{s.icon}</span>
                       <span style={{ background: 'rgba(255,255,255,0.2)', color: '#fff', borderRadius: 20, padding: '4px 12px', fontSize: '0.8rem', fontWeight: 600 }}>
-                        {cls.total_topics} тем
+                        {topicCount(cls.name)} тем
                       </span>
                     </div>
                     <div style={{ padding: '1.2rem' }}>
