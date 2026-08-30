@@ -7,7 +7,9 @@ import { extractStoragePath } from '@/lib/file-protect'
 const BUCKET = 'topic-media'
 
 
-type Class = { id: number; name: string; program: string; total_topics: number }
+type Class = { id: number; name: string; program: string; total_topics: number; is_locked?: boolean }
+type AccessGrant = { id: number; student_id: string; created_at: string; profiles: { id: string; email: string; full_name: string; display_name: string } | null }
+type StudentHit = { id: string; email: string; full_name: string; display_name: string }
 type MediaItem = { url: string; type: 'image' | 'video' | 'file'; name: string }
 type Topic = { id: number; name: string; theory: string; formulas: string; examples: string; tasks: string; resource: string; grade: string; media: MediaItem[] }
 
@@ -130,6 +132,10 @@ export default function AdminPage() {
   const [topics, setTopics] = useState<Topic[]>([])
   const [tab, setTab] = useState<'classes' | 'topics'>('classes')
   const [newClass, setNewClass] = useState({ name: '', program: '', total_topics: 0 })
+  const [accessClass, setAccessClass] = useState<Class | null>(null)
+  const [accessGrants, setAccessGrants] = useState<AccessGrant[]>([])
+  const [accessQuery, setAccessQuery] = useState('')
+  const [accessHits, setAccessHits] = useState<StudentHit[]>([])
   const emptyTopic = { name: '', theory: '', formulas: '', examples: '', tasks: '', resource: '', grade: '', media: [] as MediaItem[] }
   const [newTopic, setNewTopic] = useState(emptyTopic)
   const [newMedia, setNewMedia] = useState<MediaItem[]>([])
@@ -196,6 +202,58 @@ export default function AdminPage() {
   async function deleteTopic(id: number) {
     if (!confirm('Удалить тему?')) return
     await fetch(`/api/admin/topics?id=${id}`, { method: 'DELETE' })
+    loadData()
+  }
+
+  async function openAccess(cls: Class) {
+    setAccessClass(cls)
+    setAccessQuery('')
+    setAccessHits([])
+    await loadAccessGrants(cls.id)
+  }
+
+  async function loadAccessGrants(classId: number) {
+    const res = await fetch(`/api/admin/class-access?class_id=${classId}`)
+    const data = await res.json().catch(() => null)
+    setAccessGrants(data?.access || [])
+  }
+
+  async function searchStudents(q: string) {
+    setAccessQuery(q)
+    if (q.trim().length < 2) { setAccessHits([]); return }
+    const { data } = await supabase
+      .from('profiles')
+      .select('id, email, full_name, display_name')
+      .eq('role', 'student')
+      .or(`email.ilike.%${q}%,full_name.ilike.%${q}%,display_name.ilike.%${q}%`)
+      .limit(10)
+    setAccessHits(data || [])
+  }
+
+  async function grantAccess(studentId: string) {
+    if (!accessClass) return
+    await fetch('/api/admin/class-access', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ class_id: accessClass.id, student_id: studentId }),
+    })
+    setAccessQuery('')
+    setAccessHits([])
+    await loadAccessGrants(accessClass.id)
+  }
+
+  async function revokeAccess(grantId: number) {
+    if (!accessClass) return
+    await fetch(`/api/admin/class-access?id=${grantId}`, { method: 'DELETE' })
+    await loadAccessGrants(accessClass.id)
+  }
+
+  async function toggleLock(cls: Class) {
+    await fetch('/api/admin/classes', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id: cls.id, is_locked: !cls.is_locked }),
+    })
     loadData()
   }
 
@@ -301,12 +359,23 @@ export default function AdminPage() {
                     </div>
                   </div>
                 ) : (
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 10 }}>
                     <div>
-                      <div style={{ fontWeight: 700, fontSize: 17 }}>{cls.name}</div>
+                      <div style={{ fontWeight: 700, fontSize: 17, display: 'flex', alignItems: 'center', gap: 8 }}>
+                        {cls.name}
+                        {cls.is_locked && (
+                          <span style={{ background: '#f5576c22', color: '#f5576c', border: '1px solid #f5576c55', borderRadius: 20, padding: '2px 10px', fontSize: 11, fontWeight: 700 }}>
+                            🔒 закрыт
+                          </span>
+                        )}
+                      </div>
                       <div style={{ color: '#aaa', fontSize: 13, marginTop: 4 }}>{cls.program} · {cls.total_topics} тем</div>
                     </div>
                     <div style={{ display: 'flex', gap: 8 }}>
+                      <button onClick={() => toggleLock(cls)} style={btn(cls.is_locked ? '#43e97b' : '#555')}>
+                        {cls.is_locked ? '🔓 Открыть всем' : '🔒 Закрыть класс'}
+                      </button>
+                      <button onClick={() => openAccess(cls)} style={btn('#fbbf24')}>👤 Доступ</button>
                       <button onClick={() => setEditClass(cls)} style={btn('#667eea')}>✏️</button>
                       <button onClick={() => deleteClass(cls.id)} style={btn('#f5576c')}>🗑️</button>
                     </div>
@@ -398,6 +467,68 @@ export default function AdminPage() {
           </div>
         )}
       </div>
+
+      {accessClass && (
+        <div
+          onClick={() => setAccessClass(null)}
+          style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16, zIndex: 50 }}
+        >
+          <div
+            onClick={e => e.stopPropagation()}
+            style={{ background: '#1a1a2e', borderRadius: 20, padding: 28, width: '100%', maxWidth: 460, border: '1px solid #2a2a3e', maxHeight: '85vh', overflowY: 'auto' }}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 4 }}>
+              <h2 style={{ fontSize: '1.15rem', margin: 0 }}>👤 Доступ: {accessClass.name}</h2>
+              <button onClick={() => setAccessClass(null)} style={{ ...btn('#2a2a3e'), border: '1px solid #3a3a5e', padding: '4px 10px' }}>✕</button>
+            </div>
+            <p style={{ color: '#888', fontSize: 13, marginBottom: 20 }}>
+              {accessClass.is_locked
+                ? 'Класс закрыт для всех, кроме учеников из списка ниже.'
+                : 'Класс сейчас открыт для всех. Список ниже применится, если его закрыть.'}
+            </p>
+
+            <span style={label}>Добавить ученика (email или имя)</span>
+            <input
+              style={input}
+              placeholder="Начни вводить email или имя..."
+              value={accessQuery}
+              onChange={e => searchStudents(e.target.value)}
+            />
+            {accessHits.length > 0 && (
+              <div style={{ marginBottom: 10, border: '1px solid #2a2a3e', borderRadius: 10, overflow: 'hidden' }}>
+                {accessHits.map(s => (
+                  <div
+                    key={s.id}
+                    onClick={() => grantAccess(s.id)}
+                    style={{ padding: '10px 12px', cursor: 'pointer', borderBottom: '1px solid #2a2a3e', fontSize: 13 }}
+                    onMouseEnter={e => (e.currentTarget.style.background = '#20203e')}
+                    onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+                  >
+                    <div style={{ fontWeight: 600 }}>{s.display_name || s.full_name || 'Без имени'}</div>
+                    <div style={{ color: '#888' }}>{s.email}</div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            <h3 style={{ fontSize: 13, color: '#888', fontWeight: 600, letterSpacing: 0.5, marginTop: 20, marginBottom: 8 }}>
+              ОТКРЫТО ДЛЯ ({accessGrants.length})
+            </h3>
+            {accessGrants.length === 0 && (
+              <div style={{ color: '#666', fontSize: 13, padding: '8px 0' }}>Пока никто не добавлен</div>
+            )}
+            {accessGrants.map(g => (
+              <div key={g.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 0', borderBottom: '1px solid #2a2a3e' }}>
+                <div>
+                  <div style={{ fontWeight: 600, fontSize: 14 }}>{g.profiles?.display_name || g.profiles?.full_name || 'Без имени'}</div>
+                  <div style={{ color: '#888', fontSize: 12 }}>{g.profiles?.email}</div>
+                </div>
+                <button onClick={() => revokeAccess(g.id)} style={btn('#f5576c')}>🗑️</button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   )
 }
