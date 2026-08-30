@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
+import { gradeVariants } from '@/lib/grade-match'
 
 type Topic = { id: string; name: string; theory: string; grade: string }
 type ClassData = { id: string; name: string; program: string; total_topics: number }
@@ -28,7 +29,7 @@ export default function ClassPage() {
     if (!cls) { setClassData(null); setLoading(false); return }
     setClassData(cls)
 
-    const { data: t } = await supabase.from('topics').select('*').eq('grade', cls.name)
+    const { data: t } = await supabase.from('topics').select('*').in('grade', gradeVariants(cls.name))
     if (t) setTopics(t)
 
     const { data: prog } = await supabase

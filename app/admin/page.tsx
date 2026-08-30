@@ -3,6 +3,7 @@ import { useEffect, useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import { extractStoragePath } from '@/lib/file-protect'
+import { gradeVariants } from '@/lib/grade-match'
 
 const BUCKET = 'topic-media'
 
@@ -208,7 +209,8 @@ export default function AdminPage() {
   // Реальное число тем считаем от данных topics — раньше показывали
   // вручную вбитое classes.total_topics, которое расходилось с фактом.
   function topicCount(gradeName: string) {
-    return topics.filter(t => t.grade === gradeName).length
+    const variants = gradeVariants(gradeName)
+    return topics.filter(t => variants.includes(t.grade)).length
   }
 
   async function openAccess(cls: Class) {

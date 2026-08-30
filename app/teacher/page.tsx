@@ -2,6 +2,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
+import { gradeVariants } from '@/lib/grade-match'
 
 type Profile = { id: string; full_name: string; email: string; grade: string; total_xp: number; streak: number; role: string }
 type ClassStat = { name: string; students: Profile[]; avg_xp: number; completed_topics: number; total_topics: number }
@@ -93,7 +94,8 @@ export default function TeacherPage() {
         const clsProgress = progress.filter(p => studentIds.includes(p.student))
         const uniqueTopics = new Set(clsProgress.map(p => p.topic))
         const avgXp = clsStudents.length > 0 ? Math.round(clsStudents.reduce((sum, s) => sum + s.total_xp, 0) / clsStudents.length) : 0
-        const totalTopics = topics ? topics.filter(t => t.grade === cls.name).length : 0
+        const variants = gradeVariants(cls.name)
+        const totalTopics = topics ? topics.filter(t => variants.includes(t.grade)).length : 0
         return { name: cls.name, students: clsStudents, avg_xp: avgXp, completed_topics: uniqueTopics.size, total_topics: totalTopics }
       })
       setClassStats(stats)

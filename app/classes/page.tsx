@@ -1,4 +1,5 @@
 import { createSupabaseServer } from '../../lib/supabase-server'
+import { gradeVariants } from '../../lib/grade-match'
 import Link from 'next/link'
 
 const gradeColors: Record<string, { bg: string; accent: string; icon: string }> = {
@@ -13,7 +14,7 @@ export default async function ClassesPage() {
   const supabase = await createSupabaseServer()
   const { data: classes } = await supabase.from('classes').select('*')
   const { data: topics } = await supabase.from('topics').select('grade')
-  const topicCount = (grade: string) => topics?.filter(t => t.grade === grade).length ?? 0
+  const topicCount = (grade: string) => topics?.filter(t => gradeVariants(grade).includes(t.grade)).length ?? 0
   return (
     <>
       <style>{`
