@@ -5,6 +5,44 @@
   --shadow-md: 0 8px 24px rgba(0,0,0,0.28);
   --shadow-lg: 0 16px 48px rgba(0,0,0,0.36);
   --glow-primary: 0 0 24px rgba(102,126,234,0.35);
+
+  --c-border: #2a2a3e;
+  --c-border-soft: rgba(255,255,255,0.08);
+  --c-text-dim: #9797ae;
+  --c-text-faint: #5c5c74;
+  --gradient-brand: linear-gradient(135deg, #667eea, #764ba2);
+  --r-lg: 22px;
+  --r-md: 16px;
+}
+
+/* Стеклянная карточка поверх аврора-фона — единый стиль карточек по сайту */
+.glass-card {
+  background: rgba(20, 20, 38, 0.55);
+  border: 1px solid var(--c-border-soft);
+  border-radius: var(--r-lg);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+
+.stat-tile {
+  background: rgba(255,255,255,0.03);
+  border: 1px solid var(--c-border-soft);
+  border-radius: var(--r-md);
+  padding: 16px;
+  text-align: center;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 13px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
 }
 
 * {
