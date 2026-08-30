@@ -208,8 +208,7 @@ export default function AdminPage() {
   async function openAccess(cls: Class) {
     setAccessClass(cls)
     setAccessQuery('')
-    setAccessHits([])
-    await loadAccessGrants(cls.id)
+    await Promise.all([loadAccessGrants(cls.id), searchStudents('')])
   }
 
   async function loadAccessGrants(classId: number) {
@@ -220,13 +219,18 @@ export default function AdminPage() {
 
   async function searchStudents(q: string) {
     setAccessQuery(q)
-    if (q.trim().length < 2) { setAccessHits([]); return }
-    const { data } = await supabase
+    // Пустой запрос — показываем весь список учеников, чтобы не заставлять
+    // администратора вводить хотя бы 2 символа для поиска.
+    let query = supabase
       .from('profiles')
       .select('id, email, full_name, display_name')
       .eq('role', 'student')
-      .or(`email.ilike.%${q}%,full_name.ilike.%${q}%,display_name.ilike.%${q}%`)
-      .limit(10)
+      .order('display_name', { ascending: true })
+      .limit(50)
+    if (q.trim()) {
+      query = query.or(`email.ilike.%${q}%,full_name.ilike.%${q}%,display_name.ilike.%${q}%`)
+    }
+    const { data } = await query
     setAccessHits(data || [])
   }
 
@@ -490,7 +494,7 @@ export default function AdminPage() {
             <span style={label}>Добавить ученика (email или имя)</span>
             <input
               style={input}
-              placeholder="Начни вводить email или имя..."
+              placeholder="Все ученики ниже — начни вводить, чтобы отфильтровать"
               value={accessQuery}
               onChange={e => searchStudents(e.target.value)}
             />
