@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
+import { sortTopicsByNumber } from '@/lib/topic-order'
 
 type Topic = {
   id: string
@@ -42,7 +43,7 @@ export default function TopicsPage() {
 
   async function load() {
     const { data } = await supabase.from('topics').select('*')
-    if (data) setTopics(data)
+    if (data) setTopics(sortTopicsByNumber(data))
 
     const { data: { user } } = await supabase.auth.getUser()
     if (user) {
