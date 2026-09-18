@@ -23,7 +23,15 @@ function fileIcon(name: string): string {
 }
 
 function MediaUploader({ existing, onDone }: { existing: MediaItem[]; onDone: (items: MediaItem[]) => void }) {
-  const [items, setItems] = useState<MediaItem[]>(existing || [])
+  // Специально без своего state для items — используем existing напрямую.
+  // Раньше был внутренний items-state, инициализированный один раз из existing:
+  // после сохранения темы родитель сбрасывал existing в [], но здесь всё ещё
+  // висели миниатюры только что загруженных файлов (React не пересинхронизирует
+  // useState(existing) при смене пропа). Админ принимал их за "мусор от прошлой
+  // темы" и жал × — а это реально удаляло файл из Storage, хотя он уже был
+  // привязан к только что созданной теме. Контролируемый компонент убирает
+  // саму возможность такого рассинхрона.
+  const items = existing || []
   const [uploading, setUploading] = useState(false)
   const [msg, setMsg] = useState('')
   const fileRef = useRef<HTMLInputElement>(null)
@@ -51,9 +59,7 @@ function MediaUploader({ existing, onDone }: { existing: MediaItem[]; onDone: (i
       const type = file.type.startsWith('video') ? 'video' : file.type.startsWith('image') ? 'image' : 'file'
       newItems.push({ url: data.url, type, name: file.name })
     }
-    const updated = [...items, ...newItems]
-    setItems(updated)
-    onDone(updated)
+    onDone([...items, ...newItems])
     setUploading(false)
     setMsg(`✅ Загружено ${newItems.length} файл(ов)`)
     setTimeout(() => setMsg(''), 3000)
@@ -62,9 +68,7 @@ function MediaUploader({ existing, onDone }: { existing: MediaItem[]; onDone: (i
 
   async function remove(i: number) {
     const item = items[i]
-    const updated = items.filter((_, idx) => idx !== i)
-    setItems(updated)
-    onDone(updated)
+    onDone(items.filter((_, idx) => idx !== i))
 
     const path = extractStoragePath(item.url, BUCKET)
     if (!path) return
