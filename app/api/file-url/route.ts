@@ -3,9 +3,12 @@ import { createSupabaseServer } from '@/lib/supabase-server'
 import { createSupabaseAdmin } from '@/lib/supabase-admin'
 
 const BUCKET = 'topic-media'
-// Ссылка живёт недолго — открыть/долистать документ хватает, а "утекшая"
-// ссылка быстро перестаёт работать.
-const SIGNED_URL_TTL_SECONDS = 180
+// Для PDF/картинок/видео 180с хватало — страница берёт ссылку и сразу её использует.
+// Но презентации и Word-файлы открываются через внешний вьюер (view.officeapps.live.com):
+// он сам скачивает, конвертирует и кеширует документ, и на это у него нередко уходит
+// больше 3 минут, особенно для больших файлов. Ссылка протухала прямо во время этого
+// процесса, и вьюер показывал свою ошибку "не удалось открыть документ". Даём больше запаса.
+const SIGNED_URL_TTL_SECONDS = 900
 
 // Простой rate limit: не больше 60 запросов ссылок в час с одного IP
 const requests = new Map<string, { count: number; resetAt: number }>()

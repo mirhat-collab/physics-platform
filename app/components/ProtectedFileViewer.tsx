@@ -105,15 +105,19 @@ export default function ProtectedFileViewer({ fileUrl, fileName, watermarkLabel,
 }
 
 function Watermark({ label }: { label: string }) {
+  // Раньше это была плотная сетка 10x4 (40 плашек) с непрозрачностью 0.9 —
+  // держало от копирования, но забивало текст под собой и мешало читать.
+  // Реже и бледнее — метку по-прежнему видно на скриншоте, но она не спорит
+  // с содержимым документа.
   const tile = (
     <span style={{
-      display: 'inline-block', color: 'rgba(255,255,255,0.35)', fontSize: 13, fontWeight: 700,
-      transform: 'rotate(-28deg)', whiteSpace: 'nowrap',
+      display: 'inline-block', color: 'rgba(255,255,255,0.16)', fontSize: 12, fontWeight: 700,
+      transform: 'rotate(-24deg)', whiteSpace: 'nowrap',
     }}>
       {label}
     </span>
   )
-  const rows = Array.from({ length: 10 })
+  const rows = Array.from({ length: 4 })
   return (
     <div style={{
       position: 'absolute', inset: 0, pointerEvents: 'none', overflow: 'hidden',
@@ -121,8 +125,8 @@ function Watermark({ label }: { label: string }) {
       zIndex: 5,
     }}>
       {rows.map((_, i) => (
-        <div key={i} style={{ display: 'flex', gap: 60, opacity: 0.9 }}>
-          {Array.from({ length: 4 }).map((_, j) => <div key={j}>{tile}</div>)}
+        <div key={i} style={{ display: 'flex', gap: 140 }}>
+          {Array.from({ length: 2 }).map((_, j) => <div key={j}>{tile}</div>)}
         </div>
       ))}
     </div>
