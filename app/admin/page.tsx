@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import { extractStoragePath } from '@/lib/file-protect'
 import { gradeVariants } from '@/lib/grade-match'
+import { sortTopicsByNumber } from '@/lib/topic-order'
 
 const BUCKET = 'topic-media'
 
@@ -172,7 +173,7 @@ export default function AdminPage() {
     const c = await cRes.json().catch(() => null)
     const t = await tRes.json().catch(() => null)
     if (c?.classes) setClasses(c.classes)
-    if (t?.topics) setTopics(t.topics)
+    if (t?.topics) setTopics(sortTopicsByNumber(t.topics))
   }
 
   async function addClass() {
