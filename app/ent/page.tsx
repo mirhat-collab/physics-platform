@@ -2,7 +2,7 @@
 import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
-import { ENT_BATCH, ENT_COUNTS, ENT_DIFFICULTIES, ENT_SUBJECTS, type EntDifficulty, type EntQuestion, type EntSubject } from '@/lib/ent'
+import { sectionNames, topicsOf, ENT_BATCH, ENT_COUNTS, ENT_DIFFICULTIES, ENT_SUBJECTS, type EntDifficulty, type EntQuestion, type EntSubject } from '@/lib/ent'
 import MathText from '@/app/components/MathText'
 import Icon from '@/app/components/Icon'
 import Explain from './Explain'
@@ -18,6 +18,7 @@ export default function EntPage() {
   const [loggedIn, setLoggedIn] = useState<boolean | null>(null)
   const [subject, setSubject] = useState<EntSubject>('physics')
   const [section, setSection] = useState('all')
+  const [topic, setTopic] = useState('all')
   const [difficulty, setDifficulty] = useState<EntDifficulty>('ent')
   const [count, setCount] = useState<number>(5)
   const [attempts, setAttempts] = useState<Attempt[]>([])
@@ -46,7 +47,11 @@ export default function EntPage() {
       if (subj && ENT_SUBJECTS[subj]) {
         setSubject(subj)
         const sec = params.get('section')
-        if (sec && ENT_SUBJECTS[subj].sections.includes(sec)) setSection(sec)
+        if (sec && sectionNames(subj).includes(sec)) {
+          setSection(sec)
+          const top = params.get('topic')
+          if (top && topicsOf(subj, sec).includes(top)) setTopic(top)
+        }
       }
       setLoggedIn(!!user)
       if (!user) return
@@ -61,7 +66,7 @@ export default function EntPage() {
     const res = await fetch('/api/ent/generate', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ subject, section, difficulty, count: n, exclude }),
+      body: JSON.stringify({ subject, section, topic, difficulty, count: n, exclude }),
     })
     const data = await res.json()
     if (!res.ok) throw new Error(data.error || 'Ошибка')
@@ -126,6 +131,7 @@ export default function EntPage() {
     logAnswers([{
       source: 'ent', subject,
       section: q.section ?? (section !== 'all' ? section : null),
+      topic: q.topic ?? (topic !== 'all' ? topic : null),
       correct: ok,
       payload: ok ? null : { ...entMistakePayload(q, choice === SKIPPED ? null : choice) },
     }])
@@ -169,11 +175,11 @@ export default function EntPage() {
     return (
       <div className="page animate-fade-in-up">
         <h1 className="page-title">Подготовка к ЕНТ</h1>
-        <p className="page-sub">ИИ составляет новые задания под выбранную тему. Не получилось решить — нажми «Объясни», и он разберёт задачу по шагам.</p>
+        <p className="page-sub">Каждый раз новые задания по выбранной теме: числа и варианты меняются, так что задачи не повторяются. Не получилось решить — нажми «Объясни», и ИИ разберёт задачу по шагам.</p>
 
         {loggedIn === false && (
           <div className="card" style={{ marginBottom: 16, borderColor: 'rgba(245,158,11,0.4)' }}>
-            Чтобы пользоваться тренажёром, <Link href="/login" style={{ color: '#c4bbff' }}>войди в аккаунт</Link>.
+            <Link href="/login" style={{ color: '#c4bbff' }}>Войди в аккаунт</Link>, чтобы сохранялась статистика и работали объяснения от ИИ.
           </div>
         )}
 
@@ -196,19 +202,31 @@ export default function EntPage() {
           <div className="label">Предмет</div>
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 18 }}>
             {(Object.keys(ENT_SUBJECTS) as EntSubject[]).map(id => (
-              <button key={id} className={`chip${subject === id ? ' on' : ''}`} onClick={() => { setSubject(id); setSection('all') }}>
+              <button key={id} className={`chip${subject === id ? ' on' : ''}`} onClick={() => { setSubject(id); setSection('all'); setTopic('all') }}>
                 {ENT_SUBJECTS[id].label}
               </button>
             ))}
           </div>
 
-          <div className="label">Тема</div>
+          <div className="label">Раздел</div>
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 18 }}>
-            <button className={`chip${section === 'all' ? ' on' : ''}`} onClick={() => setSection('all')}>Вперемешку</button>
-            {ENT_SUBJECTS[subject].sections.map(s => (
-              <button key={s} className={`chip${section === s ? ' on' : ''}`} onClick={() => setSection(s)}>{s}</button>
+            <button className={`chip${section === 'all' ? ' on' : ''}`} onClick={() => { setSection('all'); setTopic('all') }}>Вперемешку</button>
+            {sectionNames(subject).map(s => (
+              <button key={s} className={`chip${section === s ? ' on' : ''}`} onClick={() => { setSection(s); setTopic('all') }}>{s}</button>
             ))}
           </div>
+
+          {section !== 'all' && (
+            <>
+              <div className="label">Тема</div>
+              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 18 }}>
+                <button className={`chip${topic === 'all' ? ' on' : ''}`} onClick={() => setTopic('all')}>Все темы раздела</button>
+                {topicsOf(subject, section).map(t => (
+                  <button key={t} className={`chip${topic === t ? ' on' : ''}`} onClick={() => setTopic(t)}>{t}</button>
+                ))}
+              </div>
+            </>
+          )}
 
           <div className="label">Сложность</div>
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 18 }}>
@@ -226,14 +244,14 @@ export default function EntPage() {
             ))}
           </div>
 
-          <button className="btn" onClick={generate} disabled={mode === 'loading' || loggedIn === false} style={{ width: '100%' }}>
+          <button className="btn" onClick={generate} disabled={mode === 'loading'} style={{ width: '100%' }}>
             {mode === 'loading' ? (
               <>
                 <span className="spin" style={{ width: 16, height: 16, border: '2px solid rgba(255,255,255,0.3)', borderTopColor: '#fff', borderRadius: '50%', display: 'inline-block' }} />
-                ИИ составляет задания… это займёт до минуты
+                Готовлю задания…
               </>
             ) : (
-              <><Icon name="sparkles" size={18} /> Сгенерировать задания</>
+              <><Icon name="sparkles" size={18} /> Начать</>
             )}
           </button>
           {error && <div style={{ color: 'var(--bad)', fontSize: 14, marginTop: 10 }}>{error}</div>}

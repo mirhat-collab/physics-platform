@@ -5,6 +5,7 @@ export type AnswerRow = {
   source: 'ent' | 'formula'
   subject: 'physics' | 'math'
   section?: string | null
+  topic?: string | null
   correct: boolean
   payload?: Record<string, unknown> | null
 }

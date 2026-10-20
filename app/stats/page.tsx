@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
-import { ENT_SUBJECTS } from '@/lib/ent'
+import { sectionNames, topicsOf } from '@/lib/ent'
 import { SECTIONS as FORMULA_SECTIONS } from '@/lib/formulas'
 import { logAnswers, type MistakePayload } from '@/lib/answer-log'
 import {
@@ -25,8 +25,9 @@ function accColor(x: number) { return x >= 0.8 ? 'var(--good)' : x >= WEAK_THRES
 
 // Куда отправить ученика тренировать раздел
 function practiceHref(s: SectionStat): string | null {
-  if (s.source === 'ent' && ENT_SUBJECTS[s.subject].sections.includes(s.section)) {
-    return `/ent?subject=${s.subject}&section=${encodeURIComponent(s.section)}`
+  if (s.source === 'ent' && sectionNames(s.subject).includes(s.section)) {
+    const topic = s.topic && topicsOf(s.subject, s.section).includes(s.topic) ? `&topic=${encodeURIComponent(s.topic)}` : ''
+    return `/ent?subject=${s.subject}&section=${encodeURIComponent(s.section)}${topic}`
   }
   if (s.source === 'formula' && FORMULA_SECTIONS[s.subject].includes(s.section)) {
     return `/formulas?subject=${s.subject}&section=${encodeURIComponent(s.section)}`
@@ -53,7 +54,7 @@ export default function StatsPage() {
       if (!user) { router.push('/login'); return }
       const since = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString()
       const [log, attempts, wrong] = await Promise.all([
-        supabase.from('answer_log').select('source, subject, section, correct, created_at')
+        supabase.from('answer_log').select('source, subject, section, topic, correct, created_at')
           .eq('user_id', user.id).gte('created_at', since).order('created_at', { ascending: false }).limit(5000),
         supabase.from('ent_attempts').select('id', { count: 'exact', head: true }).eq('user_id', user.id),
         supabase.from('answer_log').select('id, subject, section, created_at, payload')
@@ -171,11 +172,11 @@ export default function StatsPage() {
           {weak.slice(0, 5).map(s => {
             const href = practiceHref(s)
             return (
-              <div key={`${s.source}${s.subject}${s.section}`} className="card" style={{ display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap', borderColor: 'rgba(248,113,113,0.3)' }}>
+              <div key={`${s.source}${s.subject}${s.section}${s.topic}`} className="card" style={{ display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap', borderColor: 'rgba(248,113,113,0.3)' }}>
                 <div style={{ flex: 1, minWidth: 200 }}>
-                  <div style={{ fontWeight: 700 }}>{s.section}</div>
+                  <div style={{ fontWeight: 700 }}>{s.label}</div>
                   <div style={{ color: 'var(--muted)', fontSize: 13, marginTop: 2 }}>
-                    {SUBJECT_LABEL[s.subject]} · {SOURCE_LABEL[s.source]} · ошибся {s.wrong} раз из {s.total}
+                    {SUBJECT_LABEL[s.subject]} · {s.topic ? `${s.section} · ` : ''}{SOURCE_LABEL[s.source]} · ошибся {s.wrong} раз из {s.total}
                     {s.recentWrong >= 3 && <span style={{ color: 'var(--bad)' }}> · {s.recentWrong} ошибок за 2 недели</span>}
                   </div>
                 </div>
@@ -198,8 +199,8 @@ export default function StatsPage() {
           <div className="label">Сильные стороны</div>
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 16 }}>
             {strong.slice(0, 8).map(s => (
-              <span key={`${s.source}${s.subject}${s.section}`} className="chip on" style={{ cursor: 'default', borderColor: 'rgba(52,211,153,0.4)', background: 'rgba(52,211,153,0.1)', color: 'var(--good)' }}>
-                {s.section} · {pct(s.accuracy)}
+              <span key={`${s.source}${s.subject}${s.section}${s.topic}`} className="chip on" style={{ cursor: 'default', borderColor: 'rgba(52,211,153,0.4)', background: 'rgba(52,211,153,0.1)', color: 'var(--good)' }}>
+                {s.label} · {pct(s.accuracy)}
               </span>
             ))}
           </div>
@@ -242,8 +243,8 @@ export default function StatsPage() {
             <div key={subj} style={{ marginBottom: 14 }}>
               <div style={{ fontWeight: 700, marginBottom: 8 }}>{SUBJECT_LABEL[subj]}</div>
               {list.map(s => (
-                <div key={s.section} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '6px 0', fontSize: 14 }}>
-                  <span style={{ flex: '0 0 42%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={s.section}>{s.section}</span>
+                <div key={s.section + s.topic} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '6px 0', fontSize: 14 }}>
+                  <span style={{ flex: '0 0 42%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={s.topic ? `${s.section} → ${s.topic}` : s.section}>{s.label}</span>
                   <div style={{ flex: 1, height: 8, borderRadius: 999, background: 'var(--surface-2)', overflow: 'hidden' }}>
                     <div style={{ width: pct(s.accuracy), height: '100%', background: accColor(s.accuracy) }} />
                   </div>

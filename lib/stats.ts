@@ -5,6 +5,7 @@ export type LogRow = {
   source: 'ent' | 'formula'
   subject: 'physics' | 'math'
   section: string | null
+  topic?: string | null
   correct: boolean
   created_at: string
 }
@@ -13,6 +14,8 @@ export type SectionStat = {
   source: 'ent' | 'formula'
   subject: 'physics' | 'math'
   section: string
+  topic: string | null
+  label: string // что показываем: тема, а если её нет — раздел
   total: number
   correct: number
   wrong: number
@@ -28,10 +31,11 @@ export function sectionStats(rows: LogRow[]): SectionStat[] {
   const map = new Map<string, SectionStat>()
   for (const r of rows) {
     const section = r.section || 'Без раздела'
-    const key = `${r.source}|${r.subject}|${section}`
+    const topic = r.topic || null
+    const key = `${r.source}|${r.subject}|${section}|${topic ?? ''}`
     let s = map.get(key)
     if (!s) {
-      s = { source: r.source, subject: r.subject, section, total: 0, correct: 0, wrong: 0, accuracy: 0, recentWrong: 0 }
+      s = { source: r.source, subject: r.subject, section, topic, label: topic || section, total: 0, correct: 0, wrong: 0, accuracy: 0, recentWrong: 0 }
       map.set(key, s)
     }
     s.total++

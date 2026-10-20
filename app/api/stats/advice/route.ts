@@ -22,7 +22,7 @@ export async function POST() {
   const since = new Date(Date.now() - 60 * 24 * 60 * 60 * 1000).toISOString()
   const { data: rows } = await supabase
     .from('answer_log')
-    .select('source, subject, section, correct, created_at')
+    .select('source, subject, section, topic, correct, created_at')
     .eq('user_id', user.id)
     .gte('created_at', since)
     .limit(5000)
@@ -37,7 +37,7 @@ export async function POST() {
 
   const lines = stats
     .sort((a, b) => a.accuracy - b.accuracy)
-    .map(s => `- ${SOURCE_LABEL[s.source]} · ${SUBJECT_LABEL[s.subject]} · ${s.section}: ${s.correct} из ${s.total} верно (${Math.round(s.accuracy * 100)}%), ошибок за 2 недели: ${s.recentWrong}`)
+    .map(s => `- ${SOURCE_LABEL[s.source]} · ${SUBJECT_LABEL[s.subject]} · ${s.section}${s.topic ? ` → ${s.topic}` : ''}: ${s.correct} из ${s.total} верно (${Math.round(s.accuracy * 100)}%), ошибок за 2 недели: ${s.recentWrong}`)
     .join('\n')
 
   try {

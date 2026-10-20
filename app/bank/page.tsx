@@ -2,12 +2,12 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
-import { ENT_DIFFICULTIES, ENT_SUBJECTS, type EntDifficulty, type EntSubject } from '@/lib/ent'
+import { ENT_DIFFICULTIES, ENT_SUBJECTS, sectionNames, topicsOf, type EntDifficulty, type EntSubject } from '@/lib/ent'
 import MathText from '@/app/components/MathText'
 import Icon from '@/app/components/Icon'
 import { parseBulk } from '@/lib/bank-parse'
 
-type BankRow = { id: number; subject: EntSubject; section: string | null; difficulty: EntDifficulty; question: string; options: string[]; correct: number; solution: string | null }
+type BankRow = { id: number; subject: EntSubject; section: string | null; topic: string | null; difficulty: EntDifficulty; question: string; options: string[]; correct: number; solution: string | null }
 
 const LETTERS = 'ABCDE'
 const PAGE = 20
@@ -20,7 +20,8 @@ export default function BankPage() {
   const [page, setPage] = useState(0)
 
   const [subject, setSubject] = useState<EntSubject>('physics')
-  const [section, setSection] = useState(ENT_SUBJECTS.physics.sections[0])
+  const [section, setSection] = useState(sectionNames('physics')[0])
+  const [topic, setTopic] = useState(topicsOf('physics', sectionNames('physics')[0])[0])
   const [difficulty, setDifficulty] = useState<EntDifficulty>('ent')
   const [mode, setMode] = useState<'one' | 'bulk'>('one')
   const [question, setQuestion] = useState('')
@@ -56,7 +57,7 @@ export default function BankPage() {
   async function save() {
     setSaving(true)
     setMsg('')
-    const base = { subject, section, difficulty }
+    const base = { subject, section, topic, difficulty }
     const items = mode === 'one'
       ? [{ ...base, question: question.trim(), options: options.map(o => o.trim()).filter(Boolean), correct, solution: solution.trim() || null }]
       : bulkParsed.map(t => ({ ...base, ...t, solution: t.solution || null }))
@@ -96,12 +97,16 @@ export default function BankPage() {
         <div className="label">Предмет</div>
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 14 }}>
           {(Object.keys(ENT_SUBJECTS) as EntSubject[]).map(id => (
-            <button key={id} className={`chip${subject === id ? ' on' : ''}`} onClick={() => { setSubject(id); setSection(ENT_SUBJECTS[id].sections[0]) }}>{ENT_SUBJECTS[id].label}</button>
+            <button key={id} className={`chip${subject === id ? ' on' : ''}`} onClick={() => { setSubject(id); setSection(sectionNames(id)[0]); setTopic(topicsOf(id, sectionNames(id)[0])[0]) }}>{ENT_SUBJECTS[id].label}</button>
           ))}
         </div>
         <div className="label">Раздел</div>
-        <select value={section} onChange={e => setSection(e.target.value)} style={{ ...input, marginBottom: 14 }}>
-          {ENT_SUBJECTS[subject].sections.map(s => <option key={s} value={s}>{s}</option>)}
+        <select value={section} onChange={e => { setSection(e.target.value); setTopic(topicsOf(subject, e.target.value)[0]) }} style={{ ...input, marginBottom: 14 }}>
+          {sectionNames(subject).map(s => <option key={s} value={s}>{s}</option>)}
+        </select>
+        <div className="label">Тема</div>
+        <select value={topic} onChange={e => setTopic(e.target.value)} style={{ ...input, marginBottom: 14 }}>
+          {topicsOf(subject, section).map(t => <option key={t} value={t}>{t}</option>)}
         </select>
         <div className="label">Сложность</div>
         <div style={{ display: 'flex', gap: 8, marginBottom: 18 }}>
@@ -154,7 +159,7 @@ export default function BankPage() {
         {rows.map(r => (
           <div key={r.id} className="card" style={{ padding: '14px 16px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', gap: 10, marginBottom: 6 }}>
-              <span style={{ fontSize: 12, color: 'var(--muted)' }}>{ENT_SUBJECTS[r.subject]?.label} · {r.section} · {ENT_DIFFICULTIES[r.difficulty]?.label}</span>
+              <span style={{ fontSize: 12, color: 'var(--muted)' }}>{ENT_SUBJECTS[r.subject]?.label} · {r.section}{r.topic ? ` → ${r.topic}` : ''} · {ENT_DIFFICULTIES[r.difficulty]?.label}</span>
               <button onClick={() => remove(r.id)} className="nav-icon-btn" style={{ padding: 4 }} aria-label="Удалить"><Icon name="x" size={16} /></button>
             </div>
             <MathText text={r.question} style={{ fontSize: 14, marginBottom: 8 }} />
