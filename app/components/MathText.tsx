@@ -1,6 +1,7 @@
 'use client'
 import katex from 'katex'
 import 'katex/dist/katex.min.css'
+import { normalizeAiText } from '@/lib/ai-text'
 
 // Текст с формулами: $…$ — формула в строке, $$…$$ — отдельной строкой, **…** — жирный.
 // Пустая строка начинает новый абзац.
@@ -28,7 +29,7 @@ function renderInline(raw: string): string {
 }
 
 export default function MathText({ text, style }: { text: string; style?: React.CSSProperties }) {
-  const paragraphs = text.split(/\n\s*\n/).filter(p => p.trim())
+  const paragraphs = normalizeAiText(text).split(/\n\s*\n/).filter(p => p.trim())
   return (
     <div className="math-text" style={style}>
       {paragraphs.map((p, i) => (
