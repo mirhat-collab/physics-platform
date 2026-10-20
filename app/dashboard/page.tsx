@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
+import Icon from '@/app/components/Icon'
 
 type Profile = { id: string; full_name: string; email: string; grade: string; total_xp: number; streak: number }
 type Topic = { id: string; name: string; grade: string }
@@ -109,19 +110,26 @@ export default function DashboardPage() {
           </div>
         )}
 
-        <div className="stagger-children" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-          <Link href="/topics" style={{ textDecoration: 'none' }}>
-            <div className="hover-lift" style={{ background: '#1a1a2e', border: '1px solid #2a2a3e', borderRadius: 16, padding: '18px', textAlign: 'center', cursor: 'pointer' }}>
-              <div style={{ fontSize: 28 }}>📚</div>
-              <div style={{ fontWeight: 600, marginTop: 8 }}>Все темы</div>
-            </div>
-          </Link>
-          <Link href="/progress" style={{ textDecoration: 'none' }}>
-            <div className="hover-lift" style={{ background: '#1a1a2e', border: '1px solid #2a2a3e', borderRadius: 16, padding: '18px', textAlign: 'center', cursor: 'pointer' }}>
-              <div style={{ fontSize: 28 }}>🏆</div>
-              <div style={{ fontWeight: 600, marginTop: 8 }}>Рейтинг</div>
-            </div>
-          </Link>
+        <h2 style={{ fontSize: '1rem', fontWeight: 700, marginBottom: 12, color: '#888' }}>ТРЕНИРОВКА</h2>
+        <div className="stagger-children" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 12 }}>
+          {[
+            { href: '/formulas', icon: 'formula', title: 'Тренажёр формул', text: 'Собери формулу из букв — физика и математика', color: '#8b7cf6' },
+            { href: '/ent', icon: 'target', title: 'Подготовка к ЕНТ', text: 'Задания уровня ЕНТ с разбором от ИИ', color: '#34d399' },
+            { href: '/topics', icon: 'book', title: 'Все темы', text: 'Теория, формулы и тесты по классам', color: '#60a5fa' },
+            { href: '/progress', icon: 'chart', title: 'Рейтинг', text: 'Сравни свой XP с одноклассниками', color: '#f59e0b' },
+          ].map(c => (
+            <Link key={c.href} href={c.href} style={{ textDecoration: 'none' }}>
+              <div className="hover-lift" style={{ background: '#1a1a2e', border: '1px solid #2a2a3e', borderRadius: 16, padding: '18px', display: 'flex', gap: 14, alignItems: 'flex-start', cursor: 'pointer', height: '100%', boxSizing: 'border-box' }}>
+                <div style={{ width: 40, height: 40, borderRadius: 12, background: `${c.color}22`, color: c.color, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  <Icon name={c.icon} size={22} />
+                </div>
+                <div>
+                  <div style={{ fontWeight: 700, color: '#fff', marginBottom: 4 }}>{c.title}</div>
+                  <div style={{ color: '#888', fontSize: 13, lineHeight: 1.4 }}>{c.text}</div>
+                </div>
+              </div>
+            </Link>
+          ))}
         </div>
 
       </div>

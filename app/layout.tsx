@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import { Manrope } from "next/font/google";
 import "./globals.css";
-import BottomNav from "./components/BottomNav";
+import AppNav from "./components/AppNav";
+import LandingFooter from "./components/LandingFooter";
 import StreakTracker from "./components/StreakTracker";
 import StreakAlert from "./components/StreakAlert";
 import PwaInstall from "./components/PwaInstall";
@@ -91,7 +92,7 @@ export default function RootLayout({
         <link rel="icon" href="/icon-192.png" type="image/png" />
         <link rel="apple-touch-icon" href="/icon-192.png" />
       </head>
-      <body className={manrope.variable} style={{ margin: 0, fontFamily: 'var(--font-body), sans-serif', background: '#0f0f1a', paddingBottom: 64 }}>
+      <body className={manrope.variable} style={{ margin: 0, fontFamily: 'var(--font-body), sans-serif', background: '#0f0f1a' }}>
         <div aria-hidden style={{ position: 'fixed', inset: 0, zIndex: -1, overflow: 'hidden', background: '#0f0f1a' }}>
           <div className="aurora-blob aurora-blob-1" />
           <div className="aurora-blob aurora-blob-2" />
@@ -100,8 +101,9 @@ export default function RootLayout({
         <StreakTracker />
         <StreakAlert />
         <PwaInstall />
-        {children}
-        <BottomNav />
+        <AppNav />
+        <div className="app-main">{children}</div>
+        <LandingFooter />
       </body>
     </html>
   );
