@@ -1,8 +1,8 @@
 'use client'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
-import { ENT_COUNTS, ENT_DIFFICULTIES, ENT_SUBJECTS, type EntDifficulty, type EntQuestion, type EntSubject } from '@/lib/ent'
+import { ENT_BATCH, ENT_COUNTS, ENT_DIFFICULTIES, ENT_SUBJECTS, type EntDifficulty, type EntQuestion, type EntSubject } from '@/lib/ent'
 import MathText from '@/app/components/MathText'
 import Icon from '@/app/components/Icon'
 import Explain from './Explain'
@@ -23,7 +23,13 @@ export default function EntPage() {
 
   const [mode, setMode] = useState<'setup' | 'loading' | 'play' | 'done'>('setup')
   const [error, setError] = useState('')
-  const [questions, setQuestions] = useState<EntQuestion[]>([])
+  const [total, setTotal] = useState(0) // сколько заданий выбрал ученик
+  const [questions, setQuestions] = useState<EntQuestion[]>([]) // уже загруженные
+  const [fetching, setFetching] = useState(false)
+  const [fetchError, setFetchError] = useState('')
+  const fetchingRef = useRef(false)
+  const testIdRef = useRef(0) // чтобы порция от старого теста не попала в новый
+  const indexRef = useRef(0)
   const [answers, setAnswers] = useState<(number | null)[]>([]) // null — ещё не отвечал, -1 — «не знаю»
   const [index, setIndex] = useState(0)
   const [showSolution, setShowSolution] = useState(false)
@@ -42,25 +48,61 @@ export default function EntPage() {
     })
   }, [])
 
+  async function fetchBatch(n: number, exclude: number[]): Promise<EntQuestion[]> {
+    const res = await fetch('/api/ent/generate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ subject, section, difficulty, count: n, exclude }),
+    })
+    const data = await res.json()
+    if (!res.ok) throw new Error(data.error || 'Ошибка')
+    return data.questions
+  }
+
+  // Догружаем следующую порцию, пока ученик решает уже загруженные задания
+  async function loadMore(current: EntQuestion[], want: number) {
+    if (fetchingRef.current || current.length >= want) return
+    const testId = testIdRef.current
+    fetchingRef.current = true
+    setFetching(true)
+    setFetchError('')
+    try {
+      const used = current.map(q => q.bankId).filter((id): id is number => id !== undefined)
+      const batch = (await fetchBatch(Math.min(ENT_BATCH, want - current.length), used)).slice(0, want - current.length)
+      fetchingRef.current = false
+      if (testId !== testIdRef.current) return
+      const next = [...current, ...batch]
+      setQuestions(next)
+      setAnswers(prev => [...prev, ...batch.map(() => null)])
+      setFetching(false)
+      // Держим в запасе пару порций вперёд, но не грузим все 100 заданий сразу
+      if (next.length < want && next.length - indexRef.current < ENT_BATCH * 2) loadMore(next, want)
+    } catch (e) {
+      fetchingRef.current = false
+      if (testId !== testIdRef.current) return
+      setFetching(false)
+      setFetchError(e instanceof Error ? e.message : 'Ошибка')
+    }
+  }
+
   async function generate() {
+    testIdRef.current++
+    indexRef.current = 0
     setMode('loading')
     setError('')
+    setFetchError('')
     try {
-      const res = await fetch('/api/ent/generate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ subject, section, difficulty, count }),
-      })
-      const data = await res.json()
-      if (!res.ok) throw new Error(data.error || 'Ошибка')
-      setQuestions(data.questions)
-      setAnswers(data.questions.map(() => null))
+      const first = await fetchBatch(Math.min(ENT_BATCH, count), [])
+      setTotal(count)
+      setQuestions(first)
+      setAnswers(first.map(() => null))
       setDialogs({})
       setIndex(0)
       setShowSolution(false)
       setReviewOpen(null)
       setXpMsg('')
       setMode('play')
+      if (first.length < count) loadMore(first, count)
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Ошибка')
       setMode('setup')
@@ -74,10 +116,13 @@ export default function EntPage() {
 
   async function finish() {
     setMode('done')
+    // Считаем только те задания, до которых ученик дошёл
+    const answered = answers.filter(a => a !== null).length
     const correct = questions.filter((q, i) => answers[i] === q.correct).length
+    if (!answered) return
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return
-    const row = { user_id: user.id, subject, section, difficulty, total: questions.length, correct }
+    const row = { user_id: user.id, subject, section, difficulty, total: answered, correct }
     await supabase.from('ent_attempts').insert(row)
     setAttempts(prev => [{ ...row, created_at: new Date().toISOString() }, ...prev])
     // 2 XP за каждый верный ответ
@@ -91,9 +136,11 @@ export default function EntPage() {
   }
 
   function next() {
-    if (index + 1 < questions.length) {
+    if (index + 1 < total) {
       setIndex(index + 1)
+      indexRef.current = index + 1
       setShowSolution(false)
+      if (questions.length - (index + 1) <= ENT_BATCH) loadMore(questions, total)
     } else {
       finish()
     }
@@ -180,13 +227,14 @@ export default function EntPage() {
 
   // ---------- Итоги ----------
   if (mode === 'done') {
-    const correct = questions.filter((q, i) => answers[i] === q.correct).length
-    const pct = Math.round((correct / questions.length) * 100)
+    const done = questions.map((q, i) => ({ q, a: answers[i], i })).filter(x => x.a !== null)
+    const correct = done.filter(x => x.a === x.q.correct).length
+    const pct = done.length ? Math.round((correct / done.length) * 100) : 0
     return (
       <div className="page animate-fade-in-up">
         <div className="card" style={{ textAlign: 'center', padding: '28px 20px', marginBottom: 18 }}>
           <div style={{ fontSize: 46, fontWeight: 800, color: pct >= 70 ? 'var(--good)' : pct >= 40 ? '#f59e0b' : 'var(--bad)' }}>
-            {correct} / {questions.length}
+            {correct} / {done.length}
           </div>
           <div style={{ color: 'var(--muted)', marginTop: 4 }}>{pct}% верных ответов</div>
           {xpMsg && <div style={{ marginTop: 8, color: '#c4bbff', fontWeight: 700 }}>{xpMsg}</div>}
@@ -198,8 +246,7 @@ export default function EntPage() {
 
         <div className="label">Разбор заданий</div>
         <div style={{ display: 'grid', gap: 10 }}>
-          {questions.map((q, i) => {
-            const a = answers[i]
+          {done.map(({ q, a, i }) => {
             const ok = a === q.correct
             const open = reviewOpen === i
             return (
@@ -230,25 +277,69 @@ export default function EntPage() {
   }
 
   // ---------- Решение ----------
+  const answeredCount = answers.filter(a => a !== null).length
+  const header = (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 18 }}>
+      <button className="nav-icon-btn" onClick={() => setMode('setup')} aria-label="Назад"><Icon name="arrowLeft" /></button>
+      {total <= 15 ? (
+        <div style={{ flex: 1, display: 'flex', gap: 4 }}>
+          {Array.from({ length: total }, (_, i) => {
+            const qq = questions[i]
+            const a = answers[i]
+            return (
+              <div key={i} style={{
+                flex: 1, height: 6, borderRadius: 999,
+                background: !qq || a === null ? (i === index ? 'var(--accent)' : 'var(--surface-2)') : a === qq.correct ? 'var(--good)' : 'var(--bad)',
+              }} />
+            )
+          })}
+        </div>
+      ) : (
+        <div style={{ flex: 1, background: 'var(--surface-2)', borderRadius: 999, height: 8, overflow: 'hidden' }}>
+          <div style={{ width: `${(answeredCount / total) * 100}%`, height: '100%', background: 'linear-gradient(90deg,#667eea,#a78bfa)', transition: 'width 0.4s ease' }} />
+        </div>
+      )}
+      <span style={{ color: 'var(--muted)', fontSize: 13, fontWeight: 600 }}>{index + 1} / {total}</span>
+      {answeredCount > 0 && index + 1 < total && (
+        <button onClick={finish} style={{ background: 'none', border: 'none', color: 'var(--muted)', fontSize: 13, cursor: 'pointer', fontFamily: 'inherit', textDecoration: 'underline' }}>
+          Завершить
+        </button>
+      )}
+    </div>
+  )
+
   const q = questions[index]
+  if (!q) {
+    // Ученик решает быстрее, чем подгружаются задания
+    return (
+      <div className="page animate-fade-in">
+        {header}
+        <div className="card" style={{ textAlign: 'center', padding: '40px 20px' }}>
+          {fetchError ? (
+            <>
+              <div style={{ color: 'var(--bad)', marginBottom: 14 }}>{fetchError}</div>
+              <div style={{ display: 'flex', gap: 10, justifyContent: 'center', flexWrap: 'wrap' }}>
+                <button className="btn" onClick={() => loadMore(questions, total)}><Icon name="refresh" size={18} /> Попробовать снова</button>
+                <button className="btn btn-ghost" onClick={finish}>Завершить тест</button>
+              </div>
+            </>
+          ) : (
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, color: 'var(--muted)' }}>
+              <span className="spin" style={{ width: 18, height: 18, border: '2px solid var(--line)', borderTopColor: 'var(--accent)', borderRadius: '50%', display: 'inline-block' }} />
+              {fetching ? 'Готовлю следующие задания…' : 'Загрузка…'}
+            </div>
+          )}
+        </div>
+      </div>
+    )
+  }
   const chosen = answers[index]
   const answered = chosen !== null
   const isRight = chosen === q.correct
 
   return (
     <div className="page animate-fade-in">
-      <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 18 }}>
-        <button className="nav-icon-btn" onClick={() => setMode('setup')} aria-label="Назад"><Icon name="arrowLeft" /></button>
-        <div style={{ flex: 1, display: 'flex', gap: 4 }}>
-          {questions.map((qq, i) => (
-            <div key={i} style={{
-              flex: 1, height: 6, borderRadius: 999,
-              background: answers[i] === null ? (i === index ? 'var(--accent)' : 'var(--surface-2)') : answers[i] === qq.correct ? 'var(--good)' : 'var(--bad)',
-            }} />
-          ))}
-        </div>
-        <span style={{ color: 'var(--muted)', fontSize: 13, fontWeight: 600 }}>{index + 1} / {questions.length}</span>
-      </div>
+      {header}
 
       <div className="card" style={{ padding: '20px 18px' }}>
         <div style={{ color: 'var(--muted)', fontSize: 12, fontWeight: 700, marginBottom: 8 }}>ЗАДАНИЕ {index + 1}</div>
@@ -292,7 +383,7 @@ export default function EntPage() {
           )}
 
           <button className="btn" onClick={next}>
-            {index + 1 < questions.length ? 'Следующее задание' : 'Завершить'} <Icon name="arrowRight" size={18} />
+            {index + 1 < total ? 'Следующее задание' : 'Завершить'} <Icon name="arrowRight" size={18} />
           </button>
         </div>
       )}

@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
-import type Anthropic from '@anthropic-ai/sdk'
-import { AI_MODEL, aiErrorResponse, checkAiQuota, getAnthropic, textOf } from '@/lib/ai'
+import { aiErrorResponse, chat, checkAiQuota, type ChatMessage } from '@/lib/ai'
 
-export const maxDuration = 120
+export const maxDuration = 100
 
 const SYSTEM = `Ты — добрый и терпеливый репетитор по физике и математике, готовишь школьника к ЕНТ.
 Ученик решал тестовое задание и ошибся или не смог решить. Объясни решение на русском языке.
@@ -58,7 +57,8 @@ ${solution ? `\nКраткое решение составителя (прове
 
 Объясни, как решать это задание.`
 
-  const messages: Anthropic.MessageParam[] = [
+  const messages: ChatMessage[] = [
+    { role: 'system', content: SYSTEM },
     { role: 'user', content: intro },
     ...history.map(t => ({ role: t.role, content: t.content.slice(0, MAX_LEN) })),
   ]
@@ -67,17 +67,8 @@ ${solution ? `\nКраткое решение составителя (прове
   }
 
   try {
-    const message = await getAnthropic().messages.create({
-      model: AI_MODEL,
-      max_tokens: 8000,
-      system: SYSTEM,
-      output_config: { effort: 'medium' },
-      messages,
-    })
-    if (message.stop_reason === 'refusal') {
-      return NextResponse.json({ error: 'ИИ не смог ответить на этот вопрос' }, { status: 502 })
-    }
-    return NextResponse.json({ text: textOf(message) })
+    const text = await chat(messages, { maxTokens: 4000, effort: 'low' })
+    return NextResponse.json({ text })
   } catch (err) {
     return aiErrorResponse(err)
   }

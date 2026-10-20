@@ -9,6 +9,8 @@ type TournamentSub = { id: number; tournament_id: number; student_name: string; 
 const TYPE_LABELS: Record<string, string> = { essay: '📝 Эссе', model: '🏗️ Макет', photo: '📸 Фото', video: '🎥 Видео', experiment: '🔬 Опыт', other: '🏆 Турнир' }
 const TYPE_COLORS: Record<string, string> = { essay: '#667eea', model: '#10b981', photo: '#f59e0b', video: '#ef4444', experiment: '#8b5cf6', other: '#f59e0b' }
 
+const PREVIEW_GRADES = ['7', '8', '9', '10', '11']
+
 export default function TournamentPage() {
   const router = useRouter()
   const [loading, setLoading] = useState(true)
@@ -25,6 +27,8 @@ export default function TournamentPage() {
   const [uploading, setUploading] = useState<number | null>(null)
   const [sending, setSending] = useState<number | null>(null)
   const fileRefs = useRef<Record<number, HTMLInputElement | null>>({})
+  // Учитель и админ видят страницу так, как её видит ученик выбранного класса
+  const [preview, setPreview] = useState(false)
 
   useEffect(() => { loadData() }, [])
 
@@ -35,10 +39,12 @@ export default function TournamentPage() {
 
     const { data: profile } = await supabase.from('profiles').select('full_name, email, grade, role').eq('id', user.id).single()
     if (profile) { setUserName(profile.full_name || profile.email); setUserGrade(profile.grade) }
-    if (profile?.role === 'teacher') { router.push('/teacher'); return }
-
-    const { data: ts } = await supabase.from('tournaments').select('*').eq('class_name', profile?.grade || '').order('created_at', { ascending: false })
-    if (ts) setTournaments(ts)
+    const isStaff = profile?.role === 'teacher' || profile?.role === 'admin'
+    if (isStaff) {
+      setPreview(true)
+      setUserGrade(PREVIEW_GRADES[0])
+    }
+    await loadTournaments(isStaff ? PREVIEW_GRADES[0] : profile?.grade || '')
 
     const { data: subs } = await supabase.from('tournament_submissions').select('*').eq('student_id', user.id)
     if (subs) setMySubs(subs)
@@ -47,6 +53,16 @@ export default function TournamentPage() {
     if (allS) setAllSubs(allS)
 
     setLoading(false)
+  }
+
+  async function loadTournaments(grade: string) {
+    const { data: ts } = await supabase.from('tournaments').select('*').eq('class_name', grade).order('created_at', { ascending: false })
+    setTournaments(ts || [])
+  }
+
+  function switchPreviewGrade(grade: string) {
+    setUserGrade(grade)
+    loadTournaments(grade)
   }
 
   async function submit(tId: number) {
@@ -94,6 +110,17 @@ export default function TournamentPage() {
           <h1 style={{ fontSize: '1.8rem', fontWeight: 800, margin: '0 0 4px' }}>🏆 Турниры</h1>
           <p style={{ color: '#888', margin: 0, fontSize: 14 }}>{userGrade} класс · Соревнуйся и побеждай!</p>
         </div>
+
+        {preview && (
+          <div style={{ background: 'rgba(139,124,246,0.08)', border: '1px solid rgba(139,124,246,0.3)', borderRadius: 14, padding: '14px 16px', marginBottom: 20 }}>
+            <div style={{ fontSize: 14, color: '#c4bbff', fontWeight: 600, marginBottom: 10 }}>Так эту страницу видят ученики. Выбери класс:</div>
+            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+              {PREVIEW_GRADES.map(g => (
+                <button key={g} className={`chip${userGrade === g ? ' on' : ''}`} onClick={() => switchPreviewGrade(g)}>{g} класс</button>
+              ))}
+            </div>
+          </div>
+        )}
 
         {tournaments.length === 0 && (
           <div style={{ textAlign: 'center', color: '#555', padding: '60px 0' }}>
@@ -146,7 +173,11 @@ export default function TournamentPage() {
                           : <img src={t.media_url} alt="" style={{ maxWidth: '100%', maxHeight: 220, borderRadius: 10, marginBottom: 14, objectFit: 'cover' }} />
                         )}
 
-                        {mySub ? (
+                        {preview ? (
+                          <div style={{ color: '#888', fontSize: 13, background: '#0f0f1a', borderRadius: 10, padding: '10px 14px', border: '1px dashed #2a2a3e' }}>
+                            Здесь ученик отправляет свою работу на турнир.
+                          </div>
+                        ) : mySub ? (
                           <div>
                             <div style={{ background: '#0f0f1a', borderRadius: 10, padding: '14px', border: '1px solid #2a2a3e', marginBottom: 14 }}>
                               <div style={{ color: '#888', fontSize: 12, marginBottom: 6 }}>Твоя работа:</div>

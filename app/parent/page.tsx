@@ -127,11 +127,11 @@ export default function ParentPage() {
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                       <div style={{ width: 44, height: 44, borderRadius: '50%', background: 'linear-gradient(135deg,#667eea,#764ba2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700 }}>
-                        {(s.full_name || s.email).slice(0, 2).toUpperCase()}
+                        {(s.full_name || 'Без имени').slice(0, 2).toUpperCase()}
                       </div>
                       <div>
-                        <div style={{ fontWeight: 700 }}>{s.full_name || s.email}</div>
-                        <div style={{ color: '#888', fontSize: 13 }}>{s.grade} класс · {s.email}</div>
+                        <div style={{ fontWeight: 700 }}>{s.full_name || 'Без имени'}</div>
+                        <div style={{ color: '#888', fontSize: 13 }}>{s.grade} класс</div>
                       </div>
                     </div>
                     <div style={{ display: 'flex', gap: 16, textAlign: 'center' }}>

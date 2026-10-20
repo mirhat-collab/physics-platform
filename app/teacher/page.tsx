@@ -313,11 +313,10 @@ export default function TeacherPage() {
                   <div key={s.id} style={{ background: '#1a1a2e', borderRadius: 14, padding: '14px 18px', border: '1px solid #2a2a3e', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                       <div style={{ width: 36, height: 36, borderRadius: '50%', background: 'linear-gradient(135deg,#667eea,#764ba2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 14 }}>
-                        {(s.full_name || s.email).slice(0, 2).toUpperCase()}
+                        {(s.full_name || 'Без имени').slice(0, 2).toUpperCase()}
                       </div>
                       <div>
-                        <div style={{ fontWeight: 600 }}>{s.full_name || s.email}</div>
-                        <div style={{ color: '#888', fontSize: 12 }}>{s.email}</div>
+                        <div style={{ fontWeight: 600 }}>{s.full_name || 'Без имени'}</div>
                       </div>
                     </div>
                     <div style={{ display: 'flex', gap: 16, textAlign: 'center' }}>
@@ -341,11 +340,11 @@ export default function TeacherPage() {
                   <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                     <span style={{ fontSize: 18, minWidth: 32 }}>{medal}</span>
                     <div style={{ width: 36, height: 36, borderRadius: '50%', background: 'linear-gradient(135deg,#667eea,#764ba2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 14 }}>
-                      {(s.full_name || s.email).slice(0, 2).toUpperCase()}
+                      {(s.full_name || 'Без имени').slice(0, 2).toUpperCase()}
                     </div>
                     <div>
-                      <div style={{ fontWeight: 600 }}>{s.full_name || s.email}</div>
-                      <div style={{ color: '#888', fontSize: 12 }}>{s.grade} класс · {s.email}</div>
+                      <div style={{ fontWeight: 600 }}>{s.full_name || 'Без имени'}</div>
+                      <div style={{ color: '#888', fontSize: 12 }}>{s.grade} класс</div>
                     </div>
                   </div>
                   <div style={{ display: 'flex', gap: 16, textAlign: 'center' }}>

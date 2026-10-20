@@ -518,7 +518,6 @@ export default function AdminPage() {
                     onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
                   >
                     <div style={{ fontWeight: 600 }}>{s.display_name || s.full_name || 'Без имени'}</div>
-                    <div style={{ color: '#888' }}>{s.email}</div>
                   </div>
                 ))}
               </div>
@@ -534,7 +533,6 @@ export default function AdminPage() {
               <div key={g.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 0', borderBottom: '1px solid #2a2a3e' }}>
                 <div>
                   <div style={{ fontWeight: 600, fontSize: 14 }}>{g.profiles?.display_name || g.profiles?.full_name || 'Без имени'}</div>
-                  <div style={{ color: '#888', fontSize: 12 }}>{g.profiles?.email}</div>
                 </div>
                 <button onClick={() => revokeAccess(g.id)} style={btn('#f5576c')}>🗑️</button>
               </div>
