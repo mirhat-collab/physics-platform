@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 
-type Student = { id: string; full_name: string; email: string; grade: string; total_xp: number; streak: number }
+type Student = { id: string; full_name: string; email?: string; grade: string; total_xp: number; streak: number }
 type Progress = { topic: string; completed_at: string }
 
 export default function ParentPage() {
@@ -50,7 +50,7 @@ export default function ParentPage() {
     const { data: links } = await supabase.from('parent_links').select('student_id').eq('parent_id', user.id)
     if (links && links.length > 0) {
       const ids = links.map(l => l.student_id)
-      const { data: studs } = await supabase.from('profiles').select('*').in('id', ids)
+      const { data: studs } = await supabase.from('profiles').select('id, full_name, grade, total_xp, streak, role').in('id', ids)
       if (studs) setStudents(studs)
     }
     setLoading(false)
@@ -60,7 +60,7 @@ export default function ParentPage() {
     if (!linkEmail.trim()) return
     setLinking(true)
     setLinkMsg('')
-    const { data: student } = await supabase.from('profiles').select('*').eq('email', linkEmail.trim()).eq('role', 'student').maybeSingle()
+    const { data: student } = await supabase.from('profiles').select('id, full_name, grade, total_xp, streak, role').eq('email', linkEmail.trim()).eq('role', 'student').maybeSingle()
     if (!student) { setLinkMsg('❌ Ученик с таким email не найден'); setLinking(false); return }
     const { data: existing } = await supabase.from('parent_links').select('id').eq('parent_id', userId).eq('student_id', student.id).maybeSingle()
     if (existing) { setLinkMsg('Этот ученик уже привязан'); setLinking(false); return }
@@ -127,11 +127,11 @@ export default function ParentPage() {
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                       <div style={{ width: 44, height: 44, borderRadius: '50%', background: 'linear-gradient(135deg,#667eea,#764ba2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700 }}>
-                        {(s.full_name || s.email).slice(0, 2).toUpperCase()}
+                        {(s.full_name || 'Без имени').slice(0, 2).toUpperCase()}
                       </div>
                       <div>
-                        <div style={{ fontWeight: 700 }}>{s.full_name || s.email}</div>
-                        <div style={{ color: '#888', fontSize: 13 }}>{s.grade} класс · {s.email}</div>
+                        <div style={{ fontWeight: 700 }}>{s.full_name || 'Без имени'}</div>
+                        <div style={{ color: '#888', fontSize: 13 }}>{s.grade} класс</div>
                       </div>
                     </div>
                     <div style={{ display: 'flex', gap: 16, textAlign: 'center' }}>

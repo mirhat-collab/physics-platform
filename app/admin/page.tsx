@@ -130,6 +130,13 @@ function MediaUploader({ existing, onDone }: { existing: MediaItem[]; onDone: (i
   )
 }
 
+// Почту показываем частично — чтобы различать учеников с одинаковыми именами
+function maskEmail(email?: string | null): string {
+  if (!email) return ''
+  const [name, domain] = email.split('@')
+  return `${name.slice(0, 2)}***@${domain ?? ''}`
+}
+
 export default function AdminPage() {
   const router = useRouter()
   const [checking, setChecking] = useState(true)
@@ -254,8 +261,6 @@ export default function AdminPage() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ class_id: accessClass.id, student_id: studentId }),
     })
-    setAccessQuery('')
-    setAccessHits([])
     await loadAccessGrants(accessClass.id)
   }
 
@@ -496,49 +501,53 @@ export default function AdminPage() {
             </div>
             <p style={{ color: '#888', fontSize: 13, marginBottom: 20 }}>
               {accessClass.is_locked
-                ? 'Класс закрыт для всех, кроме учеников из списка ниже.'
+                ? 'Класс закрыт: в нём учатся только ученики, которых ты добавил. Сами ученики записаться не могут.'
                 : 'Класс сейчас открыт для всех. Список ниже применится, если его закрыть.'}
             </p>
 
-            <span style={label}>Добавить ученика (email или имя)</span>
-            <input
-              style={input}
-              placeholder="Все ученики ниже — начни вводить, чтобы отфильтровать"
-              value={accessQuery}
-              onChange={e => searchStudents(e.target.value)}
-            />
-            {accessHits.length > 0 && (
-              <div style={{ marginBottom: 10, border: '1px solid #2a2a3e', borderRadius: 10, overflow: 'hidden' }}>
-                {accessHits.map(s => (
-                  <div
-                    key={s.id}
-                    onClick={() => grantAccess(s.id)}
-                    style={{ padding: '10px 12px', cursor: 'pointer', borderBottom: '1px solid #2a2a3e', fontSize: 13 }}
-                    onMouseEnter={e => (e.currentTarget.style.background = '#20203e')}
-                    onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
-                  >
-                    <div style={{ fontWeight: 600 }}>{s.display_name || s.full_name || 'Без имени'}</div>
-                    <div style={{ color: '#888' }}>{s.email}</div>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            <h3 style={{ fontSize: 13, color: '#888', fontWeight: 600, letterSpacing: 0.5, marginTop: 20, marginBottom: 8 }}>
-              ОТКРЫТО ДЛЯ ({accessGrants.length})
+            <h3 style={{ fontSize: 13, color: '#888', fontWeight: 600, letterSpacing: 0.5, marginBottom: 8 }}>
+              УЧЕНИКИ КЛАССА ({accessGrants.length})
             </h3>
             {accessGrants.length === 0 && (
-              <div style={{ color: '#666', fontSize: 13, padding: '8px 0' }}>Пока никто не добавлен</div>
+              <div style={{ color: '#666', fontSize: 13, padding: '8px 0' }}>Пока никто не добавлен — выбери учеников ниже</div>
             )}
             {accessGrants.map(g => (
               <div key={g.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 0', borderBottom: '1px solid #2a2a3e' }}>
                 <div>
                   <div style={{ fontWeight: 600, fontSize: 14 }}>{g.profiles?.display_name || g.profiles?.full_name || 'Без имени'}</div>
-                  <div style={{ color: '#888', fontSize: 12 }}>{g.profiles?.email}</div>
+                  <div style={{ color: '#888', fontSize: 12 }}>{maskEmail(g.profiles?.email)}</div>
                 </div>
-                <button onClick={() => revokeAccess(g.id)} style={btn('#f5576c')}>🗑️</button>
+                <button onClick={() => revokeAccess(g.id)} style={btn('#f5576c')} title="Убрать из класса">Убрать</button>
               </div>
             ))}
+
+            <h3 style={{ fontSize: 13, color: '#888', fontWeight: 600, letterSpacing: 0.5, marginTop: 24, marginBottom: 8 }}>
+              ДОБАВИТЬ УЧЕНИКА
+            </h3>
+            <input
+              style={input}
+              placeholder="Поиск по имени или email"
+              value={accessQuery}
+              onChange={e => searchStudents(e.target.value)}
+            />
+            {(() => {
+              const memberIds = new Set(accessGrants.map(g => g.student_id))
+              const candidates = accessHits.filter(s => !memberIds.has(s.id))
+              if (!candidates.length) return <div style={{ color: '#666', fontSize: 13, padding: '8px 0' }}>Никого не найдено</div>
+              return (
+                <div style={{ border: '1px solid #2a2a3e', borderRadius: 10, overflow: 'hidden' }}>
+                  {candidates.map(s => (
+                    <div key={s.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10, padding: '8px 12px', borderBottom: '1px solid #2a2a3e', fontSize: 13 }}>
+                      <div>
+                        <div style={{ fontWeight: 600 }}>{s.display_name || s.full_name || 'Без имени'}</div>
+                        <div style={{ color: '#888' }}>{maskEmail(s.email)}</div>
+                      </div>
+                      <button onClick={() => grantAccess(s.id)} style={btn('#10b981')}>+ Добавить</button>
+                    </div>
+                  ))}
+                </div>
+              )
+            })()}
           </div>
         </div>
       )}

@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import { gradeVariants } from '@/lib/grade-match'
 
-type Profile = { id: string; full_name: string; email: string; grade: string; total_xp: number; streak: number; role: string }
+type Profile = { id: string; full_name: string; email?: string; grade: string; total_xp: number; streak: number; role: string }
 type ClassStat = { name: string; students: Profile[]; avg_xp: number; completed_topics: number; total_topics: number }
 type Homework = { id: number; title: string; description: string; class_name: string; due_date: string; created_at: string; media_urls?: string[] }
 type Submission = { id: number; homework_id: number; student_name: string; answer: string; submitted_at: string; grade: string; media_url?: string }
@@ -81,15 +81,21 @@ export default function TeacherPage() {
     if (!profile || profile.role !== 'teacher') { router.push('/dashboard'); return }
     setTeacher(profile)
 
-    const { data: allStudents } = await supabase.from('profiles').select('*').eq('role', 'student').order('total_xp', { ascending: false })
+    const { data: allStudents } = await supabase.from('profiles').select('id, full_name, grade, total_xp, streak, role').eq('role', 'student').order('total_xp', { ascending: false })
     if (allStudents) setStudents(allStudents)
 
     const { data: classes } = await supabase.from('classes').select('*')
+    const { data: access } = await supabase.from('class_access').select('class_id, student_id')
     const { data: topics } = await supabase.from('topics').select('id, grade')
     const { data: progress } = await supabase.from('progress').select('*').eq('status', 'completed')
     if (classes && allStudents && progress) {
       const stats: ClassStat[] = classes.map(cls => {
-        const clsStudents = allStudents.filter(s => s.grade === cls.name)
+        // Закрытый класс (ЕНТ) — только ученики, которым доступ выдал админ
+        const members = new Set((access || []).filter(a => a.class_id === cls.id).map(a => a.student_id))
+        const gradeNum = cls.name.replace(/\D/g, '')
+        const clsStudents = cls.is_locked
+          ? allStudents.filter(s => members.has(s.id))
+          : allStudents.filter(s => s.grade === cls.name || (gradeNum && s.grade === gradeNum))
         const studentIds = clsStudents.map(s => s.id)
         const clsProgress = progress.filter(p => studentIds.includes(p.student))
         const uniqueTopics = new Set(clsProgress.map(p => p.topic))
@@ -313,11 +319,10 @@ export default function TeacherPage() {
                   <div key={s.id} style={{ background: '#1a1a2e', borderRadius: 14, padding: '14px 18px', border: '1px solid #2a2a3e', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                       <div style={{ width: 36, height: 36, borderRadius: '50%', background: 'linear-gradient(135deg,#667eea,#764ba2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 14 }}>
-                        {(s.full_name || s.email).slice(0, 2).toUpperCase()}
+                        {(s.full_name || 'Без имени').slice(0, 2).toUpperCase()}
                       </div>
                       <div>
-                        <div style={{ fontWeight: 600 }}>{s.full_name || s.email}</div>
-                        <div style={{ color: '#888', fontSize: 12 }}>{s.email}</div>
+                        <div style={{ fontWeight: 600 }}>{s.full_name || 'Без имени'}</div>
                       </div>
                     </div>
                     <div style={{ display: 'flex', gap: 16, textAlign: 'center' }}>
@@ -341,11 +346,11 @@ export default function TeacherPage() {
                   <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                     <span style={{ fontSize: 18, minWidth: 32 }}>{medal}</span>
                     <div style={{ width: 36, height: 36, borderRadius: '50%', background: 'linear-gradient(135deg,#667eea,#764ba2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 14 }}>
-                      {(s.full_name || s.email).slice(0, 2).toUpperCase()}
+                      {(s.full_name || 'Без имени').slice(0, 2).toUpperCase()}
                     </div>
                     <div>
-                      <div style={{ fontWeight: 600 }}>{s.full_name || s.email}</div>
-                      <div style={{ color: '#888', fontSize: 12 }}>{s.grade} класс · {s.email}</div>
+                      <div style={{ fontWeight: 600 }}>{s.full_name || 'Без имени'}</div>
+                      <div style={{ color: '#888', fontSize: 12 }}>{s.grade} класс</div>
                     </div>
                   </div>
                   <div style={{ display: 'flex', gap: 16, textAlign: 'center' }}>

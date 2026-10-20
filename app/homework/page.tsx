@@ -6,6 +6,8 @@ import { supabase } from '@/lib/supabase'
 type Homework = { id: number; title: string; description: string; class_name: string; due_date: string; created_at: string; media_urls?: string[] }
 type Submission = { id: number; homework_id: number; answer: string; grade: string; media_url?: string }
 
+const PREVIEW_GRADES = ['7', '8', '9', '10', '11']
+
 export default function HomeworkPage() {
   const router = useRouter()
   const [homeworks, setHomeworks] = useState<Homework[]>([])
@@ -21,6 +23,8 @@ export default function HomeworkPage() {
   const [sending, setSending] = useState<number | null>(null)
   const [sent, setSent] = useState<Record<number, boolean>>({})
   const fileRefs = useRef<Record<number, HTMLInputElement | null>>({})
+  // Учитель и админ видят страницу так, как её видит ученик выбранного класса
+  const [preview, setPreview] = useState(false)
 
   useEffect(() => { loadData() }, [])
 
@@ -32,10 +36,15 @@ export default function HomeworkPage() {
     const { data: profile } = await supabase.from('profiles').select('full_name, email, grade, role').eq('id', user.id).single()
     if (profile) { setUserName(profile.full_name || profile.email); setUserGrade(profile.grade) }
 
-    if (profile?.role === 'teacher') { router.push('/teacher'); return }
+    if (profile?.role === 'teacher' || profile?.role === 'admin') {
+      setPreview(true)
+      setUserGrade(PREVIEW_GRADES[0])
+      await loadHomework(PREVIEW_GRADES[0])
+      setLoading(false)
+      return
+    }
 
-    const { data: hw } = await supabase.from('homework').select('*').eq('class_name', profile?.grade || '').order('created_at', { ascending: false })
-    if (hw) setHomeworks(hw)
+    await loadHomework(profile?.grade || '')
 
     const { data: subs } = await supabase.from('homework_submissions').select('*').eq('student_id', user.id)
     if (subs) {
@@ -45,6 +54,16 @@ export default function HomeworkPage() {
       setSent(s)
     }
     setLoading(false)
+  }
+
+  async function loadHomework(grade: string) {
+    const { data: hw } = await supabase.from('homework').select('*').eq('class_name', grade).order('created_at', { ascending: false })
+    setHomeworks(hw || [])
+  }
+
+  function switchPreviewGrade(grade: string) {
+    setUserGrade(grade)
+    loadHomework(grade)
   }
 
   function handleFileSelect(hwId: number, file: File | null) {
@@ -95,6 +114,17 @@ export default function HomeworkPage() {
           <p style={{ color: '#888', margin: 0, fontSize: 14 }}>{userGrade} класс</p>
         </div>
 
+        {preview && (
+          <div style={{ background: 'rgba(139,124,246,0.08)', border: '1px solid rgba(139,124,246,0.3)', borderRadius: 14, padding: '14px 16px', marginBottom: 20 }}>
+            <div style={{ fontSize: 14, color: '#c4bbff', fontWeight: 600, marginBottom: 10 }}>Так эту страницу видят ученики. Выбери класс:</div>
+            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+              {PREVIEW_GRADES.map(g => (
+                <button key={g} className={`chip${userGrade === g ? ' on' : ''}`} onClick={() => switchPreviewGrade(g)}>{g} класс</button>
+              ))}
+            </div>
+          </div>
+        )}
+
         {homeworks.length === 0 && (
           <div style={{ textAlign: 'center', color: '#555', padding: '60px 0' }}>
             <div style={{ fontSize: 40, marginBottom: 12 }}>📭</div>
@@ -143,7 +173,11 @@ export default function HomeworkPage() {
                   </div>
                 )}
 
-                {isSent ? (
+                {preview ? (
+                  <div style={{ color: '#888', fontSize: 13, background: '#0f0f1a', borderRadius: 10, padding: '10px 14px', border: '1px dashed #2a2a3e' }}>
+                    Здесь ученик пишет ответ и прикрепляет фото или видео.
+                  </div>
+                ) : isSent ? (
                   <div style={{ background: '#0f0f1a', borderRadius: 10, padding: '12px 16px', border: '1px solid #2a2a3e' }}>
                     <div style={{ color: '#888', fontSize: 12, marginBottom: 6 }}>Твой ответ:</div>
                     {mySub?.answer && <div style={{ color: '#ccc', fontSize: 14, marginBottom: mySub.media_url ? 10 : 0 }}>{mySub.answer}</div>}

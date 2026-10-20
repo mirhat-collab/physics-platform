@@ -13,10 +13,10 @@ export default function ThemeToggle() {
 
   function applyTheme(isDark: boolean) {
     if (isDark) {
-      document.body.classList.remove('light-theme')
+      document.documentElement.classList.remove('light-theme')
       document.body.style.background = '#0f0f1a'
     } else {
-      document.body.classList.add('light-theme')
+      document.documentElement.classList.add('light-theme')
       document.body.style.background = '#f0f2f8'
     }
   }
