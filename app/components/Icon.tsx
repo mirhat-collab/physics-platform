@@ -18,6 +18,7 @@ const PATHS: Record<string, React.ReactNode> = {
   school: <><path d="M2 9l10-5 10 5-10 5-10-5Z" /><path d="M6 11v5c3 2 9 2 12 0v-5" /></>,
   users: <><circle cx="9" cy="8" r="3.5" /><path d="M2.5 20a6.5 6.5 0 0 1 13 0" /><path d="M16 4.5a3.5 3.5 0 0 1 0 7M18 14a6 6 0 0 1 3.5 6" /></>,
   sparkles: <><path d="M12 3l1.8 4.7L18.5 9.5l-4.7 1.8L12 16l-1.8-4.7L5.5 9.5l4.7-1.8L12 3Z" /><path d="M19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8L19 15Z" /></>,
+  pie: <><path d="M12 3a9 9 0 1 0 9 9h-9V3Z" /><path d="M15 3.5A9 9 0 0 1 20.5 9H15V3.5Z" /></>,
   check: <path d="M5 12.5l4.5 4.5L19 7" />,
   x: <><path d="M6 6l12 12M18 6 6 18" /></>,
   arrowRight: <><path d="M5 12h14M13 6l6 6-6 6" /></>,

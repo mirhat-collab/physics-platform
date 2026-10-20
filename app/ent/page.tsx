@@ -6,6 +6,7 @@ import { ENT_BATCH, ENT_COUNTS, ENT_DIFFICULTIES, ENT_SUBJECTS, type EntDifficul
 import MathText from '@/app/components/MathText'
 import Icon from '@/app/components/Icon'
 import Explain from './Explain'
+import { entMistakePayload, logAnswers } from '@/lib/answer-log'
 
 type Turn = { role: 'user' | 'assistant'; content: string }
 type Attempt = { subject: string; total: number; correct: number; created_at: string }
@@ -39,6 +40,14 @@ export default function EntPage() {
 
   useEffect(() => {
     supabase.auth.getUser().then(async ({ data: { user } }) => {
+      // Переход со страницы статистики: /ent?subject=math&section=…
+      const params = new URLSearchParams(window.location.search)
+      const subj = params.get('subject') as EntSubject | null
+      if (subj && ENT_SUBJECTS[subj]) {
+        setSubject(subj)
+        const sec = params.get('section')
+        if (sec && ENT_SUBJECTS[subj].sections.includes(sec)) setSection(sec)
+      }
       setLoggedIn(!!user)
       if (!user) return
       const { data } = await supabase
@@ -112,6 +121,14 @@ export default function EntPage() {
   function answer(choice: number) {
     if (answers[index] !== null) return
     setAnswers(prev => prev.map((a, i) => (i === index ? choice : a)))
+    const q = questions[index]
+    const ok = choice === q.correct
+    logAnswers([{
+      source: 'ent', subject,
+      section: q.section ?? (section !== 'all' ? section : null),
+      correct: ok,
+      payload: ok ? null : { ...entMistakePayload(q, choice === SKIPPED ? null : choice) },
+    }])
   }
 
   async function finish() {

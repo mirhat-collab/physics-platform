@@ -222,6 +222,20 @@ export default function ProfilePage() {
           </div>
         </div>
 
+        {/* Статистика */}
+        <Link href="/stats" style={{ textDecoration: 'none', display: 'block', marginBottom: 12 }}>
+          <div style={{ background: '#1a1a2e', border: '1px solid #2a2a3e', borderRadius: 16, padding: '18px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+              <span style={{ fontSize: 24 }}>📊</span>
+              <div>
+                <div style={{ fontWeight: 600, fontSize: 15 }}>Моя статистика</div>
+                <div style={{ color: '#888', fontSize: 12, marginTop: 2 }}>Сильные и слабые темы, работа над ошибками</div>
+              </div>
+            </div>
+            <span style={{ color: '#555', fontSize: 20 }}>→</span>
+          </div>
+        </Link>
+
         {/* Достижения */}
         <Link href="/achievements" style={{ textDecoration: 'none', display: 'block', marginBottom: 12 }}>
           <div style={{ background: '#1a1a2e', border: '1px solid #2a2a3e', borderRadius: 16, padding: '18px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer' }}>

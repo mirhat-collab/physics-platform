@@ -49,12 +49,13 @@ export const ENT_BATCH = 5
 // Дневные лимиты на одного ученика. ИИ бесплатный, но у бесплатных тарифов
 // общий лимит на весь сайт, поэтому не даём одному ученику выбрать его целиком.
 // ent_generate считается порциями по ENT_BATCH заданий.
-export const DAILY_LIMITS = { ent_generate: 40, ent_explain: 40 } as const
+export const DAILY_LIMITS = { ent_generate: 40, ent_explain: 40, stats_advice: 5 } as const
 
 export type EntQuestion = {
   question: string
   options: string[]
   correct: number
   solution: string
+  section?: string // раздел — для статистики
   bankId?: number // задание из банка, а не от ИИ
 }

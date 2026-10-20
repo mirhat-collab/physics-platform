@@ -1,9 +1,10 @@
 'use client'
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import { FORMULAS, SECTIONS, parseFormula, variablePool, type Formula, type Subject } from '@/lib/formulas'
 import Icon from '@/app/components/Icon'
 import FormulaView, { type SlotState } from './FormulaView'
+import { logAnswers } from '@/lib/answer-log'
 
 type Level = 'easy' | 'medium' | 'hard'
 const LEVELS: { id: Level; label: string; hint: string }[] = [
@@ -60,6 +61,18 @@ export default function FormulasPage() {
   const [score, setScore] = useState(0)
   const [mistakes, setMistakes] = useState<Formula[]>([])
   const [xpMsg, setXpMsg] = useState('')
+
+  // Переход со страницы статистики: /formulas?subject=physics&section=…
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    const subj = params.get('subject') as Subject | null
+    if (!subj || !SECTIONS[subj]) return
+    const sec = params.get('section')
+    Promise.resolve().then(() => {
+      setSubject(subj)
+      if (sec && SECTIONS[subj].includes(sec)) setSection(sec)
+    })
+  }, [])
 
   const available = useMemo(
     () => FORMULAS.filter(f => f.subject === subject && (section === 'all' || f.section === section)),
@@ -123,6 +136,10 @@ export default function FormulasPage() {
     setActive(null)
     if (allOk) setScore(v => v + 1)
     else setMistakes(m => [...m, q.formula])
+    logAnswers([{
+      source: 'formula', subject: q.formula.subject, section: q.formula.section, correct: allOk,
+      payload: allOk ? null : { name: q.formula.name },
+    }])
   }
 
   async function next() {

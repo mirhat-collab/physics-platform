@@ -14,7 +14,16 @@ const NO_NAV = ['/', '/login', '/admin', '/install']
 function buildGroups(role: string | null): NavGroup[] {
   const groups: NavGroup[] = []
   if (role === 'teacher') {
-    groups.push({ title: 'Учитель', items: [{ href: '/teacher', icon: 'school', label: 'Кабинет учителя' }] })
+    groups.push({ title: 'Учитель', items: [
+      { href: '/teacher', icon: 'school', label: 'Кабинет учителя' },
+      { href: '/bank', icon: 'clipboard', label: 'Банк задач' },
+    ] })
+  }
+  if (role === 'admin') {
+    groups.push({ title: 'Администратор', items: [
+      { href: '/admin', icon: 'school', label: 'Админка' },
+      { href: '/bank', icon: 'clipboard', label: 'Банк задач' },
+    ] })
   }
   if (role === 'parent') {
     groups.push({ title: 'Родитель', items: [{ href: '/parent', icon: 'users', label: 'Мои дети' }] })
@@ -26,6 +35,7 @@ function buildGroups(role: string | null): NavGroup[] {
         { href: '/dashboard', icon: 'home', label: 'Главная' },
         { href: '/topics', icon: 'book', label: 'Темы' },
         { href: '/homework', icon: 'clipboard', label: 'Домашние задания' },
+        { href: '/stats', icon: 'pie', label: 'Моя статистика' },
       ],
     },
     {

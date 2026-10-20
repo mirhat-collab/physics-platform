@@ -21,8 +21,8 @@ const SYSTEM = `Ты — опытный составитель заданий Е
 - Задания в одном наборе разные по идее, не повторяй одну задачу с другими числами.
 
 Отвечай ТОЛЬКО JSON-объектом такого вида, без пояснений:
-{"questions":[{"question":"условие","solution":"краткое решение","options":["…","…"],"correct":0}]}
-"correct" — индекс правильного варианта, с нуля.`
+{"questions":[{"section":"раздел","question":"условие","solution":"краткое решение","options":["…","…"],"correct":0}]}
+"correct" — индекс правильного варианта, с нуля. "section" — точное название раздела из запроса, к которому относится задание.`
 
 function shuffleOptions(q: EntQuestion): EntQuestion {
   const order = q.options.map((_, i) => i)
@@ -54,9 +54,9 @@ async function pickFromBank(subject: EntSubject, section: string, difficulty: En
   }
   const chosen = pool.slice(0, n)
   if (!chosen.length) return []
-  const { data: rows } = await supabase.from('ent_bank').select('id, question, options, correct, solution').in('id', chosen)
+  const { data: rows } = await supabase.from('ent_bank').select('id, section, question, options, correct, solution').in('id', chosen)
   return (rows || [])
-    .map(r => ({ question: r.question, options: r.options, correct: r.correct, solution: r.solution || '', bankId: r.id }))
+    .map(r => ({ question: r.question, options: r.options, correct: r.correct, solution: r.solution || '', section: r.section || undefined, bankId: r.id }))
     .filter(isValid)
 }
 
@@ -84,7 +84,13 @@ async function generateWithAi(subject: EntSubject, section: string, difficulty: 
 
   const parsed = parseJsonObject<{ questions: EntQuestion[] }>(text)
   return (parsed.questions || [])
-    .map(q => ({ question: String(q.question || ''), options: (q.options || []).map(String), correct: Number(q.correct), solution: String(q.solution || '') }))
+    .map(q => ({
+      question: String(q.question || ''),
+      options: (q.options || []).map(String),
+      correct: Number(q.correct),
+      solution: String(q.solution || ''),
+      section: section !== 'all' ? section : sections.includes(String(q.section)) ? String(q.section) : undefined,
+    }))
     .filter(isValid)
     .slice(0, n)
 }
