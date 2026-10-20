@@ -5,6 +5,7 @@ import { FORMULAS, SECTIONS, parseFormula, choicePool, type Formula, type Slot, 
 import Icon from '@/app/components/Icon'
 import FormulaView, { type SlotState } from './FormulaView'
 import { logAnswers } from '@/lib/answer-log'
+import { equivalentFill } from '@/lib/formula-check'
 
 type Level = 'easy' | 'medium' | 'hard'
 const LEVELS: { id: Level; label: string; hint: string }[] = [
@@ -90,6 +91,7 @@ export default function FormulasPage() {
   const [score, setScore] = useState(0)
   const [mistakes, setMistakes] = useState<Formula[]>([])
   const [xpMsg, setXpMsg] = useState('')
+  const [altForm, setAltForm] = useState(false) // ответ засчитан как равносильная запись
 
   // Переход со страницы статистики: /formulas?subject=physics&section=…
   useEffect(() => {
@@ -153,11 +155,14 @@ export default function FormulasPage() {
 
   function check() {
     if (!q) return
-    let allOk = true
+    let allOk = q.slots.every((s, i) => !s.hidden || s.value === q.answers[i])
+    // Другая, но равносильная запись (U₁/U₂ = N₁/N₂ ↔ N₁/N₂ = U₁/U₂, ab ↔ ba) тоже верна
+    const equivalent = !allOk && equivalentFill(q.formula, q.slots.map((s, i) => (s.hidden ? s.value ?? '' : q.answers[i]))) === true
+    if (equivalent) allOk = true
+    setAltForm(equivalent)
     const slots = q.slots.map((s, i) => {
       if (!s.hidden) return s
-      const ok = s.value === q.answers[i]
-      if (!ok) allOk = false
+      const ok = allOk || s.value === q.answers[i]
       return { ...s, status: ok ? 'ok' as const : 'bad' as const }
     })
     updateSlots(slots)
@@ -319,9 +324,9 @@ export default function FormulasPage() {
           <div className="animate-fade-in" style={{ marginTop: 22, padding: '14px 16px', borderRadius: 12, textAlign: 'left', background: answeredRight ? 'rgba(52,211,153,0.08)' : 'rgba(248,113,113,0.08)', border: `1px solid ${answeredRight ? 'rgba(52,211,153,0.3)' : 'rgba(248,113,113,0.3)'}` }}>
             <div style={{ fontWeight: 700, marginBottom: 8, color: answeredRight ? 'var(--good)' : 'var(--bad)', display: 'flex', alignItems: 'center', gap: 6 }}>
               <Icon name={answeredRight ? 'check' : 'x'} size={18} />
-              {answeredRight ? 'Верно!' : 'Есть ошибка. Правильно так:'}
+              {answeredRight ? (altForm ? 'Верно! Это равносильная запись. В учебнике обычно так:' : 'Верно!') : 'Есть ошибка. Правильно так:'}
             </div>
-            {!answeredRight && (
+            {(!answeredRight || altForm) && (
               <div style={{ textAlign: 'center', margin: '6px 0 12px' }}>
                 <FormulaView toks={q.toks} size={22} />
               </div>
