@@ -1,7 +1,7 @@
 'use client'
 import { useEffect, useMemo, useState } from 'react'
 import { supabase } from '@/lib/supabase'
-import { FORMULAS, SECTIONS, parseFormula, variablePool, type Formula, type Subject } from '@/lib/formulas'
+import { FORMULAS, SECTIONS, parseFormula, choicePool, type Formula, type Slot, type Subject } from '@/lib/formulas'
 import Icon from '@/app/components/Icon'
 import FormulaView, { type SlotState } from './FormulaView'
 import { logAnswers } from '@/lib/answer-log'
@@ -9,8 +9,8 @@ import { logAnswers } from '@/lib/answer-log'
 type Level = 'easy' | 'medium' | 'hard'
 const LEVELS: { id: Level; label: string; hint: string }[] = [
   { id: 'easy', label: 'Лёгкий', hint: 'спрятана 1 буква' },
-  { id: 'medium', label: 'Средний', hint: 'спрятаны 2 буквы' },
-  { id: 'hard', label: 'Сложный', hint: 'спрятаны все буквы' },
+  { id: 'medium', label: 'Средний', hint: 'буква + функция или число' },
+  { id: 'hard', label: 'Сложный', hint: 'спрятано всё: буквы, функции, числа, знаки' },
 ]
 const ROUND_SIZE = 10
 
@@ -28,19 +28,48 @@ type Question = {
   toks: ReturnType<typeof parseFormula>['toks']
   answers: string[]          // правильная буква для каждой позиции
   slots: SlotState[]
-  choices: string[]
+  choices: { v: string; upright: boolean }[] // upright — функция, число или знак
 }
 
-function makeQuestion(formula: Formula, level: Level): Question {
-  const { toks, slots: names } = parseFormula(formula.expr)
-  const distinct = Array.from(new Set(names))
-  const hideCount = level === 'easy' ? 1 : level === 'medium' ? Math.min(2, distinct.length) : distinct.length
-  const hidden = new Set(shuffle(distinct).slice(0, hideCount))
+const HARD_LIMIT = 7 // больше пропусков в одной формуле — уже не тренировка, а лотерея
+const KIND_ORDER: Slot['kind'][] = ['trig', 'arc', 'log', 'var', 'num', 'sign']
 
-  // Ложные варианты — буквы из других формул того же предмета
-  const pool = variablePool(formula.subject).filter(v => !distinct.includes(v))
-  const extra = Math.max(3, Math.min(8, hidden.size + 4) - hidden.size)
-  const choices = shuffle([...hidden, ...shuffle(pool).slice(0, extra)])
+function makeQuestion(formula: Formula, level: Level): Question {
+  const { toks, slots: names, kinds } = parseFormula(formula.expr)
+  const kindOf = new Map(names.map((n, i) => [n, kinds[i]]))
+  const distinct = Array.from(kindOf.keys())
+  const vars = shuffle(distinct.filter(n => kindOf.get(n) === 'var'))
+  const consts = shuffle(distinct.filter(n => kindOf.get(n) !== 'var'))
+  // Знаки прячем только на сложном уровне — на среднем это слишком мелко
+  const mainConsts = consts.filter(n => kindOf.get(n) !== 'sign')
+
+  let hiddenList: string[]
+  if (level === 'easy') hiddenList = vars.length ? vars.slice(0, 1) : consts.slice(0, 1)
+  else if (level === 'medium') {
+    hiddenList = mainConsts.length && vars.length
+      ? [vars[0], mainConsts[0]]
+      : [...vars, ...mainConsts].slice(0, 2)
+  } else {
+    hiddenList = [...distinct]
+      .sort((x, y) => KIND_ORDER.indexOf(kindOf.get(x)!) - KIND_ORDER.indexOf(kindOf.get(y)!))
+      .slice(0, HARD_LIMIT)
+  }
+  const hidden = new Set(hiddenList)
+
+  // Ложные варианты — того же вида, что и спрятанное: буквы из других формул,
+  // другие функции, другие числа
+  const pool = choicePool(formula.subject)
+  const fakes = new Map<string, Slot['kind']>()
+  const hiddenKinds = new Set(hiddenList.map(n => kindOf.get(n)!))
+  for (const kind of hiddenKinds) {
+    const count = hiddenList.filter(n => kindOf.get(n) === kind).length
+    const want = kind === 'sign' ? 1 : Math.max(2, Math.min(4, count + 2))
+    shuffle(pool[kind].filter(v => !kindOf.has(v))).slice(0, want).forEach(v => fakes.set(v, kind))
+  }
+  const choices = shuffle([
+    ...hiddenList.map(v => ({ v, upright: kindOf.get(v) !== 'var' })),
+    ...[...fakes].map(([v, kind]) => ({ v, upright: kind !== 'var' })),
+  ])
 
   return {
     formula, toks, answers: names, choices,
@@ -308,10 +337,10 @@ export default function FormulasPage() {
 
       {!checked && (
         <div style={{ marginTop: 18 }}>
-          <div className="label" style={{ textAlign: 'center' }}>Выбери букву для пропуска</div>
+          <div className="label" style={{ textAlign: 'center' }}>Выбери, что вставить в пропуск</div>
           <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', justifyContent: 'center' }}>
             {q.choices.map(c => (
-              <button key={c} className="fx-choice" onClick={() => pick(c)} disabled={active === null && allFilled}>{c}</button>
+              <button key={c.v} className={`fx-choice${c.upright ? ' fx-upright' : ''}`} onClick={() => pick(c.v)} disabled={active === null && allFilled}>{c.v}</button>
             ))}
           </div>
         </div>

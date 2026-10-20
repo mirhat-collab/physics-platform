@@ -7,7 +7,7 @@ export type SlotState = {
   status?: 'ok' | 'bad'
 }
 
-// Рисует формулу: переменные курсивом, дроби — столбиком, спрятанные буквы — пустыми клетками.
+// Рисует формулу: переменные курсивом, функции и числа прямо, дроби — столбиком, спрятанные буквы — пустыми клетками.
 export default function FormulaView({ toks, slots, activeSlot, onSlotClick, size = 30 }: {
   toks: Tok[]
   slots?: SlotState[]
@@ -45,8 +45,12 @@ function Seq({ toks, slots, activeSlot, onSlotClick }: {
           </span>
         )
         const state = slots?.[tok.slot]
-        if (!state?.hidden) return <span key={i} className="fx-var">{tok.v}</span>
+        if (!state?.hidden) {
+          const cls = tok.t === 'var' ? 'fx-var' : tok.kind === 'num' || tok.kind === 'sign' ? 'fx-text' : 'fx-text fx-fn'
+          return <span key={i} className={cls}>{tok.v}</span>
+        }
         const cls = ['fx-blank']
+        if (tok.t === 'const') cls.push('const')
         if (activeSlot === tok.slot) cls.push('active')
         if (state.value) cls.push('filled')
         if (state.status) cls.push(state.status)

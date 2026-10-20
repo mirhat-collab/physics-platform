@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 
 type Profile = { id: string; full_name: string; email?: string; grade: string; total_xp: number; streak: number }
-type ClassStat = { name: string; total_topics: number; completed_topics: number; avg_xp: number; student_count: number }
+type ClassStat = { name: string; total_topics: number; completed_topics: number; avg_xp: number; student_count: number; locked: boolean }
 
 export default function ProgressPage() {
   const [profiles, setProfiles] = useState<Profile[]>([])
@@ -22,19 +22,25 @@ export default function ProgressPage() {
       const me = profilesData.find(p => p.id === user.id)
       if (me) setCurrentUser(me)
     }
-    const { data: classes } = await supabase.from('classes').select('id, name')
+    const { data: classes } = await supabase.from('classes').select('id, name, is_locked')
+    // Закрытый класс (например, ЕНТ) — ученики только из списка админа.
+    // Ученик видит лишь свою строку доступа, учитель/админ — все.
+    const { data: access } = await supabase.from('class_access').select('class_id, student_id')
     const { data: topics } = await supabase.from('topics').select('id, grade')
     const { data: progress } = await supabase.from('progress').select('student, topic, status').eq('status', 'completed')
     if (classes && profilesData && progress) {
       const stats: ClassStat[] = classes.map(cls => {
         const gradeNum = cls.name.replace(/\D/g, '')
-        const students = profilesData.filter(p => p.grade === gradeNum || p.grade === cls.name)
+        const members = new Set((access || []).filter(a => a.class_id === cls.id).map(a => a.student_id))
+        const students = cls.is_locked
+          ? profilesData.filter(p => members.has(p.id))
+          : profilesData.filter(p => (gradeNum && p.grade === gradeNum) || p.grade === cls.name)
         const studentIds = students.map(s => s.id)
         const completedByClass = progress.filter(p => studentIds.includes(p.student))
         const uniqueTopics = new Set(completedByClass.map(p => p.topic))
         const avgXp = students.length > 0 ? Math.round(students.reduce((sum, s) => sum + s.total_xp, 0) / students.length) : 0
-        const totalTopics = topics ? topics.filter(t => t.grade === gradeNum || t.grade === cls.name).length : 0
-        return { name: cls.name, total_topics: totalTopics, completed_topics: uniqueTopics.size, avg_xp: avgXp, student_count: students.length }
+        const totalTopics = topics ? topics.filter(t => (gradeNum && t.grade === gradeNum) || t.grade === cls.name).length : 0
+        return { locked: !!cls.is_locked, name: cls.name, total_topics: totalTopics, completed_topics: uniqueTopics.size, avg_xp: avgXp, student_count: students.length }
       })
       setClassStats(stats)
     }
@@ -141,7 +147,9 @@ export default function ProgressPage() {
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
                     <div>
                       <div style={{ fontWeight: 700, fontSize: 18 }}>{cls.name}</div>
-                      <div style={{ color: '#888', fontSize: 13, marginTop: 2 }}>{cls.student_count} учеников</div>
+                      <div style={{ color: '#888', fontSize: 13, marginTop: 2 }}>{cls.locked
+                          ? (currentUser ? '🔒 закрытый класс' : `🔒 по списку администратора · ${cls.student_count} учеников`)
+                          : `${cls.student_count} учеников`}</div>
                     </div>
                     <div style={{ display: 'flex', gap: 20, textAlign: 'center' }}>
                       <div>

@@ -85,11 +85,17 @@ export default function TeacherPage() {
     if (allStudents) setStudents(allStudents)
 
     const { data: classes } = await supabase.from('classes').select('*')
+    const { data: access } = await supabase.from('class_access').select('class_id, student_id')
     const { data: topics } = await supabase.from('topics').select('id, grade')
     const { data: progress } = await supabase.from('progress').select('*').eq('status', 'completed')
     if (classes && allStudents && progress) {
       const stats: ClassStat[] = classes.map(cls => {
-        const clsStudents = allStudents.filter(s => s.grade === cls.name)
+        // Закрытый класс (ЕНТ) — только ученики, которым доступ выдал админ
+        const members = new Set((access || []).filter(a => a.class_id === cls.id).map(a => a.student_id))
+        const gradeNum = cls.name.replace(/\D/g, '')
+        const clsStudents = cls.is_locked
+          ? allStudents.filter(s => members.has(s.id))
+          : allStudents.filter(s => s.grade === cls.name || (gradeNum && s.grade === gradeNum))
         const studentIds = clsStudents.map(s => s.id)
         const clsProgress = progress.filter(p => studentIds.includes(p.student))
         const uniqueTopics = new Set(clsProgress.map(p => p.topic))

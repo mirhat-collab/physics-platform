@@ -351,6 +351,7 @@ body:has(.app-tabbar) .app-main { padding-bottom: calc(var(--tabbar-h) + env(saf
 }
 .fx-text { white-space: pre; }
 .fx-var { font-style: italic; padding: 0 1px; }
+.fx-fn { padding-right: 0.15em; }
 .fx-frac { display: inline-flex; flex-direction: column; align-items: center; vertical-align: middle; margin: 0 4px; font-size: 0.85em; }
 .fx-num { display: inline-flex; align-items: center; padding: 0 4px 3px; }
 .fx-den { display: inline-flex; align-items: center; padding: 3px 4px 0; border-top: 2px solid currentColor; align-self: stretch; justify-content: center; }
@@ -372,6 +373,7 @@ body:has(.app-tabbar) .app-main { padding-bottom: calc(var(--tabbar-h) + env(saf
   border: 1px solid var(--line); background: var(--surface-2);
   color: var(--text); font-family: 'Cambria Math', 'Times New Roman', serif; font-style: italic; font-size: 22px; cursor: pointer;
 }
+.fx-choice.fx-upright, .fx-blank.const { font-style: normal; }
 .fx-choice:hover:not(:disabled) { border-color: var(--accent); }
 .fx-choice:disabled { opacity: 0.4; cursor: default; }
 

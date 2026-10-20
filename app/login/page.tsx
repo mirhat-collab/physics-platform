@@ -1,23 +1,11 @@
 'use client'
 import { useState } from 'react'
+import { getActualGrade } from '@/lib/grade-match'
 import { supabase } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
 
 const GRADES = ['7', '8', '9', '10', '11']
 
-function getActualGrade(grade: string, createdAt: string): string {
-  const gradeNum = parseInt(grade)
-  if (isNaN(gradeNum)) return grade
-  const now = new Date()
-  const created = new Date(createdAt)
-  const currentYear = now.getFullYear()
-  let yearsPassedSinceSep = 0
-  for (let y = created.getFullYear(); y <= currentYear; y++) {
-    const sep = new Date(y, 8, 1)
-    if (sep > created && sep <= now) yearsPassedSinceSep++
-  }
-  return Math.min(gradeNum + yearsPassedSinceSep, 11).toString()
-}
 export default function LoginPage() {
   const router = useRouter()
   const [isSignUp, setIsSignUp] = useState(false)
@@ -47,23 +35,40 @@ export default function LoginPage() {
         if (!valid) { setError('Неверный код учителя!'); setLoading(false); return }
       }
 
-      const { data, error } = await supabase.auth.signUp({ email, password })
+      // Имя, класс и роль ученика/родителя сохраняет триггер handle_new_user
+      // из данных регистрации. Роль клиент сам менять не может.
+      const profileGrade = role === 'student' ? grade : ''
+      const { data, error } = await supabase.auth.signUp({
+        email, password,
+        options: { data: { full_name: fullName, grade: profileGrade, role: role === 'parent' ? 'parent' : 'student' } },
+      })
       if (error) { setError(error.message); setLoading(false); return }
 
-      if (data.user) {
+      if (data.user && data.session) {
         const now = new Date().toISOString()
-        const { error: profileError } = await supabase.from('profiles').update({
-          email,
+        await supabase.from('profiles').update({
           full_name: fullName,
-          grade: role === 'teacher' ? 'Учитель' : grade,
-          role,
+          grade: profileGrade,
           last_visit: now.split('T')[0],
         }).eq('id', data.user.id)
-        if (profileError) {
-          setError('Ошибка создания профиля. Попробуй снова.')
-          setLoading(false)
-          return
+
+        if (role === 'teacher') {
+          const res = await fetch('/api/register-teacher', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ code: teacherCode }),
+          })
+          if (!res.ok) {
+            const d = await res.json().catch(() => null)
+            setError(d?.error || 'Не удалось подтвердить код учителя. Войди и попробуй снова.')
+            setLoading(false)
+            return
+          }
         }
+      } else if (data.user) {
+        setError('Проверь почту и подтверди регистрацию, затем войди.')
+        setLoading(false)
+        return
       }
       router.push(role === 'teacher' ? '/teacher' : role === 'parent' ? '/parent' : '/dashboard')
 
@@ -85,7 +90,7 @@ export default function LoginPage() {
 
           const actualGrade = profile.role === 'teacher'
             ? profile.grade
-            : getActualGrade(profile.grade, profile.created_at || new Date().toISOString())
+            : getActualGrade(profile.grade, profile.last_visit)
 
           await supabase.from('profiles').update({
             last_visit: today,
