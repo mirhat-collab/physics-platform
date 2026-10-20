@@ -1,12 +1,8 @@
-import { type Template, num, txt, rnd, pick, fmt, fx, frac, signed, term, lead, pi, distinct } from './helpers'
+import { type Template, num, txt, rnd, pick, fx, frac, signed, term, lead, pi, distinct } from './helpers'
 
 // Пифагоровы тройки — чтобы ответы получались целыми
 const TRIPLES: [number, number, number][] = [[3, 4, 5], [5, 12, 13], [6, 8, 10], [8, 15, 17], [7, 24, 25], [9, 12, 15], [12, 16, 20]]
 
-// Табличные значения: угол в градусах → значение в LaTeX и числом
-const SIN: Record<number, [string, number]> = {
-  0: ['0', 0], 30: ['\\frac{1}{2}', 0.5], 45: ['\\frac{\\sqrt{2}}{2}', Math.SQRT1_2], 60: ['\\frac{\\sqrt{3}}{2}', Math.sqrt(3) / 2], 90: ['1', 1],
-}
 const RAD: Record<number, string> = {
   30: '\\frac{\\pi}{6}', 45: '\\frac{\\pi}{4}', 60: '\\frac{\\pi}{3}', 90: '\\frac{\\pi}{2}', 120: '\\frac{2\\pi}{3}', 135: '\\frac{3\\pi}{4}',
   150: '\\frac{5\\pi}{6}', 180: '\\pi', 210: '\\frac{7\\pi}{6}', 225: '\\frac{5\\pi}{4}', 240: '\\frac{4\\pi}{3}', 270: '\\frac{3\\pi}{2}',
@@ -308,7 +304,9 @@ export const MATH_TEMPLATES: Template[] = [
   {
     topic: 'Теорема Виета',
     gen: n => {
-      let [r1, r2] = distinct(2, 1, 8).map((x, i) => (i ? -x : x))
+      const pair = distinct(2, 1, 8)
+      const r1 = pair[0]
+      let r2 = -pair[1]
       if (r1 + r2 === 0) r2 -= 1
       return txt(`Составьте приведённое квадратное уравнение с корнями ${r1} и ${r2}.`,
         `$x^2 ${term(-(r1 + r2), 'x')} ${signed(r1 * r2)} = 0$`,

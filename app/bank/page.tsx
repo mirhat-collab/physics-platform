@@ -32,16 +32,6 @@ export default function BankPage() {
   const [msg, setMsg] = useState('')
   const [saving, setSaving] = useState(false)
 
-  useEffect(() => {
-    supabase.auth.getUser().then(async ({ data: { user } }) => {
-      if (!user) { router.push('/login'); return }
-      const { data: p } = await supabase.from('profiles').select('role').eq('id', user.id).single()
-      const ok = p?.role === 'teacher' || p?.role === 'admin'
-      setAllowed(ok)
-      if (ok) await load(0)
-    })
-  }, [router])
-
   async function load(pageNo: number) {
     const { data, count: c } = await supabase
       .from('ent_bank').select('*', { count: 'exact' })
@@ -51,6 +41,16 @@ export default function BankPage() {
     setCount(c || 0)
     setPage(pageNo)
   }
+
+  useEffect(() => {
+    supabase.auth.getUser().then(async ({ data: { user } }) => {
+      if (!user) { router.push('/login'); return }
+      const { data: p } = await supabase.from('profiles').select('role').eq('id', user.id).single()
+      const ok = p?.role === 'teacher' || p?.role === 'admin'
+      setAllowed(ok)
+      if (ok) await load(0)
+    })
+  }, [router])
 
   const bulkParsed = mode === 'bulk' ? parseBulk(bulk) : []
 
