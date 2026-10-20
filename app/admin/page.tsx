@@ -130,6 +130,13 @@ function MediaUploader({ existing, onDone }: { existing: MediaItem[]; onDone: (i
   )
 }
 
+// Почту показываем частично — чтобы различать учеников с одинаковыми именами
+function maskEmail(email?: string | null): string {
+  if (!email) return ''
+  const [name, domain] = email.split('@')
+  return `${name.slice(0, 2)}***@${domain ?? ''}`
+}
+
 export default function AdminPage() {
   const router = useRouter()
   const [checking, setChecking] = useState(true)
@@ -518,6 +525,7 @@ export default function AdminPage() {
                     onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
                   >
                     <div style={{ fontWeight: 600 }}>{s.display_name || s.full_name || 'Без имени'}</div>
+                    <div style={{ color: '#888' }}>{maskEmail(s.email)}</div>
                   </div>
                 ))}
               </div>
@@ -533,6 +541,7 @@ export default function AdminPage() {
               <div key={g.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 0', borderBottom: '1px solid #2a2a3e' }}>
                 <div>
                   <div style={{ fontWeight: 600, fontSize: 14 }}>{g.profiles?.display_name || g.profiles?.full_name || 'Без имени'}</div>
+                  <div style={{ color: '#888', fontSize: 12 }}>{maskEmail(g.profiles?.email)}</div>
                 </div>
                 <button onClick={() => revokeAccess(g.id)} style={btn('#f5576c')}>🗑️</button>
               </div>

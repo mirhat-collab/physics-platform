@@ -25,15 +25,16 @@ export async function POST() {
     .select('source, subject, section, topic, correct, created_at')
     .eq('user_id', user.id)
     .gte('created_at', since)
-    .limit(5000)
+    .order('created_at', { ascending: false })
+    .limit(1000) // больше 1000 строк сервер всё равно не отдаёт
 
   const stats = sectionStats((rows || []) as LogRow[])
   if (!stats.length) {
     return NextResponse.json({ error: 'Пока нет данных — реши несколько заданий в тренажёрах, и я составлю план' }, { status: 400 })
   }
 
-  const quotaError = await checkAiQuota('stats_advice')
-  if (quotaError) return quotaError
+  const quota = await checkAiQuota('stats_advice')
+  if (quota.error) return quota.error
 
   const lines = stats
     .sort((a, b) => a.accuracy - b.accuracy)
@@ -45,6 +46,7 @@ export async function POST() {
       { role: 'system', content: SYSTEM },
       { role: 'user', content: `Статистика ученика за последние 60 дней:\n${lines}` },
     ], { maxTokens: 4000, effort: 'low' })
+    await quota.record()
     return NextResponse.json({ text })
   } catch (err) {
     return aiErrorResponse(err)

@@ -40,7 +40,8 @@ export async function chat(messages: ChatMessage[], opts: { json?: boolean; maxT
           ...(opts.json ? { response_format: { type: 'json_object' } } : {}),
           ...(p.reasoning ? { reasoning_effort: opts.effort ?? 'medium' } : {}),
         }),
-        signal: AbortSignal.timeout(90_000),
+        // Три провайдера по 30 с укладываются в лимит времени функции (100–120 с)
+        signal: AbortSignal.timeout(30_000),
       })
       if (!res.ok) {
         console.error(`AI ${p.name}: HTTP ${res.status}`, (await res.text()).slice(0, 300))
@@ -66,13 +67,14 @@ export function parseJsonObject<T>(text: string): T {
 
 type Kind = keyof typeof DAILY_LIMITS
 
-// Проверяет, что ученик вошёл в аккаунт и не исчерпал дневной лимит,
-// и записывает запрос в журнал. Возвращает ответ-ошибку или null.
-export async function checkAiQuota(kind: Kind): Promise<NextResponse | null> {
+// Проверяет, что ученик вошёл в аккаунт и не исчерпал дневной лимит.
+// Запрос записываем в журнал только после удачного ответа ИИ (record),
+// чтобы сбои провайдера не съедали лимит.
+export async function checkAiQuota(kind: Kind): Promise<{ error: NextResponse } | { error: null; record: () => Promise<void> }> {
   const supabase = await createSupabaseServer()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) {
-    return NextResponse.json({ error: 'Войди в аккаунт, чтобы пользоваться ИИ' }, { status: 401 })
+    return { error: NextResponse.json({ error: 'Войди в аккаунт, чтобы пользоваться ИИ' }, { status: 401 }) }
   }
 
   // Начало текущих суток по времени Казахстана (UTC+5)
@@ -88,14 +90,18 @@ export async function checkAiQuota(kind: Kind): Promise<NextResponse | null> {
     .gte('created_at', since.toISOString())
 
   if ((count ?? 0) >= DAILY_LIMITS[kind]) {
-    return NextResponse.json(
-      { error: `Лимит на сегодня исчерпан (${DAILY_LIMITS[kind]} запросов). Приходи завтра!` },
-      { status: 429 },
-    )
+    return {
+      error: NextResponse.json(
+        { error: `Лимит на сегодня исчерпан (${DAILY_LIMITS[kind]} запросов). Приходи завтра!` },
+        { status: 429 },
+      ),
+    }
   }
 
-  await supabase.from('ai_usage').insert({ user_id: user.id, kind })
-  return null
+  return {
+    error: null,
+    record: async () => { await supabase.from('ai_usage').insert({ user_id: user.id, kind }) },
+  }
 }
 
 export function aiErrorResponse(err: unknown): NextResponse {

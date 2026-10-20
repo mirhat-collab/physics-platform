@@ -83,7 +83,13 @@ export default function AppNav() {
 
   useEffect(() => {
     supabase.auth.getUser().then(async ({ data: { user } }) => {
-      try { setDark(localStorage.getItem('theme') !== 'light') } catch { /* нет доступа к storage */ }
+      // Применяем сохранённую тему на любой странице, а не только в профиле
+      try {
+        const isDark = localStorage.getItem('theme') !== 'light'
+        setDark(isDark)
+        document.documentElement.classList.toggle('light-theme', !isDark)
+        document.body.style.background = isDark ? '#0f0f1a' : '#f0f2f8'
+      } catch { /* нет доступа к storage */ }
       if (!user) return
       const { data: p } = await supabase.from('profiles').select('role, full_name, email, avatar_url').eq('id', user.id).single()
       if (p) {
@@ -102,7 +108,7 @@ export default function AppNav() {
     const next = !dark
     setDark(next)
     try { localStorage.setItem('theme', next ? 'dark' : 'light') } catch { /* нет доступа к storage */ }
-    document.body.classList.toggle('light-theme', !next)
+    document.documentElement.classList.toggle('light-theme', !next)
     document.body.style.background = next ? '#0f0f1a' : '#f0f2f8'
   }
 

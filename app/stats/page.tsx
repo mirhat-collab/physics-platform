@@ -15,7 +15,7 @@ import MathText from '@/app/components/MathText'
 import Icon from '@/app/components/Icon'
 import Explain from '@/app/ent/Explain'
 
-type Mistake = { id: number; subject: 'physics' | 'math'; section: string | null; created_at: string; payload: MistakePayload }
+type Mistake = { id: number; subject: 'physics' | 'math'; section: string | null; topic: string | null; created_at: string; payload: MistakePayload }
 type Turn = { role: 'user' | 'assistant'; content: string }
 
 const LETTERS = 'ABCDE'
@@ -55,9 +55,9 @@ export default function StatsPage() {
       const since = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString()
       const [log, attempts, wrong] = await Promise.all([
         supabase.from('answer_log').select('source, subject, section, topic, correct, created_at')
-          .eq('user_id', user.id).gte('created_at', since).order('created_at', { ascending: false }).limit(5000),
+          .eq('user_id', user.id).gte('created_at', since).order('created_at', { ascending: false }).limit(1000),
         supabase.from('ent_attempts').select('id', { count: 'exact', head: true }).eq('user_id', user.id),
-        supabase.from('answer_log').select('id, subject, section, created_at, payload')
+        supabase.from('answer_log').select('id, subject, section, topic, created_at, payload')
           .eq('user_id', user.id).eq('source', 'ent').eq('correct', false).not('payload', 'is', null)
           .order('created_at', { ascending: false }).limit(30),
       ])
@@ -87,7 +87,7 @@ export default function StatsPage() {
     setRetry(r => ({ ...r, [m.id]: choice }))
     // Повторное решение тоже идёт в статистику — так видно, что ученик исправился
     const ok = choice === m.payload.correct
-    logAnswers([{ source: 'ent', subject: m.subject, section: m.section, correct: ok, payload: ok ? null : { ...m.payload, chosen: choice } }])
+    logAnswers([{ source: 'ent', subject: m.subject, section: m.section, topic: m.topic, correct: ok, payload: ok ? null : { ...m.payload, chosen: choice } }])
   }
 
   if (loading) return (
@@ -125,7 +125,7 @@ export default function StatsPage() {
   return (
     <div className="page animate-fade-in-up">
       <h1 className="page-title">Моя статистика</h1>
-      <p className="page-sub">За последние 90 дней: где получается хорошо, где ошибаешься чаще и что делать дальше.</p>
+      <p className="page-sub">По последним ответам (до 1000 за 90 дней): где получается хорошо, где ошибаешься чаще и что делать дальше.</p>
 
       {/* Итоги */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 10, marginBottom: 16 }}>

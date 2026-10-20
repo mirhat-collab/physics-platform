@@ -153,10 +153,11 @@ export async function POST(req: NextRequest) {
 
   if (aiSlots.length) {
     // Если лимит ИИ исчерпан или ИИ недоступен — молча добираем задачами по шаблонам
-    const quotaError = await checkAiQuota('ent_generate')
-    if (!quotaError) {
+    const quota = await checkAiQuota('ent_generate')
+    if (!quota.error) {
       try {
         await fillWithAi(subject, difficulty, aiSlots)
+        await quota.record()
       } catch (err) {
         console.error('ENT AI fallback to templates:', err)
       }

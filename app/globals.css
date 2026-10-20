@@ -59,14 +59,15 @@ input:focus-visible, textarea:focus-visible, select:focus-visible, button:focus-
   outline-offset: 2px;
 }
 
-/* Светлая тема — переворачивает все цвета */
-body.light-theme {
+/* Светлая тема — переворачивает все цвета.
+   Фильтр ставим на <html>: на <body> он ломает position: fixed у меню */
+html.light-theme {
   filter: invert(1) hue-rotate(180deg);
 }
 
 /* Картинки и видео переворачиваем обратно чтобы выглядели нормально */
-body.light-theme img,
-body.light-theme video {
+html.light-theme img,
+html.light-theme video {
   filter: invert(1) hue-rotate(180deg);
 }
 

@@ -36,8 +36,8 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Слишком длинный диалог — начни объяснение заново' }, { status: 400 })
   }
 
-  const quotaError = await checkAiQuota('ent_explain')
-  if (quotaError) return quotaError
+  const quota = await checkAiQuota('ent_explain')
+  if (quota.error) return quota.error
 
   const letters = 'ABCDEF'
   const optionsText = options.map((o, i) => `${letters[i]}) ${o}`).join('\n')
@@ -68,6 +68,7 @@ ${solution ? `\nКраткое решение составителя (прове
 
   try {
     const text = await chat(messages, { maxTokens: 4000, effort: 'low' })
+    await quota.record()
     return NextResponse.json({ text })
   } catch (err) {
     return aiErrorResponse(err)

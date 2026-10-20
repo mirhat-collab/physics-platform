@@ -59,9 +59,13 @@ export default function BankPage() {
     setMsg('')
     const base = { subject, section, topic, difficulty }
     const items = mode === 'one'
-      ? [{ ...base, question: question.trim(), options: options.map(o => o.trim()).filter(Boolean), correct, solution: solution.trim() || null }]
+      ? [(() => {
+          // Пустые варианты убираем, а номер правильного пересчитываем
+          const kept = options.map((o, i) => ({ o: o.trim(), i })).filter(x => x.o)
+          return { ...base, question: question.trim(), options: kept.map(x => x.o), correct: kept.findIndex(x => x.i === correct), solution: solution.trim() || null }
+        })()]
       : bulkParsed.map(t => ({ ...base, ...t, solution: t.solution || null }))
-    const bad = items.find(t => !t.question || t.options.length < 2 || t.correct >= t.options.length)
+    const bad = items.find(t => !t.question || t.options.length < 2 || t.correct < 0 || t.correct >= t.options.length)
     if (!items.length || bad) {
       setMsg('Проверь задание: нужно условие, минимум 2 варианта и правильный ответ')
       setSaving(false)

@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import { gradeVariants } from '@/lib/grade-match'
 
-type Profile = { id: string; full_name: string; email: string; grade: string; total_xp: number; streak: number; role: string }
+type Profile = { id: string; full_name: string; email?: string; grade: string; total_xp: number; streak: number; role: string }
 type ClassStat = { name: string; students: Profile[]; avg_xp: number; completed_topics: number; total_topics: number }
 type Homework = { id: number; title: string; description: string; class_name: string; due_date: string; created_at: string; media_urls?: string[] }
 type Submission = { id: number; homework_id: number; student_name: string; answer: string; submitted_at: string; grade: string; media_url?: string }
@@ -81,7 +81,7 @@ export default function TeacherPage() {
     if (!profile || profile.role !== 'teacher') { router.push('/dashboard'); return }
     setTeacher(profile)
 
-    const { data: allStudents } = await supabase.from('profiles').select('*').eq('role', 'student').order('total_xp', { ascending: false })
+    const { data: allStudents } = await supabase.from('profiles').select('id, full_name, grade, total_xp, streak, role').eq('role', 'student').order('total_xp', { ascending: false })
     if (allStudents) setStudents(allStudents)
 
     const { data: classes } = await supabase.from('classes').select('*')

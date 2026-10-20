@@ -2,7 +2,7 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 
-type Profile = { id: string; full_name: string; email: string; grade: string; total_xp: number; streak: number }
+type Profile = { id: string; full_name: string; email?: string; grade: string; total_xp: number; streak: number }
 type ClassStat = { name: string; total_topics: number; completed_topics: number; avg_xp: number; student_count: number }
 
 export default function ProgressPage() {
@@ -16,7 +16,7 @@ export default function ProgressPage() {
 
   async function loadData() {
     const { data: { user } } = await supabase.auth.getUser()
-    const { data: profilesData } = await supabase.from('profiles').select('*').eq('role', 'student').order('total_xp', { ascending: false })
+    const { data: profilesData } = await supabase.from('profiles').select('id, full_name, grade, total_xp, streak, role').eq('role', 'student').order('total_xp', { ascending: false })
     if (profilesData) setProfiles(profilesData)
     if (user && profilesData) {
       const me = profilesData.find(p => p.id === user.id)

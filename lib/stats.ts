@@ -65,15 +65,18 @@ export function strongSections(stats: SectionStat[]): SectionStat[] {
 export function dailyAccuracy(rows: LogRow[], days: number): { date: string; total: number; correct: number }[] {
   const out: { date: string; total: number; correct: number }[] = []
   const byDay = new Map<string, { total: number; correct: number }>()
+  // Дни считаем по времени Казахстана (UTC+5), а не по UTC
+  const KZ = 5 * 60 * 60 * 1000
+  const day = (t: number) => new Date(t + KZ).toISOString().slice(0, 10)
   for (const r of rows) {
-    const d = r.created_at.slice(0, 10)
+    const d = day(new Date(r.created_at).getTime())
     const v = byDay.get(d) || { total: 0, correct: 0 }
     v.total++
     if (r.correct) v.correct++
     byDay.set(d, v)
   }
   for (let i = days - 1; i >= 0; i--) {
-    const d = new Date(Date.now() - i * 24 * 60 * 60 * 1000).toISOString().slice(0, 10)
+    const d = day(Date.now() - i * 24 * 60 * 60 * 1000)
     out.push({ date: d, ...(byDay.get(d) || { total: 0, correct: 0 }) })
   }
   return out
