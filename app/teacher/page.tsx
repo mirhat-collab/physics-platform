@@ -2,7 +2,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
-import { gradeVariants } from '@/lib/grade-match'
+import { gradeLabel, gradeVariants } from '@/lib/grade-match'
 
 type Profile = { id: string; full_name: string; email?: string; grade: string; total_xp: number; streak: number; role: string }
 type ClassStat = { name: string; students: Profile[]; avg_xp: number; completed_topics: number; total_topics: number }
@@ -97,11 +97,14 @@ export default function TeacherPage() {
           ? allStudents.filter(s => members.has(s.id))
           : allStudents.filter(s => s.grade === cls.name || (gradeNum && s.grade === gradeNum))
         const studentIds = clsStudents.map(s => s.id)
-        const clsProgress = progress.filter(p => studentIds.includes(p.student))
-        const uniqueTopics = new Set(clsProgress.map(p => p.topic))
-        const avgXp = clsStudents.length > 0 ? Math.round(clsStudents.reduce((sum, s) => sum + s.total_xp, 0) / clsStudents.length) : 0
         const variants = gradeVariants(cls.name)
-        const totalTopics = topics ? topics.filter(t => variants.includes(t.grade)).length : 0
+        const clsTopicIds = new Set((topics || []).filter(t => variants.includes(t.grade)).map(t => String(t.id)))
+        // progress.topic — текст, topics.id — число; считаем только темы этого класса,
+        // иначе «пройдено» могло быть больше, чем тем в классе
+        const clsProgress = progress.filter(p => studentIds.includes(p.student) && clsTopicIds.has(String(p.topic)))
+        const uniqueTopics = new Set(clsProgress.map(p => String(p.topic)))
+        const avgXp = clsStudents.length > 0 ? Math.round(clsStudents.reduce((sum, s) => sum + (s.total_xp || 0), 0) / clsStudents.length) : 0
+        const totalTopics = clsTopicIds.size
         return { name: cls.name, students: clsStudents, avg_xp: avgXp, completed_topics: uniqueTopics.size, total_topics: totalTopics }
       })
       setClassStats(stats)
@@ -144,20 +147,27 @@ export default function TeacherPage() {
         const ext = file.name.split('.').pop()
         const path = `homework/${teacher.id}_${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`
         const { error } = await supabase.storage.from('homework-media').upload(path, file)
-        if (!error) {
-          const { data: urlData } = supabase.storage.from('homework-media').getPublicUrl(path)
-          mediaUrls.push(urlData.publicUrl)
+        if (error) {
+          setHwUploading(false); setSavingHw(false)
+          alert('Не удалось загрузить файл: ' + error.message)
+          return
         }
+        mediaUrls.push(supabase.storage.from('homework-media').getPublicUrl(path).data.publicUrl)
       }
       setHwUploading(false)
     }
 
-    const { data } = await supabase.from('homework').insert({
+    const { data, error } = await supabase.from('homework').insert({
       title: hwTitle, description: hwDesc, class_name: hwClass,
       due_date: hwDue || null, created_by: teacher.id,
       media_urls: mediaUrls.length > 0 ? mediaUrls : null
     }).select().single()
-    if (data) setHomeworks([data, ...homeworks])
+    if (error || !data) {
+      setSavingHw(false)
+      alert('Не удалось создать задание: ' + (error?.message || 'неизвестная ошибка'))
+      return
+    }
+    setHomeworks([data, ...homeworks])
     setHwTitle(''); setHwDesc(''); setHwClass(''); setHwDue('')
     setHwMediaFiles([]); setHwMediaPreviews([])
     setSavingHw(false)
@@ -180,18 +190,25 @@ export default function TeacherPage() {
       const ext = tMediaFile.name.split('.').pop()
       const path = `tournaments/${teacher.id}_${Date.now()}.${ext}`
       const { error } = await supabase.storage.from('homework-media').upload(path, tMediaFile)
-      if (!error) {
-        const { data: urlData } = supabase.storage.from('homework-media').getPublicUrl(path)
-        mediaUrl = urlData.publicUrl
-      }
       setTUploading(false)
+      if (error) {
+        setSavingT(false)
+        alert('Не удалось загрузить файл: ' + error.message)
+        return
+      }
+      mediaUrl = supabase.storage.from('homework-media').getPublicUrl(path).data.publicUrl
     }
-    const { data } = await supabase.from('tournaments').insert({
+    const { data, error } = await supabase.from('tournaments').insert({
       title: tTitle, description: tDesc, type: tType, class_name: tClass,
       status: 'active', ends_at: tEnds || null, created_by: teacher.id,
       prize: tPrize || null, media_url: mediaUrl || null
     }).select().single()
-    if (data) setTournaments([data, ...tournaments])
+    if (error || !data) {
+      setSavingT(false)
+      alert('Не удалось создать турнир: ' + (error?.message || 'неизвестная ошибка'))
+      return
+    }
+    setTournaments([data, ...tournaments])
     setTTitle(''); setTDesc(''); setTType('essay'); setTClass(''); setTEnds(''); setTPrize('')
     setTMediaFile(null); setTMediaPreview('')
     setSavingT(false)
@@ -214,7 +231,9 @@ export default function TeacherPage() {
     </div>
   )
 
-  const selectedClassStudents = selectedClass ? students.filter(s => s.grade === selectedClass) : []
+  // У ученика grade = "11", а класс называется "11th Grade" — берём уже
+  // посчитанный состав класса (там учтены и закрытые классы с доступом)
+  const selectedClassStudents = classStats.find(c => c.name === selectedClass)?.students ?? []
   const selectedHwSubs = submissions.filter(s => s.homework_id === selectedHw)
   const classNames = classStats.map(c => c.name)
 
@@ -350,7 +369,7 @@ export default function TeacherPage() {
                     </div>
                     <div>
                       <div style={{ fontWeight: 600 }}>{s.full_name || 'Без имени'}</div>
-                      <div style={{ color: '#888', fontSize: 12 }}>{s.grade} класс</div>
+                      <div style={{ color: '#888', fontSize: 12 }}>{gradeLabel(s.grade)}</div>
                     </div>
                   </div>
                   <div style={{ display: 'flex', gap: 16, textAlign: 'center' }}>

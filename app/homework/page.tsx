@@ -2,11 +2,10 @@
 import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
+import { gradeLabel, gradeVariants, studentClassNames } from '@/lib/grade-match'
 
 type Homework = { id: number; title: string; description: string; class_name: string; due_date: string; created_at: string; media_urls?: string[] }
 type Submission = { id: number; homework_id: number; answer: string; grade: string; media_url?: string }
-
-const PREVIEW_GRADES = ['7', '8', '9', '10', '11']
 
 export default function HomeworkPage() {
   const router = useRouter()
@@ -16,6 +15,8 @@ export default function HomeworkPage() {
   const [userId, setUserId] = useState('')
   const [userName, setUserName] = useState('')
   const [userGrade, setUserGrade] = useState('')
+  // Названия классов для просмотра учителем/админом ("7th Grade", …, "ЕНТ")
+  const [previewClasses, setPreviewClasses] = useState<string[]>([])
   const [answers, setAnswers] = useState<Record<number, string>>({})
   const [mediaFiles, setMediaFiles] = useState<Record<number, File | null>>({})
   const [mediaPreviews, setMediaPreviews] = useState<Record<number, string>>({})
@@ -36,15 +37,20 @@ export default function HomeworkPage() {
     const { data: profile } = await supabase.from('profiles').select('full_name, email, grade, role').eq('id', user.id).single()
     if (profile) { setUserName(profile.full_name || profile.email); setUserGrade(profile.grade) }
 
+    // RLS отдаёт открытые классы и только те закрытые, куда ученику выдан доступ
+    const { data: classes } = await supabase.from('classes').select('name, is_locked')
+
     if (profile?.role === 'teacher' || profile?.role === 'admin') {
+      const names = (classes || []).map(c => c.name)
       setPreview(true)
-      setUserGrade(PREVIEW_GRADES[0])
-      await loadHomework(PREVIEW_GRADES[0])
+      setPreviewClasses(names)
+      setUserGrade(names[0] || '')
+      await loadHomework(names[0] ? gradeVariants(names[0]) : [])
       setLoading(false)
       return
     }
 
-    await loadHomework(profile?.grade || '')
+    await loadHomework(studentClassNames(profile?.grade, classes || []))
 
     const { data: subs } = await supabase.from('homework_submissions').select('*').eq('student_id', user.id)
     if (subs) {
@@ -56,14 +62,15 @@ export default function HomeworkPage() {
     setLoading(false)
   }
 
-  async function loadHomework(grade: string) {
-    const { data: hw } = await supabase.from('homework').select('*').eq('class_name', grade).order('created_at', { ascending: false })
+  async function loadHomework(classNames: string[]) {
+    if (!classNames.length) { setHomeworks([]); return }
+    const { data: hw } = await supabase.from('homework').select('*').in('class_name', classNames).order('created_at', { ascending: false })
     setHomeworks(hw || [])
   }
 
-  function switchPreviewGrade(grade: string) {
-    setUserGrade(grade)
-    loadHomework(grade)
+  function switchPreviewClass(name: string) {
+    setUserGrade(name)
+    loadHomework(gradeVariants(name))
   }
 
   function handleFileSelect(hwId: number, file: File | null) {
@@ -85,19 +92,26 @@ export default function HomeworkPage() {
       const ext = file.name.split('.').pop()
       const path = `submissions/${userId}_${hwId}_${Date.now()}.${ext}`
       const { error } = await supabase.storage.from('homework-media').upload(path, file)
-      if (!error) {
-        const { data: urlData } = supabase.storage.from('homework-media').getPublicUrl(path)
-        mediaUrl = urlData.publicUrl
-      }
       setUploading(null)
+      if (error) {
+        setSending(null)
+        alert('Не удалось загрузить файл: ' + error.message)
+        return
+      }
+      mediaUrl = supabase.storage.from('homework-media').getPublicUrl(path).data.publicUrl
     }
 
-    await supabase.from('homework_submissions').insert({
+    const { data, error } = await supabase.from('homework_submissions').insert({
       homework_id: hwId, student_id: userId, student_name: userName,
       answer: answer?.trim() || '', media_url: mediaUrl || null
-    })
-    setSent({ ...sent, [hwId]: true })
+    }).select().single()
     setSending(null)
+    if (error || !data) {
+      alert('Не удалось отправить ответ, попробуй ещё раз')
+      return
+    }
+    setSubmissions(prev => [...prev, data])
+    setSent(prev => ({ ...prev, [hwId]: true }))
   }
 
   if (loading) return (
@@ -111,15 +125,15 @@ export default function HomeworkPage() {
       <div style={{ maxWidth: 700, margin: '0 auto' }}>
         <div style={{ background: 'linear-gradient(135deg, #1a1a3e, #0f0f1a)', borderBottom: '1px solid #2a2a3e', borderRadius: 20, padding: '24px', marginBottom: 24 }}>
           <h1 style={{ fontSize: '1.8rem', fontWeight: 800, margin: '0 0 4px' }}>📝 Домашние задания</h1>
-          <p style={{ color: '#888', margin: 0, fontSize: 14 }}>{userGrade} класс</p>
+          <p style={{ color: '#888', margin: 0, fontSize: 14 }}>{preview ? userGrade : gradeLabel(userGrade)}</p>
         </div>
 
         {preview && (
           <div style={{ background: 'rgba(139,124,246,0.08)', border: '1px solid rgba(139,124,246,0.3)', borderRadius: 14, padding: '14px 16px', marginBottom: 20 }}>
             <div style={{ fontSize: 14, color: '#c4bbff', fontWeight: 600, marginBottom: 10 }}>Так эту страницу видят ученики. Выбери класс:</div>
             <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-              {PREVIEW_GRADES.map(g => (
-                <button key={g} className={`chip${userGrade === g ? ' on' : ''}`} onClick={() => switchPreviewGrade(g)}>{g} класс</button>
+              {previewClasses.map(name => (
+                <button key={name} className={`chip${userGrade === name ? ' on' : ''}`} onClick={() => switchPreviewClass(name)}>{name}</button>
               ))}
             </div>
           </div>

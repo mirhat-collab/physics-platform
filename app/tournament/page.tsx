@@ -2,6 +2,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
+import { gradeLabel, gradeVariants, studentClassNames } from '@/lib/grade-match'
 
 type Tournament = { id: number; title: string; description?: string; type?: string; class_name: string; status: string; ends_at?: string; media_url?: string; prize?: string }
 type TournamentSub = { id: number; tournament_id: number; student_name: string; text_answer: string; media_url?: string; place?: number; teacher_comment?: string; submitted_at: string }
@@ -9,14 +10,14 @@ type TournamentSub = { id: number; tournament_id: number; student_name: string; 
 const TYPE_LABELS: Record<string, string> = { essay: '📝 Эссе', model: '🏗️ Макет', photo: '📸 Фото', video: '🎥 Видео', experiment: '🔬 Опыт', other: '🏆 Турнир' }
 const TYPE_COLORS: Record<string, string> = { essay: '#667eea', model: '#10b981', photo: '#f59e0b', video: '#ef4444', experiment: '#8b5cf6', other: '#f59e0b' }
 
-const PREVIEW_GRADES = ['7', '8', '9', '10', '11']
-
 export default function TournamentPage() {
   const router = useRouter()
   const [loading, setLoading] = useState(true)
   const [userId, setUserId] = useState('')
   const [userName, setUserName] = useState('')
   const [userGrade, setUserGrade] = useState('')
+  // Названия классов для просмотра учителем/админом ("7th Grade", …, "ЕНТ")
+  const [previewClasses, setPreviewClasses] = useState<string[]>([])
   const [tournaments, setTournaments] = useState<Tournament[]>([])
   const [mySubs, setMySubs] = useState<TournamentSub[]>([])
   const [allSubs, setAllSubs] = useState<TournamentSub[]>([])
@@ -40,11 +41,17 @@ export default function TournamentPage() {
     const { data: profile } = await supabase.from('profiles').select('full_name, email, grade, role').eq('id', user.id).single()
     if (profile) { setUserName(profile.full_name || profile.email); setUserGrade(profile.grade) }
     const isStaff = profile?.role === 'teacher' || profile?.role === 'admin'
+    // RLS отдаёт открытые классы и только те закрытые, куда ученику выдан доступ
+    const { data: classes } = await supabase.from('classes').select('name, is_locked')
     if (isStaff) {
+      const names = (classes || []).map(c => c.name)
       setPreview(true)
-      setUserGrade(PREVIEW_GRADES[0])
+      setPreviewClasses(names)
+      setUserGrade(names[0] || '')
+      await loadTournaments(names[0] ? gradeVariants(names[0]) : [])
+    } else {
+      await loadTournaments(studentClassNames(profile?.grade, classes || []))
     }
-    await loadTournaments(isStaff ? PREVIEW_GRADES[0] : profile?.grade || '')
 
     const { data: subs } = await supabase.from('tournament_submissions').select('*').eq('student_id', user.id)
     if (subs) setMySubs(subs)
@@ -55,14 +62,15 @@ export default function TournamentPage() {
     setLoading(false)
   }
 
-  async function loadTournaments(grade: string) {
-    const { data: ts } = await supabase.from('tournaments').select('*').eq('class_name', grade).order('created_at', { ascending: false })
+  async function loadTournaments(classNames: string[]) {
+    if (!classNames.length) { setTournaments([]); return }
+    const { data: ts } = await supabase.from('tournaments').select('*').in('class_name', classNames).order('created_at', { ascending: false })
     setTournaments(ts || [])
   }
 
-  function switchPreviewGrade(grade: string) {
-    setUserGrade(grade)
-    loadTournaments(grade)
+  function switchPreviewClass(name: string) {
+    setUserGrade(name)
+    loadTournaments(gradeVariants(name))
   }
 
   async function submit(tId: number) {
@@ -77,11 +85,13 @@ export default function TournamentPage() {
       const ext = file.name.split('.').pop()
       const path = `tournament-submissions/${userId}_${tId}_${Date.now()}.${ext}`
       const { error } = await supabase.storage.from('homework-media').upload(path, file)
-      if (!error) {
-        const { data: urlData } = supabase.storage.from('homework-media').getPublicUrl(path)
-        mediaUrl = urlData.publicUrl
-      }
       setUploading(null)
+      if (error) {
+        setSending(null)
+        alert('Не удалось загрузить файл: ' + error.message)
+        return
+      }
+      mediaUrl = supabase.storage.from('homework-media').getPublicUrl(path).data.publicUrl
     }
 
     const { data } = await supabase.from('tournament_submissions').insert({
@@ -89,8 +99,10 @@ export default function TournamentPage() {
       text_answer: text?.trim() || '', media_url: mediaUrl || null
     }).select().single()
 
-    if (data) setMySubs([...mySubs, data])
     setSending(null)
+    if (!data) { alert('Не удалось отправить работу, попробуй ещё раз'); return }
+    setMySubs([...mySubs, data])
+    setAllSubs(prev => [...prev, data])
   }
 
   if (loading) return (
@@ -108,15 +120,15 @@ export default function TournamentPage() {
 
         <div style={{ background: 'linear-gradient(135deg, #2a1a0e, #1a1000)', border: '1px solid #f59e0b33', borderRadius: 20, padding: '24px', marginBottom: 24 }}>
           <h1 style={{ fontSize: '1.8rem', fontWeight: 800, margin: '0 0 4px' }}>🏆 Турниры</h1>
-          <p style={{ color: '#888', margin: 0, fontSize: 14 }}>{userGrade} класс · Соревнуйся и побеждай!</p>
+          <p style={{ color: '#888', margin: 0, fontSize: 14 }}>{preview ? userGrade : gradeLabel(userGrade)} · Соревнуйся и побеждай!</p>
         </div>
 
         {preview && (
           <div style={{ background: 'rgba(139,124,246,0.08)', border: '1px solid rgba(139,124,246,0.3)', borderRadius: 14, padding: '14px 16px', marginBottom: 20 }}>
             <div style={{ fontSize: 14, color: '#c4bbff', fontWeight: 600, marginBottom: 10 }}>Так эту страницу видят ученики. Выбери класс:</div>
             <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-              {PREVIEW_GRADES.map(g => (
-                <button key={g} className={`chip${userGrade === g ? ' on' : ''}`} onClick={() => switchPreviewGrade(g)}>{g} класс</button>
+              {previewClasses.map(name => (
+                <button key={name} className={`chip${userGrade === name ? ' on' : ''}`} onClick={() => switchPreviewClass(name)}>{name}</button>
               ))}
             </div>
           </div>

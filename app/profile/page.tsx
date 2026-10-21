@@ -3,9 +3,12 @@ import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
+import { gradeLabel } from '@/lib/grade-match'
 import ThemeToggle from '@/app/components/ThemeToggle'
 
-type Profile = { id: string; full_name: string; email: string; grade: string; total_xp: number; streak: number; avatar_url?: string }
+type Profile = { id: string; full_name: string; email: string; grade: string; total_xp: number; streak: number; avatar_url?: string; role?: string }
+
+const GRADES = ['7', '8', '9', '10', '11']
 
 export default function ProfilePage() {
   const router = useRouter()
@@ -94,6 +97,21 @@ export default function ProfilePage() {
     setEditing(false)
     setSaving(false)
     setMsg('✅ Имя сохранено!')
+    setTimeout(() => setMsg(''), 3000)
+  }
+
+  // У части учеников класс не сохранился при регистрации — без него не видно
+  // ни тем на главной, ни домашних заданий, поэтому даём выбрать его здесь
+  async function saveGrade(grade: string) {
+    if (!profile) return
+    const { error } = await supabase.from('profiles').update({ grade }).eq('id', profile.id)
+    if (error) {
+      setMsg('❌ Ошибка: ' + error.message)
+      setTimeout(() => setMsg(''), 5000)
+      return
+    }
+    setProfile({ ...profile, grade })
+    setMsg('✅ Класс сохранён!')
     setTimeout(() => setMsg(''), 3000)
   }
 
@@ -192,8 +210,21 @@ export default function ProfilePage() {
             {profile?.full_name || 'Без имени'}
           </div>
           <div style={{ opacity: 0.8, fontSize: 14 }}>{profile?.email}</div>
-          <div style={{ opacity: 0.8, fontSize: 14, marginTop: 4 }}>{profile?.grade} класс · Уровень {level}</div>
+          <div style={{ opacity: 0.8, fontSize: 14, marginTop: 4 }}>{profile?.role === 'student' ? gradeLabel(profile?.grade) + ' · ' : ''}Уровень {level}</div>
         </div>
+
+        {profile?.role === 'student' && !GRADES.includes(profile.grade) && (
+          <div style={{ background: '#2a1a0e', borderRadius: 16, padding: '16px 20px', marginBottom: 20, border: '1px solid #f59e0b55' }}>
+            <div style={{ fontWeight: 600, marginBottom: 10 }}>Выбери свой класс</div>
+            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+              {GRADES.map(g => (
+                <button key={g} onClick={() => saveGrade(g)} style={{ padding: '8px 16px', borderRadius: 10, border: '1px solid #2a2a3e', background: '#0f0f1a', color: '#fff', cursor: 'pointer', fontSize: 14 }}>
+                  {g} класс
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Статистика */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12, marginBottom: 20 }}>

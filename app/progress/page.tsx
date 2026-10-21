@@ -1,6 +1,7 @@
 'use client'
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
+import { gradeLabel } from '@/lib/grade-match'
 
 type Profile = { id: string; full_name: string; email?: string; grade: string; total_xp: number; streak: number }
 type ClassStat = { name: string; total_topics: number; completed_topics: number; avg_xp: number; student_count: number; locked: boolean }
@@ -36,10 +37,12 @@ export default function ProgressPage() {
           ? profilesData.filter(p => members.has(p.id))
           : profilesData.filter(p => (gradeNum && p.grade === gradeNum) || p.grade === cls.name)
         const studentIds = students.map(s => s.id)
-        const completedByClass = progress.filter(p => studentIds.includes(p.student))
-        const uniqueTopics = new Set(completedByClass.map(p => p.topic))
-        const avgXp = students.length > 0 ? Math.round(students.reduce((sum, s) => sum + s.total_xp, 0) / students.length) : 0
-        const totalTopics = topics ? topics.filter(t => (gradeNum && t.grade === gradeNum) || t.grade === cls.name).length : 0
+        const clsTopicIds = new Set((topics || []).filter(t => (gradeNum && t.grade === gradeNum) || t.grade === cls.name).map(t => String(t.id)))
+        // Считаем только темы этого класса (progress.topic — текст, topics.id — число)
+        const completedByClass = progress.filter(p => studentIds.includes(p.student) && clsTopicIds.has(String(p.topic)))
+        const uniqueTopics = new Set(completedByClass.map(p => String(p.topic)))
+        const avgXp = students.length > 0 ? Math.round(students.reduce((sum, s) => sum + (s.total_xp || 0), 0) / students.length) : 0
+        const totalTopics = clsTopicIds.size
         return { locked: !!cls.is_locked, name: cls.name, total_topics: totalTopics, completed_topics: uniqueTopics.size, avg_xp: avgXp, student_count: students.length }
       })
       setClassStats(stats)
@@ -75,7 +78,7 @@ export default function ProgressPage() {
                 <div>
                   <div style={{ fontSize: 12, opacity: 0.8, marginBottom: 2 }}>Твой профиль</div>
                   <div style={{ fontSize: '1.2rem', fontWeight: 800 }}>{currentUser.full_name || 'Без имени'}</div>
-                  <div style={{ opacity: 0.8, fontSize: 13, marginTop: 2 }}>{currentUser.grade}</div>
+                  <div style={{ opacity: 0.8, fontSize: 13, marginTop: 2 }}>{gradeLabel(currentUser.grade)}</div>
                 </div>
                 <div style={{ display: 'flex', gap: 20 }}>
                   <div style={{ textAlign: 'center' }}>
@@ -123,7 +126,7 @@ export default function ProgressPage() {
                       <span style={{ fontSize: 18, minWidth: 32 }}>{medal}</span>
                       <div>
                         <div style={{ fontWeight: 600 }}>{profile.full_name || 'Без имени'}</div>
-                        <div style={{ color: '#888', fontSize: 12 }}>{profile.grade} {profile.streak > 0 && `🔥 ${profile.streak} дней`}</div>
+                        <div style={{ color: '#888', fontSize: 12 }}>{gradeLabel(profile.grade)} {profile.streak > 0 && `🔥 ${profile.streak} дней`}</div>
                       </div>
                     </div>
                     <div style={{ fontWeight: 800, color: '#a78bfa', fontSize: 18 }}>{profile.total_xp} XP</div>

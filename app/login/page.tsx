@@ -88,14 +88,12 @@ export default function LoginPage() {
             ? (profile.streak || 0) + 1
             : lastVisit === today ? profile.streak : 1
 
-          const actualGrade = profile.role === 'teacher'
-            ? profile.grade
-            : getActualGrade(profile.grade, profile.last_visit)
-
+          // Класс «переводим» только ученикам — у учителя/админа/родителя
+          // в grade не номер класса (раньше так у админа появился grade = "NaN")
           await supabase.from('profiles').update({
             last_visit: today,
             streak: newStreak,
-            grade: actualGrade,
+            ...(profile.role === 'student' ? { grade: getActualGrade(profile.grade || '', profile.last_visit) } : {}),
           }).eq('id', user.id)
 
           router.push(

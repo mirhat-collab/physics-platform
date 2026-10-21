@@ -2,9 +2,10 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
+import { gradeLabel } from '@/lib/grade-match'
 
 type Student = { id: string; full_name: string; email?: string; grade: string; total_xp: number; streak: number }
-type Progress = { topic: string; completed_at: string }
+type Progress = { topic: string; completed_at: string; name?: string }
 
 export default function ParentPage() {
   const router = useRouter()
@@ -75,7 +76,12 @@ export default function ParentPage() {
   async function loadProgress(student: Student) {
     setSelectedStudent(student)
     const { data } = await supabase.from('progress').select('topic, completed_at').eq('student', student.id).eq('status', 'completed').order('completed_at', { ascending: false })
-    if (data) setProgress(data)
+    if (!data) return
+    // В progress лежит только id темы — подтягиваем названия, чтобы не показывать «Тема #75»
+    const ids = [...new Set(data.map(p => Number(p.topic)).filter(Number.isFinite))]
+    const { data: topics } = ids.length ? await supabase.from('topics').select('id, name').in('id', ids) : { data: [] }
+    const names = new Map((topics || []).map(t => [String(t.id), t.name as string]))
+    setProgress(data.map(p => ({ ...p, name: names.get(String(p.topic)) })))
   }
 
   if (loading) return (
@@ -131,7 +137,7 @@ export default function ParentPage() {
                       </div>
                       <div>
                         <div style={{ fontWeight: 700 }}>{s.full_name || 'Без имени'}</div>
-                        <div style={{ color: '#888', fontSize: 13 }}>{s.grade} класс</div>
+                        <div style={{ color: '#888', fontSize: 13 }}>{gradeLabel(s.grade)}</div>
                       </div>
                     </div>
                     <div style={{ display: 'flex', gap: 16, textAlign: 'center' }}>
@@ -151,7 +157,7 @@ export default function ParentPage() {
                       <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                         {progress.slice(0, 10).map((p, i) => (
                           <div key={i} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, padding: '8px 12px', background: '#0f0f1a', borderRadius: 8 }}>
-                            <span style={{ color: '#ccc' }}>✅ Тема #{p.topic}</span>
+                            <span style={{ color: '#ccc' }}>✅ {p.name || `Тема #${p.topic}`}</span>
                             <span style={{ color: '#555' }}>{new Date(p.completed_at).toLocaleDateString('ru-RU')}</span>
                           </div>
                         ))}

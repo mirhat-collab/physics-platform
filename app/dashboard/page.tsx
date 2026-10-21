@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
 import Icon from '@/app/components/Icon'
+import { sortTopicsByNumber } from '@/lib/topic-order'
 
 type Profile = { id: string; full_name: string; email: string; grade: string; total_xp: number; streak: number }
 type Topic = { id: string; name: string; grade: string }
@@ -35,7 +36,8 @@ export default function DashboardPage() {
     const { data: prog } = await supabase
       .from('progress').select('topic')
       .eq('student', user.id).eq('status', 'completed')
-    if (prog) setCompleted(prog.map(p => p.topic))
+    // progress.topic хранится текстом, а topics.id — число: сравниваем строками
+    if (prog) setCompleted(prog.map(p => String(p.topic)))
 
     setLoading(false)
   }
@@ -47,8 +49,9 @@ export default function DashboardPage() {
   )
 
   const gradeDisplay = profile?.grade && VALID_GRADES.includes(profile.grade) ? `${profile.grade} класс` : 'Класс не указан'
-  const percent = topics.length > 0 ? Math.round((completed.filter(c => topics.find(t => t.id === c)).length / topics.length) * 100) : 0
-  const nextTopic = topics.find(t => !completed.includes(t.id))
+  const doneCount = topics.filter(t => completed.includes(String(t.id))).length
+  const percent = topics.length > 0 ? Math.round((doneCount / topics.length) * 100) : 0
+  const nextTopic = sortTopicsByNumber(topics).find(t => !completed.includes(String(t.id)))
   const level = Math.floor((profile?.total_xp || 0) / 100) + 1
   const xpInLevel = (profile?.total_xp || 0) % 100
 
@@ -75,11 +78,11 @@ export default function DashboardPage() {
 
         <div className="stagger-children" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12, marginBottom: 20 }}>
           <div className="hover-lift" style={{ background: '#1a1a2e', borderRadius: 16, padding: '16px', border: '1px solid #2a2a3e', textAlign: 'center' }}>
-            <div style={{ fontSize: 28, fontWeight: 800, color: '#a78bfa' }}>{profile?.total_xp}</div>
+            <div style={{ fontSize: 28, fontWeight: 800, color: '#a78bfa' }}>{profile?.total_xp ?? 0}</div>
             <div style={{ color: '#888', fontSize: 12, marginTop: 4 }}>Всего XP</div>
           </div>
           <div className="hover-lift" style={{ background: '#1a1a2e', borderRadius: 16, padding: '16px', border: '1px solid #2a2a3e', textAlign: 'center' }}>
-            <div style={{ fontSize: 28, fontWeight: 800, color: '#f59e0b' }}>🔥{profile?.streak}</div>
+            <div style={{ fontSize: 28, fontWeight: 800, color: '#f59e0b' }}>🔥{profile?.streak ?? 0}</div>
             <div style={{ color: '#888', fontSize: 12, marginTop: 4 }}>Дней подряд</div>
           </div>
           <div className="hover-lift" style={{ background: '#1a1a2e', borderRadius: 16, padding: '16px', border: '1px solid #2a2a3e', textAlign: 'center' }}>
@@ -91,7 +94,7 @@ export default function DashboardPage() {
         <div style={{ background: '#1a1a2e', borderRadius: 20, padding: '20px 24px', marginBottom: 20, border: '1px solid #2a2a3e' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 12 }}>
             <span style={{ fontWeight: 600 }}>📚 Прогресс класса</span>
-            <span style={{ color: '#888', fontSize: 13 }}>{completed.filter(c => topics.find(t => t.id === c)).length} / {topics.length} тем</span>
+            <span style={{ color: '#888', fontSize: 13 }}>{doneCount} / {topics.length} тем</span>
           </div>
           <div style={{ background: '#0f0f1a', borderRadius: 999, height: 10, overflow: 'hidden' }}>
             <div style={{ height: '100%', width: `${percent}%`, background: 'linear-gradient(90deg, #667eea, #764ba2)', borderRadius: 999, transition: 'width 0.6s ease' }} />

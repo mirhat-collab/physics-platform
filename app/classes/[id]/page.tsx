@@ -4,6 +4,7 @@ import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
 import { gradeVariants } from '@/lib/grade-match'
+import { sortTopicsByNumber } from '@/lib/topic-order'
 
 type Topic = { id: string; name: string; theory: string; grade: string }
 type ClassData = { id: string; name: string; program: string; total_topics: number }
@@ -30,12 +31,13 @@ export default function ClassPage() {
     setClassData(cls)
 
     const { data: t } = await supabase.from('topics').select('*').in('grade', gradeVariants(cls.name))
-    if (t) setTopics(t)
+    if (t) setTopics(sortTopicsByNumber(t))
 
     const { data: prog } = await supabase
       .from('progress').select('topic')
       .eq('student', user.id).eq('status', 'completed')
-    if (prog) setCompleted(prog.map(p => p.topic))
+    // progress.topic хранится текстом, а topics.id — число: сравниваем строками
+    if (prog) setCompleted(prog.map(p => String(p.topic)))
 
     setLoading(false)
   }
@@ -57,7 +59,8 @@ export default function ClassPage() {
     </div>
   )
 
-  const percent = topics.length > 0 ? Math.round((completed.filter(c => topics.find(t => t.id === c)).length / topics.length) * 100) : 0
+  const doneCount = topics.filter(t => completed.includes(String(t.id))).length
+  const percent = topics.length > 0 ? Math.round((doneCount / topics.length) * 100) : 0
 
   return (
     <div style={{ minHeight: '100vh', color: '#fff', padding: '2rem' }}>
@@ -75,7 +78,7 @@ export default function ClassPage() {
           {/* Прогресс бар */}
           <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, opacity: 0.9, marginBottom: 8 }}>
             <span>Прогресс</span>
-            <span>{completed.filter(c => topics.find(t => t.id === c)).length} / {topics.length} тем</span>
+            <span>{doneCount} / {topics.length} тем</span>
           </div>
           <div style={{ background: 'rgba(255,255,255,0.2)', borderRadius: 999, height: 10, overflow: 'hidden' }}>
             <div style={{ height: '100%', width: `${percent}%`, background: '#fff', borderRadius: 999, transition: 'width 0.6s ease' }} />
@@ -92,7 +95,7 @@ export default function ClassPage() {
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
           {topics.map((topic, index) => {
-            const isDone = completed.includes(topic.id)
+            const isDone = completed.includes(String(topic.id))
             const isHov = hovered === topic.id
             return (
               <Link key={topic.id} href={`/topics/${topic.id}`} style={{ textDecoration: 'none' }}>

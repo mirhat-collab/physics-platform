@@ -194,8 +194,20 @@ export default function AdminPage() {
     loadData()
   }
 
+  // topics.grade должен совпадать с классом: "7".."11" для "7th Grade".."11th Grade"
+  // или полное имя ("ЕНТ"). Раньше это был свободный ввод с подсказкой «10А» —
+  // тема с таким значением не попадала ни в один класс.
+  function gradeOptions(current: string) {
+    const opts = classes.map(c => {
+      const num = c.name.replace(/\D/g, '')
+      return { value: num || c.name, label: c.name }
+    })
+    if (current && !opts.some(o => o.value === current)) opts.push({ value: current, label: `${current} (нет такого класса)` })
+    return opts
+  }
+
   async function addTopic() {
-    if (!newTopic.name) return
+    if (!newTopic.name || !newTopic.grade) { alert('Укажи название и класс темы'); return }
     await fetch('/api/admin/topics', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -411,7 +423,10 @@ export default function AdminPage() {
               <span style={label}>Название темы</span>
               <input style={input} placeholder="Законы Ньютона" value={newTopic.name} onChange={e => setNewTopic({ ...newTopic, name: e.target.value })} />
               <span style={label}>Класс</span>
-              <input style={input} placeholder="10А" value={newTopic.grade} onChange={e => setNewTopic({ ...newTopic, grade: e.target.value })} />
+              <select style={input} value={newTopic.grade} onChange={e => setNewTopic({ ...newTopic, grade: e.target.value })}>
+                <option value="">— выбери класс —</option>
+                {gradeOptions(newTopic.grade).map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+              </select>
               <span style={label}>📖 Теория</span>
               <textarea style={textarea} placeholder="Объяснение темы..." value={newTopic.theory} onChange={e => setNewTopic({ ...newTopic, theory: e.target.value })} />
               <span style={label}>🔢 Формулы (LaTeX, каждая на новой строке)</span>
@@ -436,7 +451,9 @@ export default function AdminPage() {
                     <span style={label}>Название</span>
                     <input style={input} value={editTopic.name} onChange={e => setEditTopic({ ...editTopic, name: e.target.value })} />
                     <span style={label}>Класс</span>
-                    <input style={input} value={editTopic.grade} onChange={e => setEditTopic({ ...editTopic, grade: e.target.value })} />
+                    <select style={input} value={editTopic.grade} onChange={e => setEditTopic({ ...editTopic, grade: e.target.value })}>
+                      {gradeOptions(editTopic.grade).map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+                    </select>
                     <span style={label}>📖 Теория</span>
                     <textarea style={textarea} value={editTopic.theory} onChange={e => setEditTopic({ ...editTopic, theory: e.target.value })} />
                     <span style={label}>🔢 Формулы (LaTeX)</span>
