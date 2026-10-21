@@ -4,6 +4,8 @@ import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import Icon from './Icon'
+import LanguageSwitcher from './LanguageSwitcher'
+import { useT } from '@/app/components/LanguageProvider'
 
 type NavItem = { href: string; icon: string; label: string }
 type NavGroup = { title: string; items: NavItem[] }
@@ -70,6 +72,7 @@ function isActive(path: string, href: string) {
 }
 
 export default function AppNav() {
+  const { t } = useT()
   const path = usePathname()
   const router = useRouter()
   const [role, setRole] = useState<string | null>(null)
@@ -124,33 +127,36 @@ export default function AppNav() {
       <span className="nav-avatar">
         {avatar ? <img src={avatar} alt="" /> : initials}
       </span>
-      <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{name || 'Профиль'}</span>
+      <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{name || t('Профиль')}</span>
     </Link>
   )
 
   const groupList = groups.map(g => (
     <div key={g.title} style={{ marginBottom: 18 }}>
-      <div className="nav-group-title">{g.title}</div>
+      <div className="nav-group-title">{t(g.title)}</div>
       {g.items.map(item => (
         <Link key={item.href} href={item.href} className={`nav-link${isActive(path, item.href) ? ' active' : ''}`}>
           <Icon name={item.icon} />
-          {item.label}
+          {t(item.label)}
         </Link>
       ))}
     </div>
   ))
 
   const footerActions = (
+    <>
+    <div style={{ marginTop: 10 }}><LanguageSwitcher /></div>
     <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
-      <button onClick={toggleTheme} className="nav-action" title={dark ? 'Светлая тема' : 'Тёмная тема'}>
+      <button onClick={toggleTheme} className="nav-action" title={dark ? t('Светлая тема') : t('Тёмная тема')}>
         <Icon name={dark ? 'sun' : 'moon'} size={18} />
-        {dark ? 'Светлая' : 'Тёмная'}
+        {dark ? t('Светлая') : t('Тёмная')}
       </button>
-      <button onClick={logout} className="nav-action" title="Выйти">
+      <button onClick={logout} className="nav-action" title={t('Выйти')}>
         <Icon name="logout" size={18} />
-        Выйти
+        {t('Выйти')}
       </button>
     </div>
+    </>
   )
 
   return (
@@ -173,12 +179,12 @@ export default function AppNav() {
         {MOBILE_TABS.map(item => (
           <Link key={item.href} href={item.href} className={`tab-link${isActive(path, item.href) ? ' active' : ''}`}>
             <Icon name={item.icon} size={22} />
-            <span>{item.label}</span>
+            <span>{t(item.label)}</span>
           </Link>
         ))}
         <button onClick={() => setDrawer(true)} className={`tab-link${drawer ? ' active' : ''}`}>
           <Icon name="menu" size={22} />
-          <span>Меню</span>
+          <span>{t('Меню')}</span>
         </button>
       </nav>
 
@@ -188,14 +194,14 @@ export default function AppNav() {
           <div className="drawer" onClick={e => e.stopPropagation()}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
               {profileRow}
-              <button onClick={() => setDrawer(false)} className="nav-icon-btn" aria-label="Закрыть">
+              <button onClick={() => setDrawer(false)} className="nav-icon-btn" aria-label={t('Закрыть')}>
                 <Icon name="close" />
               </button>
             </div>
             {groupList}
             <Link href="/install" className="nav-link">
               <Icon name="phone" />
-              Установить приложение
+              {t('Установить приложение')}
             </Link>
             {footerActions}
           </div>

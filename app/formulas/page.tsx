@@ -6,6 +6,9 @@ import Icon from '@/app/components/Icon'
 import FormulaView, { type SlotState } from './FormulaView'
 import { logAnswers } from '@/lib/answer-log'
 import { equivalentFill } from '@/lib/formula-check'
+import { useT } from '@/app/components/LanguageProvider'
+import { formulasKk } from '@/lib/i18n/formulas-kk'
+import { formulasEn } from '@/lib/i18n/formulas-en'
 
 type Level = 'easy' | 'medium' | 'hard'
 const LEVELS: { id: Level; label: string; hint: string }[] = [
@@ -79,6 +82,9 @@ function makeQuestion(formula: Formula, level: Level): Question {
 }
 
 export default function FormulasPage() {
+  const { t, locale } = useT()
+  // Названия формул и расшифровки букв — из отдельного словаря тренажёра
+  const tf = (text: string) => (locale === 'kk' ? formulasKk : locale === 'en' ? formulasEn : null)?.[text] ?? t(text)
   const [subject, setSubject] = useState<Subject>('physics')
   const [section, setSection] = useState<string>('all')
   const [level, setLevel] = useState<Level>('easy')
@@ -203,42 +209,42 @@ export default function FormulasPage() {
   if (mode === 'setup' || mode === 'reference') {
     return (
       <div className="page animate-fade-in-up">
-        <h1 className="page-title">Тренажёр формул</h1>
-        <p className="page-sub">Тебе показывают формулу с пропусками — вставь нужные буквы. Так формулы запоминаются намного быстрее, чем зубрёжкой.</p>
+        <h1 className="page-title">{t('Тренажёр формул')}</h1>
+        <p className="page-sub">{t('Тебе показывают формулу с пропусками — вставь нужные буквы. Так формулы запоминаются намного быстрее, чем зубрёжкой.')}</p>
 
         <div className="card" style={{ marginBottom: 16 }}>
-          <div className="label">Предмет</div>
+          <div className="label">{t('Предмет')}</div>
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 18 }}>
-            {([['physics', 'Физика'], ['math', 'Математика']] as const).map(([id, label]) => (
+            {([['physics', t('Физика')], ['math', t('Математика')]] as const).map(([id, label]) => (
               <button key={id} className={`chip${subject === id ? ' on' : ''}`} onClick={() => { setSubject(id); setSection('all') }}>{label}</button>
             ))}
           </div>
 
-          <div className="label">Раздел</div>
+          <div className="label">{t('Раздел')}</div>
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 18 }}>
-            <button className={`chip${section === 'all' ? ' on' : ''}`} onClick={() => setSection('all')}>Все разделы</button>
+            <button className={`chip${section === 'all' ? ' on' : ''}`} onClick={() => setSection('all')}>{t('Все разделы')}</button>
             {SECTIONS[subject].map(s => (
-              <button key={s} className={`chip${section === s ? ' on' : ''}`} onClick={() => setSection(s)}>{s}</button>
+              <button key={s} className={`chip${section === s ? ' on' : ''}`} onClick={() => setSection(s)}>{t(s)}</button>
             ))}
           </div>
 
-          <div className="label">Сложность</div>
+          <div className="label">{t('Сложность')}</div>
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 22 }}>
             {LEVELS.map(l => (
               <button key={l.id} className={`chip${level === l.id ? ' on' : ''}`} onClick={() => setLevel(l.id)} title={l.hint}>
-                {l.label} <span style={{ opacity: 0.6, fontWeight: 500 }}>· {l.hint}</span>
+                {t(l.label)} <span style={{ opacity: 0.6, fontWeight: 500 }}>· {t(l.hint)}</span>
               </button>
             ))}
           </div>
 
           <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
             <button className="btn" onClick={() => start()} disabled={!available.length}>
-              Начать · {Math.min(ROUND_SIZE, available.length)} формул
+              {t('Начать ·')} {Math.min(ROUND_SIZE, available.length)} {t('формул')}
               <Icon name="arrowRight" size={18} />
             </button>
             <button className="btn btn-ghost" onClick={() => setMode(mode === 'reference' ? 'setup' : 'reference')}>
               <Icon name="book" size={18} />
-              {mode === 'reference' ? 'Скрыть справочник' : 'Справочник формул'}
+              {mode === 'reference' ? t('Скрыть справочник') : t('Справочник формул')}
             </button>
           </div>
         </div>
@@ -247,11 +253,11 @@ export default function FormulasPage() {
           <div style={{ display: 'grid', gap: 10 }}>
             {available.map(f => (
               <div key={f.id} className="card" style={{ padding: '14px 18px' }}>
-                <div style={{ color: 'var(--muted)', fontSize: 13, marginBottom: 8 }}>{f.name}</div>
+                <div style={{ color: 'var(--muted)', fontSize: 13, marginBottom: 8 }}>{tf(f.name)}</div>
                 <FormulaView toks={parseFormula(f.expr).toks} size={22} />
                 <div style={{ color: 'var(--muted)', fontSize: 12, marginTop: 10, display: 'flex', flexWrap: 'wrap', gap: '4px 14px' }}>
                   {Object.entries(f.legend).map(([k, v]) => (
-                    <span key={k}><i style={{ color: 'var(--text)', fontFamily: 'serif' }}>{k}</i> — {v}</span>
+                    <span key={k}><i style={{ color: 'var(--text)', fontFamily: 'serif' }}>{k}</i> — {tf(v)}</span>
                   ))}
                 </div>
               </div>
@@ -272,25 +278,25 @@ export default function FormulasPage() {
             {score} / {queue.length}
           </div>
           <div style={{ color: 'var(--muted)', marginTop: 6 }}>
-            {pct === 100 ? 'Идеально! Все формулы собраны верно.' : pct >= 70 ? 'Отличный результат!' : pct >= 40 ? 'Неплохо, но есть что повторить.' : 'Стоит повторить эти формулы.'}
+            {pct === 100 ? t('Идеально! Все формулы собраны верно.') : pct >= 70 ? t('Отличный результат!') : pct >= 40 ? t('Неплохо, но есть что повторить.') : t('Стоит повторить эти формулы.')}
           </div>
           {xpMsg && <div style={{ marginTop: 10, color: '#c4bbff', fontWeight: 700 }}>{xpMsg}</div>}
           <div style={{ display: 'flex', gap: 10, justifyContent: 'center', marginTop: 22, flexWrap: 'wrap' }}>
-            <button className="btn" onClick={() => start()}><Icon name="refresh" size={18} /> Ещё раунд</button>
+            <button className="btn" onClick={() => start()}><Icon name="refresh" size={18} /> {t('Ещё раунд')}</button>
             {mistakes.length > 0 && (
-              <button className="btn btn-ghost" onClick={() => start(mistakes)}>Повторить ошибки ({mistakes.length})</button>
+              <button className="btn btn-ghost" onClick={() => start(mistakes)}>{t('Повторить ошибки (')}{mistakes.length})</button>
             )}
-            <button className="btn btn-ghost" onClick={() => setMode('setup')}>Сменить раздел</button>
+            <button className="btn btn-ghost" onClick={() => setMode('setup')}>{t('Сменить раздел')}</button>
           </div>
         </div>
 
         {mistakes.length > 0 && (
           <>
-            <div className="label">Формулы с ошибками</div>
+            <div className="label">{t('Формулы с ошибками')}</div>
             <div style={{ display: 'grid', gap: 10 }}>
               {mistakes.map(f => (
                 <div key={f.id} className="card" style={{ padding: '14px 18px' }}>
-                  <div style={{ color: 'var(--muted)', fontSize: 13, marginBottom: 8 }}>{f.name}</div>
+                  <div style={{ color: 'var(--muted)', fontSize: 13, marginBottom: 8 }}>{tf(f.name)}</div>
                   <FormulaView toks={parseFormula(f.expr).toks} size={22} />
                 </div>
               ))}
@@ -306,7 +312,7 @@ export default function FormulasPage() {
   return (
     <div className="page animate-fade-in">
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 18 }}>
-        <button className="nav-icon-btn" onClick={() => setMode('setup')} aria-label="Назад"><Icon name="arrowLeft" /></button>
+        <button className="nav-icon-btn" onClick={() => setMode('setup')} aria-label={t('Назад')}><Icon name="arrowLeft" /></button>
         <div style={{ flex: 1, background: 'var(--surface-2)', borderRadius: 999, height: 8, overflow: 'hidden' }}>
           <div style={{ width: `${((index + (checked ? 1 : 0)) / queue.length) * 100}%`, height: '100%', background: 'linear-gradient(90deg,#667eea,#a78bfa)', transition: 'width 0.4s ease' }} />
         </div>
@@ -314,8 +320,8 @@ export default function FormulasPage() {
       </div>
 
       <div className="card" style={{ textAlign: 'center', padding: '28px 16px' }}>
-        <div style={{ color: 'var(--muted)', fontSize: 13, marginBottom: 4 }}>{q.formula.section}</div>
-        <div style={{ fontWeight: 700, fontSize: 18, marginBottom: 26 }}>{q.formula.name}</div>
+        <div style={{ color: 'var(--muted)', fontSize: 13, marginBottom: 4 }}>{t(q.formula.section)}</div>
+        <div style={{ fontWeight: 700, fontSize: 18, marginBottom: 26 }}>{tf(q.formula.name)}</div>
         <div style={{ minHeight: 80, display: 'flex', alignItems: 'center', justifyContent: 'center', overflowX: 'auto' }}>
           <FormulaView toks={q.toks} slots={q.slots} activeSlot={active} onSlotClick={clickSlot} />
         </div>
@@ -324,7 +330,7 @@ export default function FormulasPage() {
           <div className="animate-fade-in" style={{ marginTop: 22, padding: '14px 16px', borderRadius: 12, textAlign: 'left', background: answeredRight ? 'rgba(52,211,153,0.08)' : 'rgba(248,113,113,0.08)', border: `1px solid ${answeredRight ? 'rgba(52,211,153,0.3)' : 'rgba(248,113,113,0.3)'}` }}>
             <div style={{ fontWeight: 700, marginBottom: 8, color: answeredRight ? 'var(--good)' : 'var(--bad)', display: 'flex', alignItems: 'center', gap: 6 }}>
               <Icon name={answeredRight ? 'check' : 'x'} size={18} />
-              {answeredRight ? (altForm ? 'Верно! Это равносильная запись. В учебнике обычно так:' : 'Верно!') : 'Есть ошибка. Правильно так:'}
+              {answeredRight ? (altForm ? t('Верно! Это равносильная запись. В учебнике обычно так:') : t('Верно!')) : t('Есть ошибка. Правильно так:')}
             </div>
             {(!answeredRight || altForm) && (
               <div style={{ textAlign: 'center', margin: '6px 0 12px' }}>
@@ -333,7 +339,7 @@ export default function FormulasPage() {
             )}
             <div style={{ color: 'var(--muted)', fontSize: 13, display: 'flex', flexWrap: 'wrap', gap: '4px 14px' }}>
               {Object.entries(q.formula.legend).map(([k, v]) => (
-                <span key={k}><i style={{ color: 'var(--text)', fontFamily: 'serif' }}>{k}</i> — {v}</span>
+                <span key={k}><i style={{ color: 'var(--text)', fontFamily: 'serif' }}>{k}</i> — {tf(v)}</span>
               ))}
             </div>
           </div>
@@ -342,7 +348,7 @@ export default function FormulasPage() {
 
       {!checked && (
         <div style={{ marginTop: 18 }}>
-          <div className="label" style={{ textAlign: 'center' }}>Выбери, что вставить в пропуск</div>
+          <div className="label" style={{ textAlign: 'center' }}>{t('Выбери, что вставить в пропуск')}</div>
           <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', justifyContent: 'center' }}>
             {q.choices.map(c => (
               <button key={c.v} className={`fx-choice${c.upright ? ' fx-upright' : ''}`} onClick={() => pick(c.v)} disabled={active === null && allFilled}>{c.v}</button>
@@ -354,10 +360,10 @@ export default function FormulasPage() {
       <div style={{ display: 'flex', justifyContent: 'center', marginTop: 22 }}>
         {checked ? (
           <button className="btn" onClick={next}>
-            {index + 1 < queue.length ? 'Дальше' : 'Результаты'} <Icon name="arrowRight" size={18} />
+            {index + 1 < queue.length ? t('Дальше') : t('Результаты')} <Icon name="arrowRight" size={18} />
           </button>
         ) : (
-          <button className="btn" onClick={check} disabled={!allFilled}>Проверить</button>
+          <button className="btn" onClick={check} disabled={!allFilled}>{t('Проверить')}</button>
         )}
       </div>
     </div>

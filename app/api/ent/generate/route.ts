@@ -6,6 +6,9 @@ import {
   type EntDifficulty, type EntQuestion, type EntSubject,
 } from '@/lib/ent'
 import { generateFromTemplate } from '@/lib/templates'
+import { AI_LANGUAGE, type Locale } from '@/lib/i18n'
+import { getLocale } from '@/lib/i18n/server'
+import { translateFields } from '@/lib/translate'
 
 export const maxDuration = 120
 
@@ -17,7 +20,7 @@ const SHARE: Record<EntDifficulty, { template: number; bank: number }> = {
 }
 
 const SYSTEM = `Ты — опытный составитель заданий ЕНТ (Единое национальное тестирование, Казахстан) по физике и математике.
-Составляй оригинальные задания на русском языке в стиле ЕНТ: чёткое условие, числовые данные, однозначный ответ.
+Составляй оригинальные задания в стиле ЕНТ: чёткое условие, числовые данные, однозначный ответ.
 
 Правила:
 - Сначала реши задачу сам и запиши краткое решение в поле "solution", и только потом составь варианты ответа.
@@ -69,8 +72,8 @@ function planSlots(subject: EntSubject, section: string, topic: string, count: n
   return slots
 }
 
-function fromTemplate(subject: EntSubject, slot: Slot, nOptions: number): EntQuestion | null {
-  const g = generateFromTemplate(subject, slot.topic, nOptions)
+function fromTemplate(subject: EntSubject, slot: Slot, nOptions: number, locale: Locale): EntQuestion | null {
+  const g = generateFromTemplate(subject, slot.topic, nOptions, locale)
   return g ? { ...g, section: slot.section, topic: slot.topic } : null
 }
 
@@ -83,13 +86,14 @@ async function loadBank(subject: EntSubject, section: string, difficulty: EntDif
   return shuffle(((data || []) as BankRow[]).filter(r => !exclude.includes(r.id)))
 }
 
-async function fillWithAi(subject: EntSubject, difficulty: EntDifficulty, slots: Slot[]): Promise<void> {
+async function fillWithAi(subject: EntSubject, difficulty: EntDifficulty, slots: Slot[], locale: Locale): Promise<void> {
   const optionsCount = ENT_DIFFICULTIES[difficulty].options
   const level = difficulty === 'ent'
     ? 'уровень реального ЕНТ: от простых заданий в одно действие до сложных в 3-4 действия'
     : 'выше уровня ЕНТ: комбинированные задачи в несколько действий, нестандартные идеи, уровень вступительных экзаменов и областных олимпиад'
   const text = await chat([
-    { role: 'system', content: SYSTEM },
+    // Язык заданий — язык интерфейса ученика; поле topic оставляем русским
+    { role: 'system', content: `${SYSTEM}\nЯзык условий, решений и вариантов ответа — ${AI_LANGUAGE[locale]}. Поле "topic" пиши точно как в запросе (по-русски).` },
     {
       role: 'user',
       content: `Составь ${slots.length} заданий по предмету «${ENT_SUBJECTS[subject].label}», по одному на каждую тему:
@@ -130,6 +134,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Неизвестная тема' }, { status: 400 })
   }
 
+  const locale = await getLocale()
   const nOptions = ENT_DIFFICULTIES[difficulty].options
   const share = SHARE[difficulty]
   const slots = planSlots(subject, section, topic, count)
@@ -139,7 +144,7 @@ export async function POST(req: NextRequest) {
   for (const slot of slots) {
     const r = Math.random()
     if (r < share.template) {
-      slot.q = fromTemplate(subject, slot, nOptions) ?? undefined
+      slot.q = fromTemplate(subject, slot, nOptions, locale) ?? undefined
     } else if (r < share.template + share.bank) {
       // Подходящая задача из банка: та же тема, а если тема не указана — тот же раздел
       const idx = bank.findIndex(b => b.topic ? b.topic === slot.topic : b.section === slot.section)
@@ -156,18 +161,37 @@ export async function POST(req: NextRequest) {
     const quota = await checkAiQuota('ent_generate')
     if (!quota.error) {
       try {
-        await fillWithAi(subject, difficulty, aiSlots)
+        await fillWithAi(subject, difficulty, aiSlots, locale)
         await quota.record()
       } catch (err) {
         console.error('ENT AI fallback to templates:', err)
       }
     }
-    for (const slot of aiSlots) if (!slot.q) slot.q = fromTemplate(subject, slot, nOptions) ?? undefined
+    for (const slot of aiSlots) if (!slot.q) slot.q = fromTemplate(subject, slot, nOptions, locale) ?? undefined
   }
+
+  if (locale !== 'ru') await localizeBank(slots, locale)
 
   const questions = slots.map(s => s.q).filter((q): q is EntQuestion => !!q && isValid(q)).map(shuffleOptions)
   if (!questions.length) {
     return NextResponse.json({ error: 'Не удалось подготовить задания, попробуй ещё раз' }, { status: 502 })
   }
   return NextResponse.json({ questions })
+}
+
+// Задачи из банка учителя пишут по-русски — переводим их через ИИ (один раз,
+// перевод кэшируется по id задачи). Если ИИ недоступен, остаётся оригинал.
+async function localizeBank(slots: Slot[], locale: Exclude<Locale, 'ru'>): Promise<void> {
+  await Promise.all(slots.map(async slot => {
+    const q = slot.q
+    if (!q?.bankId) return
+    const fields: Record<string, string> = { question: q.question, solution: q.solution || '' }
+    q.options.forEach((o, i) => { fields[`o${i}`] = o })
+    try {
+      const tr = await translateFields('bank', q.bankId, locale, fields)
+      slot.q = { ...q, question: tr.question ?? q.question, solution: tr.solution ?? q.solution, options: q.options.map((o, i) => tr[`o${i}`] ?? o) }
+    } catch (err) {
+      console.error('Bank translation failed:', err)
+    }
+  }))
 }

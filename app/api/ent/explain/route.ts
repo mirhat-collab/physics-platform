@@ -1,10 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { aiErrorResponse, chat, checkAiQuota, type ChatMessage } from '@/lib/ai'
+import { AI_LANGUAGE } from '@/lib/i18n'
+import { getLocale } from '@/lib/i18n/server'
 
 export const maxDuration = 100
 
 const SYSTEM = `Ты — добрый и терпеливый репетитор по физике и математике, готовишь школьника к ЕНТ.
-Ученик решал тестовое задание и ошибся или не смог решить. Объясни решение на русском языке.
+Ученик решал тестовое задание и ошибся или не смог решить. Объясни решение.
 
 Как объяснять:
 - Начни с идеи: какой закон или формула здесь нужны и почему.
@@ -63,7 +65,8 @@ ${solution ? `\nКраткое решение составителя (прове
 Объясни, как решать это задание.`
 
   const messages: ChatMessage[] = [
-    { role: 'system', content: SYSTEM },
+    // Объяснение — на языке интерфейса ученика (рус/қаз/англ)
+    { role: 'system', content: `${SYSTEM}\n- Отвечай только на ${AI_LANGUAGE[await getLocale()]} языке.` },
     { role: 'user', content: intro },
     ...history.map(t => ({ role: t.role, content: t.content.slice(0, MAX_LEN) })),
   ]

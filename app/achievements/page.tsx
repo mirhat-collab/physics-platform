@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
+import { useT } from '@/app/components/LanguageProvider'
 
 type Profile = { total_xp: number; streak: number }
 type Stats = { topics: number; wins: number; tourParticipations: number; homeworkDone: number }
@@ -46,6 +47,7 @@ const CATEGORY_COLORS: Record<string, string> = {
 }
 
 export default function AchievementsPage() {
+  const { t } = useT()
   const router = useRouter()
   const [profile, setProfile] = useState<Profile | null>(null)
   const [stats, setStats] = useState<Stats>({ topics: 0, wins: 0, tourParticipations: 0, homeworkDone: 0 })
@@ -76,7 +78,7 @@ export default function AchievementsPage() {
 
   if (loading) return (
     <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-      <div style={{ color: '#fff', fontSize: 18 }}>Загрузка...</div>
+      <div style={{ color: '#fff', fontSize: 18 }}>{t('Загрузка...')}</div>
     </div>
   )
 
@@ -88,13 +90,13 @@ export default function AchievementsPage() {
     <div style={{ minHeight: '100vh', color: '#fff', padding: '1.5rem', paddingBottom: 80 }}>
       <div style={{ maxWidth: 500, margin: '0 auto' }}>
 
-        <h1 style={{ fontSize: '1.8rem', fontWeight: 800, marginBottom: 4 }}>🏅 Достижения</h1>
-        <p style={{ color: '#888', marginBottom: 20, fontSize: 14 }}>{unlocked.length} из {ACHIEVEMENTS.length} получено</p>
+        <h1 style={{ fontSize: '1.8rem', fontWeight: 800, marginBottom: 4 }}>{t('🏅 Достижения')}</h1>
+        <p style={{ color: '#888', marginBottom: 20, fontSize: 14 }}>{t('{a} из {b} получено', { a: unlocked.length, b: ACHIEVEMENTS.length })}</p>
 
         {/* Прогресс */}
         <div style={{ background: '#1a1a2e', borderRadius: 16, padding: '16px 20px', marginBottom: 20, border: '1px solid #2a2a3e' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, marginBottom: 8 }}>
-            <span style={{ color: '#888' }}>Общий прогресс</span>
+            <span style={{ color: '#888' }}>{t('Общий прогресс')}</span>
             <span style={{ color: '#a78bfa', fontWeight: 600 }}>{unlocked.length} / {ACHIEVEMENTS.length}</span>
           </div>
           <div style={{ background: '#0f0f1a', borderRadius: 999, height: 8 }}>
@@ -105,10 +107,10 @@ export default function AchievementsPage() {
         {/* Статистика */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8, marginBottom: 24 }}>
           {[
-            { val: stats.topics, label: 'тем', color: '#667eea' },
-            { val: stats.wins, label: 'побед', color: '#10b981' },
-            { val: stats.tourParticipations, label: 'турниров', color: '#f59e0b' },
-            { val: stats.homeworkDone, label: 'домашек', color: '#8b5cf6' },
+            { val: stats.topics, label: t('тем'), color: '#667eea' },
+            { val: stats.wins, label: t('побед'), color: '#10b981' },
+            { val: stats.tourParticipations, label: t('турниров'), color: '#f59e0b' },
+            { val: stats.homeworkDone, label: t('домашек'), color: '#8b5cf6' },
           ].map(({ val, label, color }) => (
             <div key={label} style={{ background: '#1a1a2e', borderRadius: 12, padding: '12px 8px', border: '1px solid #2a2a3e', textAlign: 'center' }}>
               <div style={{ fontSize: 20, fontWeight: 800, color }}>{val}</div>
@@ -125,7 +127,7 @@ export default function AchievementsPage() {
           return (
             <div key={cat} style={{ marginBottom: 24 }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
-                <h2 style={{ fontSize: '0.95rem', fontWeight: 700, color, margin: 0 }}>{cat.toUpperCase()}</h2>
+                <h2 style={{ fontSize: '0.95rem', fontWeight: 700, color, margin: 0 }}>{t(cat).toUpperCase()}</h2>
                 <span style={{ color: '#555', fontSize: 12 }}>{catUnlocked.length}/{catAchievements.length}</span>
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -141,8 +143,8 @@ export default function AchievementsPage() {
                     }}>
                       <div style={{ fontSize: 32, flexShrink: 0, filter: done ? 'none' : 'grayscale(1)' }}>{a.icon}</div>
                       <div style={{ flex: 1 }}>
-                        <div style={{ fontWeight: 700, fontSize: 14, color: done ? '#fff' : '#aaa' }}>{a.title}</div>
-                        <div style={{ color: '#888', fontSize: 12, marginTop: 2 }}>{a.desc}</div>
+                        <div style={{ fontWeight: 700, fontSize: 14, color: done ? '#fff' : '#aaa' }}>{t(a.title)}</div>
+                        <div style={{ color: '#888', fontSize: 12, marginTop: 2 }}>{t(a.desc)}</div>
                       </div>
                       <div style={{ fontSize: 18 }}>{done ? '✅' : '🔒'}</div>
                     </div>

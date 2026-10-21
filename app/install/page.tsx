@@ -1,19 +1,21 @@
 'use client'
 import Link from 'next/link'
+import { useT } from '@/app/components/LanguageProvider'
 
 export default function InstallPage() {
+  const { t } = useT()
   return (
     <div style={{ minHeight: '100vh', color: '#fff', padding: '2rem' }}>
       <div style={{ maxWidth: 600, margin: '0 auto' }}>
 
         <Link href="/dashboard" style={{ color: '#666', textDecoration: 'none', fontSize: 14, display: 'inline-flex', alignItems: 'center', gap: 6, marginBottom: 32 }}>
-          ← Назад
+          {t('← Назад')}
         </Link>
 
         <div style={{ textAlign: 'center', marginBottom: 32 }}>
           <div style={{ fontSize: 64, marginBottom: 16 }}>📲</div>
-          <h1 style={{ fontSize: '2rem', fontWeight: 800, margin: '0 0 8px' }}>Установи приложение</h1>
-          <p style={{ color: '#888', fontSize: 15, margin: 0 }}>Бесплатно — прямо с браузера, без магазинов!</p>
+          <h1 style={{ fontSize: '2rem', fontWeight: 800, margin: '0 0 8px' }}>{t('Установи приложение')}</h1>
+          <p style={{ color: '#888', fontSize: 15, margin: 0 }}>{t('Бесплатно — прямо с браузера, без магазинов!')}</p>
         </div>
 
         {/* Android */}
@@ -24,15 +26,15 @@ export default function InstallPage() {
             </div>
             <div>
               <div style={{ fontWeight: 800, fontSize: 18 }}>Android</div>
-              <div style={{ color: '#888', fontSize: 13 }}>Через Google Chrome</div>
+              <div style={{ color: '#888', fontSize: 13 }}>{t('Через Google Chrome')}</div>
             </div>
           </div>
 
           {[
-            { num: 1, text: 'Открой этот сайт в браузере Chrome' },
-            { num: 2, text: 'Нажми три точки ⋮ в правом верхнем углу' },
-            { num: 3, text: 'Выбери "Добавить на главный экран" или "Установить приложение"' },
-            { num: 4, text: 'Нажми "Установить" — готово!' },
+            { num: 1, text: t('Открой этот сайт в браузере Chrome') },
+            { num: 2, text: t('Нажми три точки ⋮ в правом верхнем углу') },
+            { num: 3, text: t('Выбери "Добавить на главный экран" или "Установить приложение"') },
+            { num: 4, text: t('Нажми "Установить" — готово!') },
           ].map(step => (
             <div key={step.num} style={{ display: 'flex', gap: 14, marginBottom: 14, alignItems: 'flex-start' }}>
               <div style={{ width: 28, height: 28, borderRadius: '50%', background: 'linear-gradient(135deg,#10b981,#059669)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: 13, flexShrink: 0 }}>
@@ -51,16 +53,16 @@ export default function InstallPage() {
             </div>
             <div>
               <div style={{ fontWeight: 800, fontSize: 18 }}>iPhone / iPad</div>
-              <div style={{ color: '#888', fontSize: 13 }}>Через Safari (не Chrome!)</div>
+              <div style={{ color: '#888', fontSize: 13 }}>{t('Через Safari (не Chrome!)')}</div>
             </div>
           </div>
 
           {[
-            { num: 1, text: 'Открой Safari — именно Safari, не Chrome!' },
-            { num: 2, text: 'Зайди на этот сайт в Safari' },
-            { num: 3, text: 'Нажми кнопку "Поделиться" — квадрат со стрелкой вверх ↑ внизу экрана' },
-            { num: 4, text: 'Прокрути список вниз → нажми "На экран Домой"' },
-            { num: 5, text: 'Нажми "Добавить" — иконка появится на рабочем столе!' },
+            { num: 1, text: t('Открой Safari — именно Safari, не Chrome!') },
+            { num: 2, text: t('Зайди на этот сайт в Safari') },
+            { num: 3, text: t('Нажми кнопку "Поделиться" — квадрат со стрелкой вверх ↑ внизу экрана') },
+            { num: 4, text: t('Прокрути список вниз → нажми "На экран Домой"') },
+            { num: 5, text: t('Нажми "Добавить" — иконка появится на рабочем столе!') },
           ].map(step => (
             <div key={step.num} style={{ display: 'flex', gap: 14, marginBottom: 14, alignItems: 'flex-start' }}>
               <div style={{ width: 28, height: 28, borderRadius: '50%', background: 'linear-gradient(135deg,#667eea,#764ba2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: 13, flexShrink: 0 }}>
@@ -74,12 +76,12 @@ export default function InstallPage() {
         {/* После установки */}
         <div style={{ background: 'rgba(102,126,234,0.1)', border: '1px solid rgba(102,126,234,0.3)', borderRadius: 16, padding: '20px', textAlign: 'center', marginBottom: 32 }}>
           <div style={{ fontSize: 28, marginBottom: 8 }}>✨</div>
-          <div style={{ fontWeight: 700, marginBottom: 6 }}>После установки:</div>
+          <div style={{ fontWeight: 700, marginBottom: 6 }}>{t('После установки:')}</div>
           <div style={{ color: '#aaa', fontSize: 14, lineHeight: 1.8 }}>
-            Иконка появится на рабочем столе<br />
-            Открывается как настоящее приложение<br />
-            Работает быстрее чем через браузер<br />
-            Абсолютно бесплатно!
+            {t('Иконка появится на рабочем столе')}<br />
+            {t('Открывается как настоящее приложение')}<br />
+            {t('Работает быстрее чем через браузер')}<br />
+            {t('Абсолютно бесплатно!')}
           </div>
         </div>
 
@@ -88,13 +90,13 @@ export default function InstallPage() {
           onClick={() => {
             if (navigator.share) {
               navigator.share({
-                title: 'Mirha_Edu — установи приложение!',
-                text: 'Учи физику онлайн — установи бесплатное приложение',
+                title: t('Mirha_Edu — установи приложение!'),
+                text: t('Учи физику онлайн — установи бесплатное приложение'),
                 url: window.location.origin + '/install',
               })
             } else {
               navigator.clipboard.writeText(window.location.origin + '/install')
-              alert('Ссылка скопирована!')
+              alert(t('Ссылка скопирована!'))
             }
           }}
           style={{
@@ -103,7 +105,7 @@ export default function InstallPage() {
             color: '#fff', fontSize: 16, fontWeight: 700, cursor: 'pointer',
             marginBottom: 32
           }}>
-          📤 Поделиться инструкцией
+          {t('📤 Поделиться инструкцией')}
         </button>
 
       </div>

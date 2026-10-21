@@ -4,6 +4,9 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
 import Icon from '@/app/components/Icon'
+import { sortTopicsByNumber } from '@/lib/topic-order'
+import { useT } from '@/app/components/LanguageProvider'
+import { useTranslatedNames } from '@/app/components/useTranslatedNames'
 
 type Profile = { id: string; full_name: string; email: string; grade: string; total_xp: number; streak: number }
 type Topic = { id: string; name: string; grade: string }
@@ -11,11 +14,13 @@ type Topic = { id: string; name: string; grade: string }
 const VALID_GRADES = ['7', '8', '9', '10', '11']
 
 export default function DashboardPage() {
+  const { t } = useT()
   const router = useRouter()
   const [profile, setProfile] = useState<Profile | null>(null)
   const [topics, setTopics] = useState<Topic[]>([])
   const [completed, setCompleted] = useState<string[]>([])
   const [loading, setLoading] = useState(true)
+  const topicName = useTranslatedNames('topic', topics.map(t => t.id))
 
   useEffect(() => { loadData() }, [])
 
@@ -35,20 +40,22 @@ export default function DashboardPage() {
     const { data: prog } = await supabase
       .from('progress').select('topic')
       .eq('student', user.id).eq('status', 'completed')
-    if (prog) setCompleted(prog.map(p => p.topic))
+    // progress.topic хранится текстом, а topics.id — число: сравниваем строками
+    if (prog) setCompleted(prog.map(p => String(p.topic)))
 
     setLoading(false)
   }
 
   if (loading) return (
     <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-      <div style={{ color: '#fff', fontSize: 18 }}>Загрузка...</div>
+      <div style={{ color: '#fff', fontSize: 18 }}>{t('Загрузка...')}</div>
     </div>
   )
 
-  const gradeDisplay = profile?.grade && VALID_GRADES.includes(profile.grade) ? `${profile.grade} класс` : 'Класс не указан'
-  const percent = topics.length > 0 ? Math.round((completed.filter(c => topics.find(t => t.id === c)).length / topics.length) * 100) : 0
-  const nextTopic = topics.find(t => !completed.includes(t.id))
+  const gradeDisplay = profile?.grade && VALID_GRADES.includes(profile.grade) ? t('{grade} класс', { grade: profile.grade }) : t('Класс не указан')
+  const doneCount = topics.filter(t => completed.includes(String(t.id))).length
+  const percent = topics.length > 0 ? Math.round((doneCount / topics.length) * 100) : 0
+  const nextTopic = sortTopicsByNumber(topics).find(t => !completed.includes(String(t.id)))
   const level = Math.floor((profile?.total_xp || 0) / 100) + 1
   const xpInLevel = (profile?.total_xp || 0) % 100
 
@@ -57,14 +64,14 @@ export default function DashboardPage() {
       <div className="animate-fade-in-up" style={{ maxWidth: 800, margin: '0 auto' }}>
 
         <div style={{ background: 'linear-gradient(135deg, #667eea, #764ba2)', borderRadius: 24, padding: '28px 32px', marginBottom: 20, boxShadow: 'var(--shadow-md)' }}>
-          <div style={{ fontSize: 13, opacity: 0.8, marginBottom: 6 }}>Добро пожаловать 👋</div>
+          <div style={{ fontSize: 13, opacity: 0.8, marginBottom: 6 }}>{t('Добро пожаловать 👋')}</div>
           <h1 style={{ fontSize: '1.8rem', fontWeight: 800, margin: '0 0 4px' }}>
             {profile?.full_name || profile?.email}
           </h1>
-          <div style={{ opacity: 0.8, fontSize: 14 }}>{gradeDisplay} · Уровень {level}</div>
+          <div style={{ opacity: 0.8, fontSize: 14 }}>{gradeDisplay} {t('· Уровень')} {level}</div>
           <div style={{ marginTop: 16 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, opacity: 0.8, marginBottom: 6 }}>
-              <span>XP до следующего уровня</span>
+              <span>{t('XP до следующего уровня')}</span>
               <span>{xpInLevel} / 100</span>
             </div>
             <div style={{ background: 'rgba(255,255,255,0.2)', borderRadius: 999, height: 8 }}>
@@ -75,23 +82,23 @@ export default function DashboardPage() {
 
         <div className="stagger-children" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12, marginBottom: 20 }}>
           <div className="hover-lift" style={{ background: '#1a1a2e', borderRadius: 16, padding: '16px', border: '1px solid #2a2a3e', textAlign: 'center' }}>
-            <div style={{ fontSize: 28, fontWeight: 800, color: '#a78bfa' }}>{profile?.total_xp}</div>
-            <div style={{ color: '#888', fontSize: 12, marginTop: 4 }}>Всего XP</div>
+            <div style={{ fontSize: 28, fontWeight: 800, color: '#a78bfa' }}>{profile?.total_xp ?? 0}</div>
+            <div style={{ color: '#888', fontSize: 12, marginTop: 4 }}>{t('Всего XP')}</div>
           </div>
           <div className="hover-lift" style={{ background: '#1a1a2e', borderRadius: 16, padding: '16px', border: '1px solid #2a2a3e', textAlign: 'center' }}>
-            <div style={{ fontSize: 28, fontWeight: 800, color: '#f59e0b' }}>🔥{profile?.streak}</div>
-            <div style={{ color: '#888', fontSize: 12, marginTop: 4 }}>Дней подряд</div>
+            <div style={{ fontSize: 28, fontWeight: 800, color: '#f59e0b' }}>🔥{profile?.streak ?? 0}</div>
+            <div style={{ color: '#888', fontSize: 12, marginTop: 4 }}>{t('Дней подряд')}</div>
           </div>
           <div className="hover-lift" style={{ background: '#1a1a2e', borderRadius: 16, padding: '16px', border: '1px solid #2a2a3e', textAlign: 'center' }}>
             <div style={{ fontSize: 28, fontWeight: 800, color: '#10b981' }}>{percent}%</div>
-            <div style={{ color: '#888', fontSize: 12, marginTop: 4 }}>Прогресс</div>
+            <div style={{ color: '#888', fontSize: 12, marginTop: 4 }}>{t('Прогресс')}</div>
           </div>
         </div>
 
         <div style={{ background: '#1a1a2e', borderRadius: 20, padding: '20px 24px', marginBottom: 20, border: '1px solid #2a2a3e' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 12 }}>
-            <span style={{ fontWeight: 600 }}>📚 Прогресс класса</span>
-            <span style={{ color: '#888', fontSize: 13 }}>{completed.filter(c => topics.find(t => t.id === c)).length} / {topics.length} тем</span>
+            <span style={{ fontWeight: 600 }}>{t('📚 Прогресс класса')}</span>
+            <span style={{ color: '#888', fontSize: 13 }}>{doneCount} / {topics.length} {t('тем')}</span>
           </div>
           <div style={{ background: '#0f0f1a', borderRadius: 999, height: 10, overflow: 'hidden' }}>
             <div style={{ height: '100%', width: `${percent}%`, background: 'linear-gradient(90deg, #667eea, #764ba2)', borderRadius: 999, transition: 'width 0.6s ease' }} />
@@ -100,23 +107,23 @@ export default function DashboardPage() {
 
         {nextTopic && (
           <div style={{ marginBottom: 20 }}>
-            <h2 style={{ fontSize: '1rem', fontWeight: 700, marginBottom: 12, color: '#888' }}>▶ СЛЕДУЮЩАЯ ТЕМА</h2>
+            <h2 style={{ fontSize: '1rem', fontWeight: 700, marginBottom: 12, color: '#888' }}>{t('▶ СЛЕДУЮЩАЯ ТЕМА')}</h2>
             <Link href={`/topics/${nextTopic.id}`} style={{ textDecoration: 'none' }}>
               <div className="hover-lift animate-pulse-glow" style={{ background: 'linear-gradient(135deg, #1a1a2e, #16213e)', border: '1px solid #667eea', borderRadius: 16, padding: '20px 24px', cursor: 'pointer' }}>
-                <div style={{ fontWeight: 700, fontSize: 16, marginBottom: 6 }}>{nextTopic.name}</div>
-                <div style={{ color: '#667eea', fontSize: 13, fontWeight: 600 }}>Начать → +10 XP</div>
+                <div style={{ fontWeight: 700, fontSize: 16, marginBottom: 6 }}>{topicName(nextTopic.id, nextTopic.name)}</div>
+                <div style={{ color: '#667eea', fontSize: 13, fontWeight: 600 }}>{t('Начать → +10 XP')}</div>
               </div>
             </Link>
           </div>
         )}
 
-        <h2 style={{ fontSize: '1rem', fontWeight: 700, marginBottom: 12, color: '#888' }}>ТРЕНИРОВКА</h2>
+        <h2 style={{ fontSize: '1rem', fontWeight: 700, marginBottom: 12, color: '#888' }}>{t('ТРЕНИРОВКА')}</h2>
         <div className="stagger-children" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 12 }}>
           {[
-            { href: '/formulas', icon: 'formula', title: 'Тренажёр формул', text: 'Собери формулу из букв — физика и математика', color: '#8b7cf6' },
-            { href: '/ent', icon: 'target', title: 'Подготовка к ЕНТ', text: 'Задания уровня ЕНТ с разбором от ИИ', color: '#34d399' },
-            { href: '/topics', icon: 'book', title: 'Все темы', text: 'Теория, формулы и тесты по классам', color: '#60a5fa' },
-            { href: '/progress', icon: 'chart', title: 'Рейтинг', text: 'Сравни свой XP с одноклассниками', color: '#f59e0b' },
+            { href: '/formulas', icon: 'formula', title: t('Тренажёр формул'), text: t('Собери формулу из букв — физика и математика'), color: '#8b7cf6' },
+            { href: '/ent', icon: 'target', title: t('Подготовка к ЕНТ'), text: t('Задания уровня ЕНТ с разбором от ИИ'), color: '#34d399' },
+            { href: '/topics', icon: 'book', title: t('Все темы'), text: t('Теория, формулы и тесты по классам'), color: '#60a5fa' },
+            { href: '/progress', icon: 'chart', title: t('Рейтинг'), text: t('Сравни свой XP с одноклассниками'), color: '#f59e0b' },
           ].map(c => (
             <Link key={c.href} href={c.href} style={{ textDecoration: 'none' }}>
               <div className="hover-lift" style={{ background: '#1a1a2e', border: '1px solid #2a2a3e', borderRadius: 16, padding: '18px', display: 'flex', gap: 14, alignItems: 'flex-start', cursor: 'pointer', height: '100%', boxSizing: 'border-box' }}>

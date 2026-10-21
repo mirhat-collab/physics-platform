@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createSupabaseServer } from '@/lib/supabase-server'
 import { createSupabaseAdmin } from '@/lib/supabase-admin'
+import { extractStoragePath } from '@/lib/file-protect'
 
 const BUCKET = 'topic-media'
 // Для PDF/картинок/видео 180с хватало — страница берёт ссылку и сразу её использует.
@@ -40,7 +41,17 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Не указан путь к файлу' }, { status: 400 })
     }
 
-    // 3) Генерируем короткоживущую подписанную ссылку через service role,
+    // 3) Файл должен принадлежать теме, которую пользователю видно по RLS —
+    //    иначе любой вошедший получил бы файлы закрытого класса (ЕНТ)
+    const { data: topics } = await supabase.from('topics').select('media')
+    const allowed = (topics || []).some(t =>
+      ((t.media || []) as { url: string }[]).some(m => extractStoragePath(m.url, BUCKET) === path)
+    )
+    if (!allowed) {
+      return NextResponse.json({ error: 'Нет доступа к файлу' }, { status: 403 })
+    }
+
+    // 4) Генерируем короткоживущую подписанную ссылку через service role,
     //    работает даже если бакет приватный (без публичного доступа)
     const admin = createSupabaseAdmin()
     const { data, error } = await admin.storage

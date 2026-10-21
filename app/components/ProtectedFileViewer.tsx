@@ -1,6 +1,7 @@
 'use client'
 import { useEffect, useRef, useState } from 'react'
 import { extractStoragePath, isPdf, isOfficeDoc, fileExt } from '@/lib/file-protect'
+import { useT } from '@/app/components/LanguageProvider'
 
 type Props = {
   fileUrl: string   // старое значение media[].url (используем только чтобы достать путь)
@@ -12,6 +13,7 @@ type Props = {
 const BUCKET = 'topic-media'
 
 export default function ProtectedFileViewer({ fileUrl, fileName, watermarkLabel, onClose }: Props) {
+  const { t } = useT()
   const [signedUrl, setSignedUrl] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
@@ -23,7 +25,7 @@ export default function ProtectedFileViewer({ fileUrl, fileName, watermarkLabel,
       setError(null)
       const path = extractStoragePath(fileUrl, BUCKET)
       if (!path) {
-        setError('Не удалось определить путь к файлу')
+        setError(t('Не удалось определить путь к файлу'))
         setLoading(false)
         return
       }
@@ -34,10 +36,10 @@ export default function ProtectedFileViewer({ fileUrl, fileName, watermarkLabel,
           body: JSON.stringify({ path }),
         })
         const data = await res.json().catch(() => null)
-        if (!res.ok || !data) throw new Error(data?.error || 'Ошибка загрузки файла')
+        if (!res.ok || !data) throw new Error(t(data?.error || 'Ошибка загрузки файла'))
         if (!cancelled) setSignedUrl(data.url)
       } catch (e) {
-        if (!cancelled) setError(e instanceof Error ? e.message : 'Ошибка загрузки файла')
+        if (!cancelled) setError(e instanceof Error ? e.message : t('Ошибка загрузки файла'))
       } finally {
         if (!cancelled) setLoading(false)
       }
@@ -70,7 +72,7 @@ export default function ProtectedFileViewer({ fileUrl, fileName, watermarkLabel,
             color: '#fff', borderRadius: 10, padding: '8px 16px', cursor: 'pointer', fontSize: 14,
           }}
         >
-          ✕ Закрыть
+          {t('✕ Закрыть')}
         </button>
       </div>
 
@@ -79,7 +81,7 @@ export default function ProtectedFileViewer({ fileUrl, fileName, watermarkLabel,
         borderRadius: 16, marginBottom: 20, position: 'relative',
       }}>
         {loading && (
-          <div style={{ color: '#888', textAlign: 'center', padding: '80px 20px' }}>⏳ Открываем файл…</div>
+          <div style={{ color: '#888', textAlign: 'center', padding: '80px 20px' }}>{t('⏳ Открываем файл…')}</div>
         )}
         {error && (
           <div style={{ color: '#f5576c', textAlign: 'center', padding: '80px 20px' }}>😕 {error}</div>
@@ -139,6 +141,7 @@ function Watermark({ label }: { label: string }) {
  * поверх — водяной знак с именем ученика.
  */
 function PdfCanvasViewer({ url, watermarkLabel }: { url: string; watermarkLabel: string }) {
+  const { t } = useT()
   const containerRef = useRef<HTMLDivElement>(null)
   const [numPages, setNumPages] = useState(0)
   const [renderError, setRenderError] = useState<string | null>(null)
@@ -188,7 +191,7 @@ function PdfCanvasViewer({ url, watermarkLabel }: { url: string; watermarkLabel:
           renderedCanvases.push(canvas)
         }
       } catch (e) {
-        if (!cancelled) setRenderError('Не удалось отобразить PDF')
+        if (!cancelled) setRenderError(t('Не удалось отобразить PDF'))
         console.error(e)
       }
     }

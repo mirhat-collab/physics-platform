@@ -2,11 +2,17 @@
 import { useState } from 'react'
 import { getActualGrade } from '@/lib/grade-match'
 import { supabase } from '@/lib/supabase'
+import { kzDate, nextStreak } from '@/lib/streak'
 import { useRouter } from 'next/navigation'
+import { useT } from '@/app/components/LanguageProvider'
+import LanguageSwitcher from '@/app/components/LanguageSwitcher'
 
 const GRADES = ['7', '8', '9', '10', '11']
 
+const PENDING_TEACHER_CODE = 'pendingTeacherCode'
+
 export default function LoginPage() {
+  const { t } = useT()
   const router = useRouter()
   const [isSignUp, setIsSignUp] = useState(false)
   const [role, setRole] = useState<'student' | 'teacher' | 'parent'>('student')
@@ -18,13 +24,29 @@ export default function LoginPage() {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
 
+  // Код учителя, сохранённый при регистрации с подтверждением почты
+  async function applyPendingTeacherCode() {
+    let code: string | null = null
+    try { code = localStorage.getItem(PENDING_TEACHER_CODE) } catch { return }
+    if (!code) return
+    const res = await fetch('/api/register-teacher', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ code }),
+    }).catch(() => null)
+    // Неверный код повторять бессмысленно; сетевую ошибку — попробуем при следующем входе
+    if (res && (res.ok || res.status === 403)) {
+      try { localStorage.removeItem(PENDING_TEACHER_CODE) } catch { /* нет доступа к storage */ }
+    }
+  }
+
   async function handleSubmit() {
     setLoading(true)
     setError('')
 
     if (isSignUp) {
-      if (!fullName) { setError('Введи своё имя!'); setLoading(false); return }
-      if (role === 'student' && !grade) { setError('Выбери класс!'); setLoading(false); return }
+      if (!fullName) { setError(t('Введи своё имя!')); setLoading(false); return }
+      if (role === 'student' && !grade) { setError(t('Выбери класс!')); setLoading(false); return }
       if (role === 'teacher') {
         const res = await fetch('/api/check-teacher-code', {
           method: 'POST',
@@ -32,7 +54,7 @@ export default function LoginPage() {
           body: JSON.stringify({ code: teacherCode })
         })
         const { valid } = await res.json()
-        if (!valid) { setError('Неверный код учителя!'); setLoading(false); return }
+        if (!valid) { setError(t('Неверный код учителя!')); setLoading(false); return }
       }
 
       // Имя, класс и роль ученика/родителя сохраняет триггер handle_new_user
@@ -45,11 +67,10 @@ export default function LoginPage() {
       if (error) { setError(error.message); setLoading(false); return }
 
       if (data.user && data.session) {
-        const now = new Date().toISOString()
         await supabase.from('profiles').update({
           full_name: fullName,
           grade: profileGrade,
-          last_visit: now.split('T')[0],
+          last_visit: kzDate(),
         }).eq('id', data.user.id)
 
         if (role === 'teacher') {
@@ -60,13 +81,20 @@ export default function LoginPage() {
           })
           if (!res.ok) {
             const d = await res.json().catch(() => null)
-            setError(d?.error || 'Не удалось подтвердить код учителя. Войди и попробуй снова.')
+            setError(t(d?.error || 'Не удалось подтвердить код учителя. Войди и попробуй снова.'))
             setLoading(false)
             return
           }
         }
       } else if (data.user) {
-        setError('Проверь почту и подтверди регистрацию, затем войди.')
+        // Без подтверждённой почты сессии ещё нет, и роль учителя выдать нельзя.
+        // Запоминаем код в этом браузере — роль применится при первом входе.
+        if (role === 'teacher') {
+          try { localStorage.setItem(PENDING_TEACHER_CODE, teacherCode) } catch { /* нет доступа к storage */ }
+          setError(t('Проверь почту и подтверди регистрацию, затем войди — роль учителя включится автоматически. Если войдёшь с другого устройства, введи код учителя в профиле.'))
+        } else {
+          setError(t('Проверь почту и подтверди регистрацию, затем войди.'))
+        }
         setLoading(false)
         return
       }
@@ -78,24 +106,19 @@ export default function LoginPage() {
 
       const { data: { user } } = await supabase.auth.getUser()
       if (user) {
-        const today = new Date().toISOString().split('T')[0]
+        await applyPendingTeacherCode()
+        const today = kzDate()
         const { data: profile } = await supabase.from('profiles').select('*').eq('id', user.id).single()
 
         if (profile) {
-          const lastVisit = profile.last_visit
-          const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0]
-          const newStreak = lastVisit === yesterday
-            ? (profile.streak || 0) + 1
-            : lastVisit === today ? profile.streak : 1
+          const newStreak = nextStreak(profile.last_visit, profile.streak)
 
-          const actualGrade = profile.role === 'teacher'
-            ? profile.grade
-            : getActualGrade(profile.grade, profile.last_visit)
-
+          // Класс «переводим» только ученикам — у учителя/админа/родителя
+          // в grade не номер класса (раньше так у админа появился grade = "NaN")
           await supabase.from('profiles').update({
             last_visit: today,
             streak: newStreak,
-            grade: actualGrade,
+            ...(profile.role === 'student' ? { grade: getActualGrade(profile.grade || '', profile.last_visit) } : {}),
           }).eq('id', user.id)
 
           router.push(
@@ -124,19 +147,20 @@ export default function LoginPage() {
       <div style={{ position: 'absolute', top: '-15%', left: '50%', transform: 'translateX(-50%)', width: 600, height: 600, borderRadius: '50%', background: 'radial-gradient(circle, rgba(102,126,234,0.15) 0%, transparent 70%)', pointerEvents: 'none' }} />
       <div className="animate-scale-in" style={{ background: '#1a1a2e', borderRadius: 20, padding: 40, width: '100%', maxWidth: 440, border: '1px solid #2a2a3e', boxShadow: 'var(--shadow-lg)', position: 'relative' }}>
 
+        <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 8 }}><LanguageSwitcher compact /></div>
         <img src="/logo-mark.png" alt="Mirha_Edu" style={{ width: 56, height: 56, objectFit: 'contain', display: 'block', margin: '0 auto 12px' }} />
 
         <h1 style={{ color: '#fff', fontSize: '1.8rem', fontWeight: 800, marginBottom: 8, textAlign: 'center' }}>
-          {isSignUp ? '🚀 Регистрация' : '⚡ Вход'}
+          {isSignUp ? t('🚀 Регистрация') : t('⚡ Вход')}
         </h1>
         <p style={{ color: '#888', textAlign: 'center', marginBottom: 24 }}>
-          {isSignUp ? 'Создай аккаунт и начни учиться' : 'Войди в свой аккаунт'}
+          {isSignUp ? t('Создай аккаунт и начни учиться') : t('Войди в свой аккаунт')}
         </p>
 
         {/* Выбор роли — только при регистрации */}
         {isSignUp && (
           <div style={{ marginBottom: 20 }}>
-            <div style={{ color: '#888', fontSize: 13, marginBottom: 8 }}>Кто ты?</div>
+            <div style={{ color: '#888', fontSize: 13, marginBottom: 8 }}>{t('Кто ты?')}</div>
             <div style={{ display: 'flex', gap: 10 }}>
               <button onClick={() => setRole('student')} style={{
                 flex: 1, padding: '12px', borderRadius: 12,
@@ -146,7 +170,7 @@ export default function LoginPage() {
                 fontSize: 15, fontWeight: role === 'student' ? 700 : 400,
                 cursor: 'pointer', transition: 'all 0.2s',
               }}>
-                🎓 Ученик
+                {t('🎓 Ученик')}
               </button>
               <button onClick={() => setRole('parent')} style={{
                 flex: 1, padding: '12px', borderRadius: 12,
@@ -156,7 +180,7 @@ export default function LoginPage() {
                 fontSize: 15, fontWeight: role === 'parent' ? 700 : 400,
                 cursor: 'pointer', transition: 'all 0.2s',
               }}>
-                👨‍👩‍👧 Родитель
+                {t('👨‍👩‍👧 Родитель')}
               </button>
               <button onClick={() => setRole('teacher')} style={{
                 flex: 1, padding: '12px', borderRadius: 12,
@@ -166,7 +190,7 @@ export default function LoginPage() {
                 fontSize: 15, fontWeight: role === 'teacher' ? 700 : 400,
                 cursor: 'pointer', transition: 'all 0.2s',
               }}>
-                👨‍🏫 Учитель
+                {t('👨‍🏫 Учитель')}
               </button>
             </div>
           </div>
@@ -174,12 +198,12 @@ export default function LoginPage() {
 
         {isSignUp && (
           <>
-            <input style={input} placeholder="Твоё имя" value={fullName} onChange={e => setFullName(e.target.value)} />
+            <input style={input} placeholder={t('Твоё имя')} value={fullName} onChange={e => setFullName(e.target.value)} />
 
             {/* Только для ученика — выбор класса */}
             {role === 'student' && (
               <div style={{ marginBottom: 12 }}>
-                <div style={{ color: '#888', fontSize: 13, marginBottom: 8 }}>Выбери свой класс:</div>
+                <div style={{ color: '#888', fontSize: 13, marginBottom: 8 }}>{t('Выбери свой класс:')}</div>
                 <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                   {GRADES.map(g => (
                     <button key={g} onClick={() => setGrade(g)} style={{
@@ -190,7 +214,7 @@ export default function LoginPage() {
                       fontSize: 15, fontWeight: grade === g ? 700 : 400,
                       cursor: 'pointer', transition: 'all 0.2s',
                     }}>
-                      {g} класс
+                      {t('{g} класс', { g: g })}
                     </button>
                   ))}
                 </div>
@@ -200,16 +224,16 @@ export default function LoginPage() {
             {/* Только для учителя — секретный код */}
             {role === 'teacher' && (
               <div style={{ marginBottom: 12 }}>
-                <div style={{ color: '#888', fontSize: 13, marginBottom: 8 }}>🔐 Код учителя:</div>
+                <div style={{ color: '#888', fontSize: 13, marginBottom: 8 }}>{t('🔐 Код учителя:')}</div>
                 <input
                   style={{ ...input, marginBottom: 0, border: '1px solid #10b98144', background: '#0a1a14' }}
                   type="password"
-                  placeholder="Введи секретный код учителя"
+                  placeholder={t('Введи секретный код учителя')}
                   value={teacherCode}
                   onChange={e => setTeacherCode(e.target.value)}
                 />
                 <div style={{ color: '#555', fontSize: 11, marginTop: 4 }}>
-                  Код выдаётся администратором платформы
+                  {t('Код выдаётся администратором платформы')}
                 </div>
               </div>
             )}
@@ -217,7 +241,7 @@ export default function LoginPage() {
         )}
 
         <input style={input} type="email" placeholder="Email" value={email} onChange={e => setEmail(e.target.value)} />
-        <input style={input} type="password" placeholder="Пароль (минимум 6 символов)" value={password} onChange={e => setPassword(e.target.value)} />
+        <input style={input} type="password" placeholder={t('Пароль (минимум 6 символов)')} value={password} onChange={e => setPassword(e.target.value)} />
 
         {error && (
           <div className="animate-scale-in" style={{ background: '#2d1a1a', border: '1px solid #f5576c', borderRadius: 8, padding: '10px 14px', color: '#f5576c', fontSize: 14, marginBottom: 12 }}>
@@ -235,16 +259,16 @@ export default function LoginPage() {
           display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
         }}>
           {loading && <span className="spin" style={{ width: 16, height: 16, borderRadius: '50%', border: '2px solid rgba(255,255,255,0.35)', borderTopColor: '#fff', display: 'inline-block' }} />}
-          {loading ? 'Загрузка...' : isSignUp
-            ? (role === 'teacher' ? '👨‍🏫 Зарегистрироваться как учитель' : '🎓 Зарегистрироваться')
-            : '⚡ Войти'}
+          {loading ? t('Загрузка...') : isSignUp
+            ? (role === 'teacher' ? t('👨‍🏫 Зарегистрироваться как учитель') : t('🎓 Зарегистрироваться'))
+            : t('⚡ Войти')}
         </button>
 
         <p style={{ color: '#888', textAlign: 'center', fontSize: 14 }}>
-          {isSignUp ? 'Уже есть аккаунт? ' : 'Нет аккаунта? '}
+          {isSignUp ? t('Уже есть аккаунт? ') : t('Нет аккаунта? ')}
           <span onClick={() => { setIsSignUp(!isSignUp); setRole('student'); setTeacherCode('') }}
             style={{ color: '#a78bfa', cursor: 'pointer', fontWeight: 600 }}>
-            {isSignUp ? 'Войти' : 'Зарегистрироваться'}
+            {isSignUp ? t('Войти') : t('Зарегистрироваться')}
           </span>
         </p>
 

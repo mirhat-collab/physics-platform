@@ -5,6 +5,7 @@ import { supabase } from '@/lib/supabase'
 import { extractStoragePath } from '@/lib/file-protect'
 import { gradeVariants } from '@/lib/grade-match'
 import { sortTopicsByNumber } from '@/lib/topic-order'
+import { useT } from '@/app/components/LanguageProvider'
 
 const BUCKET = 'topic-media'
 
@@ -24,6 +25,7 @@ function fileIcon(name: string): string {
 }
 
 function MediaUploader({ existing, onDone }: { existing: MediaItem[]; onDone: (items: MediaItem[]) => void }) {
+  const { t } = useT()
   // Специально без своего state для items — используем existing напрямую.
   // Раньше был внутренний items-state, инициализированный один раз из existing:
   // после сохранения темы родитель сбрасывал existing в [], но здесь всё ещё
@@ -41,7 +43,7 @@ function MediaUploader({ existing, onDone }: { existing: MediaItem[]; onDone: (i
     const files = Array.from(e.target.files || [])
     if (!files.length) return
     setUploading(true)
-    setMsg('Загружаю...')
+    setMsg(t('Загружаю...'))
     const newItems: MediaItem[] = []
     for (const file of files) {
       // Сервер только выдаёт подписанную ссылку — сам файл идёт напрямую
@@ -52,17 +54,17 @@ function MediaUploader({ existing, onDone }: { existing: MediaItem[]; onDone: (i
         body: JSON.stringify({ name: file.name }),
       })
       const data = await res.json().catch(() => null)
-      if (!res.ok || !data) { setMsg('Ошибка: ' + (data?.error || 'не удалось загрузить')); continue }
+      if (!res.ok || !data) { setMsg(t('Ошибка: ') + t(data?.error || 'не удалось загрузить')); continue }
 
       const { error: uploadError } = await supabase.storage.from(BUCKET).uploadToSignedUrl(data.path, data.token, file)
-      if (uploadError) { setMsg('Ошибка: ' + uploadError.message); continue }
+      if (uploadError) { setMsg(t('Ошибка: ') + uploadError.message); continue }
 
       const type = file.type.startsWith('video') ? 'video' : file.type.startsWith('image') ? 'image' : 'file'
       newItems.push({ url: data.url, type, name: file.name })
     }
     onDone([...items, ...newItems])
     setUploading(false)
-    setMsg(`✅ Загружено ${newItems.length} файл(ов)`)
+    setMsg(t('✅ Загружено {length} файл(ов)', { length: newItems.length }))
     setTimeout(() => setMsg(''), 3000)
     if (fileRef.current) fileRef.current.value = ''
   }
@@ -88,7 +90,7 @@ function MediaUploader({ existing, onDone }: { existing: MediaItem[]; onDone: (i
         onMouseEnter={e => (e.currentTarget.style.borderColor = '#667eea')}
         onMouseLeave={e => (e.currentTarget.style.borderColor = '#2a2a4e')}
       >
-        {uploading ? '⏳ Загружаю...' : '📎 Нажми чтобы добавить фото, видео, PDF или конспект'}
+        {uploading ? t('⏳ Загружаю...') : t('📎 Нажми чтобы добавить фото, видео, PDF или конспект')}
         <div style={{ fontSize: 12, marginTop: 4, color: '#555' }}>JPG, PNG, GIF, MP4, WebM, PDF, DOC(X), PPT(X)</div>
       </div>
       <input
@@ -120,7 +122,7 @@ function MediaUploader({ existing, onDone }: { existing: MediaItem[]; onDone: (i
                 style={{ position: 'absolute', top: 3, right: 3, width: 20, height: 20, borderRadius: '50%', background: '#f5576c', border: 'none', color: '#fff', fontSize: 12, cursor: 'pointer', padding: 0, lineHeight: '20px' }}
               >×</button>
               <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, background: 'rgba(0,0,0,.6)', fontSize: 9, color: '#ccc', padding: '2px 4px', textAlign: 'center' }}>
-                {item.type === 'video' ? '▶ видео' : item.type === 'image' ? '🖼 фото' : '📄 файл'}
+                {item.type === 'video' ? t('▶ видео') : item.type === 'image' ? t('🖼 фото') : t('📄 файл')}
               </div>
             </div>
           ))}
@@ -138,6 +140,7 @@ function maskEmail(email?: string | null): string {
 }
 
 export default function AdminPage() {
+  const { t } = useT()
   const router = useRouter()
   const [checking, setChecking] = useState(true)
   const [isAdmin, setIsAdmin] = useState(false)
@@ -194,8 +197,20 @@ export default function AdminPage() {
     loadData()
   }
 
+  // topics.grade должен совпадать с классом: "7".."11" для "7th Grade".."11th Grade"
+  // или полное имя ("ЕНТ"). Раньше это был свободный ввод с подсказкой «10А» —
+  // тема с таким значением не попадала ни в один класс.
+  function gradeOptions(current: string) {
+    const opts = classes.map(c => {
+      const num = c.name.replace(/\D/g, '')
+      return { value: num || c.name, label: c.name }
+    })
+    if (current && !opts.some(o => o.value === current)) opts.push({ value: current, label: `${current} (нет такого класса)` })
+    return opts
+  }
+
   async function addTopic() {
-    if (!newTopic.name) return
+    if (!newTopic.name || !newTopic.grade) { alert(t('Укажи название и класс темы')); return }
     await fetch('/api/admin/topics', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -207,13 +222,13 @@ export default function AdminPage() {
   }
 
   async function deleteClass(id: number) {
-    if (!confirm('Удалить класс?')) return
+    if (!confirm(t('Удалить класс?'))) return
     await fetch(`/api/admin/classes?id=${id}`, { method: 'DELETE' })
     loadData()
   }
 
   async function deleteTopic(id: number) {
-    if (!confirm('Удалить тему?')) return
+    if (!confirm(t('Удалить тему?'))) return
     await fetch(`/api/admin/topics?id=${id}`, { method: 'DELETE' })
     loadData()
   }
@@ -320,7 +335,7 @@ export default function AdminPage() {
   if (checking) {
     return (
       <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#888' }}>
-        Проверяю доступ…
+        {t('Проверяю доступ…')}
       </div>
     )
   }
@@ -330,9 +345,9 @@ export default function AdminPage() {
       <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
         <div style={{ background: '#1a1a2e', borderRadius: 24, padding: 48, width: '100%', maxWidth: 400, border: '1px solid #2a2a3e', textAlign: 'center' }}>
           <div style={{ fontSize: 48, marginBottom: 16 }}>🔒</div>
-          <h1 style={{ color: '#fff', fontSize: '1.6rem', fontWeight: 800, marginBottom: 8 }}>Доступ запрещён</h1>
-          <p style={{ color: '#666', marginBottom: 32, fontSize: 14 }}>Эта страница только для администраторов. Войди под аккаунтом с ролью admin.</p>
-          <button onClick={() => router.push('/login')} style={{ width: '100%', padding: '14px', borderRadius: 12, border: 'none', background: 'linear-gradient(135deg, #667eea, #764ba2)', color: '#fff', fontSize: 16, fontWeight: 700, cursor: 'pointer' }}>Войти</button>
+          <h1 style={{ color: '#fff', fontSize: '1.6rem', fontWeight: 800, marginBottom: 8 }}>{t('Доступ запрещён')}</h1>
+          <p style={{ color: '#666', marginBottom: 32, fontSize: 14 }}>{t('Эта страница только для администраторов. Войди под аккаунтом с ролью admin.')}</p>
+          <button onClick={() => router.push('/login')} style={{ width: '100%', padding: '14px', borderRadius: 12, border: 'none', background: 'linear-gradient(135deg, #667eea, #764ba2)', color: '#fff', fontSize: 16, fontWeight: 700, cursor: 'pointer' }}>{t('Войти')}</button>
         </div>
       </div>
     )
@@ -342,38 +357,38 @@ export default function AdminPage() {
     <div style={{ minHeight: '100vh', padding: '2rem', color: '#fff' }}>
       <div style={{ maxWidth: 900, margin: '0 auto' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
-          <h1 style={{ fontSize: '2rem', fontWeight: 800, margin: 0 }}>⚙️ Панель админа</h1>
-          <button onClick={handleLogout} style={{ ...btn('#2a2a3e'), border: '1px solid #3a3a5e', fontSize: 13 }}>🚪 Выйти</button>
+          <h1 style={{ fontSize: '2rem', fontWeight: 800, margin: 0 }}>{t('⚙️ Панель админа')}</h1>
+          <button onClick={handleLogout} style={{ ...btn('#2a2a3e'), border: '1px solid #3a3a5e', fontSize: 13 }}>{t('🚪 Выйти')}</button>
         </div>
-        <p style={{ color: '#888', marginBottom: 32 }}>Управление классами и темами</p>
+        <p style={{ color: '#888', marginBottom: 32 }}>{t('Управление классами и темами')}</p>
 
         <div style={{ display: 'flex', gap: 12, marginBottom: 32 }}>
-          <button onClick={() => setTab('classes')} style={{ ...btn(tab === 'classes' ? '#667eea' : '#1a1a2e'), border: '1px solid #2a2a3e' }}>📚 Классы ({classes.length})</button>
-          <button onClick={() => setTab('topics')} style={{ ...btn(tab === 'topics' ? '#667eea' : '#1a1a2e'), border: '1px solid #2a2a3e' }}>📖 Темы ({topics.length})</button>
+          <button onClick={() => setTab('classes')} style={{ ...btn(tab === 'classes' ? '#667eea' : '#1a1a2e'), border: '1px solid #2a2a3e' }}>{t('📚 Классы (')}{classes.length})</button>
+          <button onClick={() => setTab('topics')} style={{ ...btn(tab === 'topics' ? '#667eea' : '#1a1a2e'), border: '1px solid #2a2a3e' }}>{t('📖 Темы (')}{topics.length})</button>
         </div>
 
         {tab === 'classes' && (
           <div>
             <div style={{ background: '#1a1a2e', borderRadius: 20, padding: 28, marginBottom: 32, border: '1px solid #2a2a3e' }}>
-              <h2 style={{ marginBottom: 20, fontSize: '1.1rem' }}>➕ Добавить класс</h2>
-              <span style={label}>Название класса</span>
-              <input style={input} placeholder="Например: 10А" value={newClass.name} onChange={e => setNewClass({ ...newClass, name: e.target.value })} />
-              <span style={label}>Программа</span>
-              <input style={input} placeholder="Физика базовый уровень" value={newClass.program} onChange={e => setNewClass({ ...newClass, program: e.target.value })} />
-              <button onClick={addClass} style={btn('#43e97b')}>✅ Добавить класс</button>
+              <h2 style={{ marginBottom: 20, fontSize: '1.1rem' }}>{t('➕ Добавить класс')}</h2>
+              <span style={label}>{t('Название класса')}</span>
+              <input style={input} placeholder={t('Например: 10А')} value={newClass.name} onChange={e => setNewClass({ ...newClass, name: e.target.value })} />
+              <span style={label}>{t('Программа')}</span>
+              <input style={input} placeholder={t('Физика базовый уровень')} value={newClass.program} onChange={e => setNewClass({ ...newClass, program: e.target.value })} />
+              <button onClick={addClass} style={btn('#43e97b')}>{t('✅ Добавить класс')}</button>
             </div>
-            <h2 style={{ marginBottom: 16 }}>📋 Все классы</h2>
+            <h2 style={{ marginBottom: 16 }}>{t('📋 Все классы')}</h2>
             {classes.map(cls => (
               <div key={cls.id} style={{ background: '#1a1a2e', borderRadius: 16, padding: 20, marginBottom: 12, border: '1px solid #2a2a3e' }}>
                 {editClass?.id === cls.id ? (
                   <div>
-                    <span style={label}>Название</span>
+                    <span style={label}>{t('Название')}</span>
                     <input style={input} value={editClass.name} onChange={e => setEditClass({ ...editClass, name: e.target.value })} />
-                    <span style={label}>Программа</span>
+                    <span style={label}>{t('Программа')}</span>
                     <input style={input} value={editClass.program} onChange={e => setEditClass({ ...editClass, program: e.target.value })} />
                     <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
-                      <button onClick={saveEditClass} style={btn('#43e97b')}>💾 Сохранить</button>
-                      <button onClick={() => setEditClass(null)} style={btn('#555')}>Отмена</button>
+                      <button onClick={saveEditClass} style={btn('#43e97b')}>{t('💾 Сохранить')}</button>
+                      <button onClick={() => setEditClass(null)} style={btn('#555')}>{t('Отмена')}</button>
                     </div>
                   </div>
                 ) : (
@@ -383,17 +398,17 @@ export default function AdminPage() {
                         {cls.name}
                         {cls.is_locked && (
                           <span style={{ background: '#f5576c22', color: '#f5576c', border: '1px solid #f5576c55', borderRadius: 20, padding: '2px 10px', fontSize: 11, fontWeight: 700 }}>
-                            🔒 закрыт
+                            {t('🔒 закрыт')}
                           </span>
                         )}
                       </div>
-                      <div style={{ color: '#aaa', fontSize: 13, marginTop: 4 }}>{cls.program} · {topicCount(cls.name)} тем</div>
+                      <div style={{ color: '#aaa', fontSize: 13, marginTop: 4 }}>{cls.program} · {topicCount(cls.name)} {t('тем')}</div>
                     </div>
                     <div style={{ display: 'flex', gap: 8 }}>
                       <button onClick={() => toggleLock(cls)} style={btn(cls.is_locked ? '#43e97b' : '#555')}>
-                        {cls.is_locked ? '🔓 Открыть всем' : '🔒 Закрыть класс'}
+                        {cls.is_locked ? t('🔓 Открыть всем') : t('🔒 Закрыть класс')}
                       </button>
-                      <button onClick={() => openAccess(cls)} style={btn('#fbbf24')}>👤 Доступ</button>
+                      <button onClick={() => openAccess(cls)} style={btn('#fbbf24')}>{t('👤 Доступ')}</button>
                       <button onClick={() => setEditClass(cls)} style={btn('#667eea')}>✏️</button>
                       <button onClick={() => deleteClass(cls.id)} style={btn('#f5576c')}>🗑️</button>
                     </div>
@@ -407,52 +422,57 @@ export default function AdminPage() {
         {tab === 'topics' && (
           <div>
             <div style={{ background: '#1a1a2e', borderRadius: 20, padding: 28, marginBottom: 32, border: '1px solid #2a2a3e' }}>
-              <h2 style={{ marginBottom: 20, fontSize: '1.1rem' }}>➕ Добавить тему</h2>
-              <span style={label}>Название темы</span>
-              <input style={input} placeholder="Законы Ньютона" value={newTopic.name} onChange={e => setNewTopic({ ...newTopic, name: e.target.value })} />
-              <span style={label}>Класс</span>
-              <input style={input} placeholder="10А" value={newTopic.grade} onChange={e => setNewTopic({ ...newTopic, grade: e.target.value })} />
-              <span style={label}>📖 Теория</span>
-              <textarea style={textarea} placeholder="Объяснение темы..." value={newTopic.theory} onChange={e => setNewTopic({ ...newTopic, theory: e.target.value })} />
-              <span style={label}>🔢 Формулы (LaTeX, каждая на новой строке)</span>
+              <h2 style={{ marginBottom: 20, fontSize: '1.1rem' }}>{t('➕ Добавить тему')}</h2>
+              <span style={label}>{t('Название темы')}</span>
+              <input style={input} placeholder={t('Законы Ньютона')} value={newTopic.name} onChange={e => setNewTopic({ ...newTopic, name: e.target.value })} />
+              <span style={label}>{t('Класс')}</span>
+              <select style={input} value={newTopic.grade} onChange={e => setNewTopic({ ...newTopic, grade: e.target.value })}>
+                <option value="">{t('— выбери класс —')}</option>
+                {gradeOptions(newTopic.grade).map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+              </select>
+              <span style={label}>{t('📖 Теория')}</span>
+              <textarea style={textarea} placeholder={t('Объяснение темы...')} value={newTopic.theory} onChange={e => setNewTopic({ ...newTopic, theory: e.target.value })} />
+              <span style={label}>{t('🔢 Формулы (LaTeX, каждая на новой строке)')}</span>
               <textarea style={formulaArea} placeholder={"F = ma\n\\frac{v_f - v_i}{t}"} value={newTopic.formulas} onChange={e => setNewTopic({ ...newTopic, formulas: e.target.value })} />
-              <div style={{ color: '#666', fontSize: 11, marginBottom: 10 }}>💡 Дроби: \frac{'{числитель}'}{'{знаменатель}'}  |  Степень: x^2  |  Индекс: v_0</div>
-              <span style={label}>💡 Примеры</span>
-              <textarea style={textarea} placeholder="Разобранные примеры..." value={newTopic.examples} onChange={e => setNewTopic({ ...newTopic, examples: e.target.value })} />
-              <span style={label}>🧪 Практика / Задачи</span>
-              <textarea style={textarea} placeholder="Задачи для решения..." value={newTopic.tasks} onChange={e => setNewTopic({ ...newTopic, tasks: e.target.value })} />
-              <span style={label}>🌐 Ссылка на ресурс</span>
+              <div style={{ color: '#666', fontSize: 11, marginBottom: 10 }}>{t('💡 Дроби: \\frac')}{t('{числитель}')}{t('{знаменатель}')}  {t('| Степень: x^2 | Индекс: v_0')}</div>
+              <span style={label}>{t('💡 Примеры')}</span>
+              <textarea style={textarea} placeholder={t('Разобранные примеры...')} value={newTopic.examples} onChange={e => setNewTopic({ ...newTopic, examples: e.target.value })} />
+              <span style={label}>{t('🧪 Практика / Задачи')}</span>
+              <textarea style={textarea} placeholder={t('Задачи для решения...')} value={newTopic.tasks} onChange={e => setNewTopic({ ...newTopic, tasks: e.target.value })} />
+              <span style={label}>{t('🌐 Ссылка на ресурс')}</span>
               <input style={input} placeholder="https://..." value={newTopic.resource} onChange={e => setNewTopic({ ...newTopic, resource: e.target.value })} />
-              <span style={label}>🖼 Фото и видео</span>
+              <span style={label}>{t('🖼 Фото и видео')}</span>
               <MediaUploader existing={newMedia} onDone={setNewMedia} />
-              <button onClick={addTopic} style={{ ...btn('#43e97b'), marginTop: 16 }}>✅ Добавить тему</button>
+              <button onClick={addTopic} style={{ ...btn('#43e97b'), marginTop: 16 }}>{t('✅ Добавить тему')}</button>
             </div>
 
-            <h2 style={{ marginBottom: 16 }}>📋 Все темы</h2>
+            <h2 style={{ marginBottom: 16 }}>{t('📋 Все темы')}</h2>
             {topics.map(topic => (
               <div key={topic.id} style={{ background: '#1a1a2e', borderRadius: 16, padding: 20, marginBottom: 12, border: '1px solid #2a2a3e' }}>
                 {editTopic?.id === topic.id ? (
                   <div>
-                    <span style={label}>Название</span>
+                    <span style={label}>{t('Название')}</span>
                     <input style={input} value={editTopic.name} onChange={e => setEditTopic({ ...editTopic, name: e.target.value })} />
-                    <span style={label}>Класс</span>
-                    <input style={input} value={editTopic.grade} onChange={e => setEditTopic({ ...editTopic, grade: e.target.value })} />
-                    <span style={label}>📖 Теория</span>
+                    <span style={label}>{t('Класс')}</span>
+                    <select style={input} value={editTopic.grade} onChange={e => setEditTopic({ ...editTopic, grade: e.target.value })}>
+                      {gradeOptions(editTopic.grade).map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+                    </select>
+                    <span style={label}>{t('📖 Теория')}</span>
                     <textarea style={textarea} value={editTopic.theory} onChange={e => setEditTopic({ ...editTopic, theory: e.target.value })} />
-                    <span style={label}>🔢 Формулы (LaTeX)</span>
+                    <span style={label}>{t('🔢 Формулы (LaTeX)')}</span>
                     <textarea style={formulaArea} value={editTopic.formulas} onChange={e => setEditTopic({ ...editTopic, formulas: e.target.value })} />
-                    <div style={{ color: '#666', fontSize: 11, marginBottom: 10 }}>💡 Дроби: \frac{'{числитель}'}{'{знаменатель}'}  |  Степень: x^2  |  Индекс: v_0</div>
-                    <span style={label}>💡 Примеры</span>
+                    <div style={{ color: '#666', fontSize: 11, marginBottom: 10 }}>{t('💡 Дроби: \\frac')}{t('{числитель}')}{t('{знаменатель}')}  {t('| Степень: x^2 | Индекс: v_0')}</div>
+                    <span style={label}>{t('💡 Примеры')}</span>
                     <textarea style={textarea} value={editTopic.examples || ''} onChange={e => setEditTopic({ ...editTopic, examples: e.target.value })} />
-                    <span style={label}>🧪 Практика</span>
+                    <span style={label}>{t('🧪 Практика')}</span>
                     <textarea style={textarea} value={editTopic.tasks} onChange={e => setEditTopic({ ...editTopic, tasks: e.target.value })} />
-                    <span style={label}>🌐 Ссылка на ресурс</span>
+                    <span style={label}>{t('🌐 Ссылка на ресурс')}</span>
                     <input style={input} value={editTopic.resource || ''} onChange={e => setEditTopic({ ...editTopic, resource: e.target.value })} />
-                    <span style={label}>🖼 Фото и видео</span>
+                    <span style={label}>{t('🖼 Фото и видео')}</span>
                     <MediaUploader existing={editMedia} onDone={setEditMedia} />
                     <div style={{ display: 'flex', gap: 8, marginTop: 16 }}>
-                      <button onClick={saveEditTopic} style={btn('#43e97b')}>💾 Сохранить</button>
-                      <button onClick={() => setEditTopic(null)} style={btn('#555')}>Отмена</button>
+                      <button onClick={saveEditTopic} style={btn('#43e97b')}>{t('💾 Сохранить')}</button>
+                      <button onClick={() => setEditTopic(null)} style={btn('#555')}>{t('Отмена')}</button>
                     </div>
                   </div>
                 ) : (
@@ -475,8 +495,8 @@ export default function AdminPage() {
                       )}
                     </div>
                     <div style={{ display: 'flex', gap: 8, marginLeft: 16, flexShrink: 0 }}>
-                      <button onClick={() => startEdit(topic)} style={btn('#667eea')}>✏️ Изменить</button>
-                      <button onClick={() => deleteTopic(topic.id)} style={btn('#f5576c')}>🗑️ Удалить</button>
+                      <button onClick={() => startEdit(topic)} style={btn('#667eea')}>{t('✏️ Изменить')}</button>
+                      <button onClick={() => deleteTopic(topic.id)} style={btn('#f5576c')}>{t('🗑️ Удалить')}</button>
                     </div>
                   </div>
                 )}
@@ -496,53 +516,53 @@ export default function AdminPage() {
             style={{ background: '#1a1a2e', borderRadius: 20, padding: 28, width: '100%', maxWidth: 460, border: '1px solid #2a2a3e', maxHeight: '85vh', overflowY: 'auto' }}
           >
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 4 }}>
-              <h2 style={{ fontSize: '1.15rem', margin: 0 }}>👤 Доступ: {accessClass.name}</h2>
+              <h2 style={{ fontSize: '1.15rem', margin: 0 }}>{t('👤 Доступ:')} {accessClass.name}</h2>
               <button onClick={() => setAccessClass(null)} style={{ ...btn('#2a2a3e'), border: '1px solid #3a3a5e', padding: '4px 10px' }}>✕</button>
             </div>
             <p style={{ color: '#888', fontSize: 13, marginBottom: 20 }}>
               {accessClass.is_locked
-                ? 'Класс закрыт: в нём учатся только ученики, которых ты добавил. Сами ученики записаться не могут.'
-                : 'Класс сейчас открыт для всех. Список ниже применится, если его закрыть.'}
+                ? t('Класс закрыт: в нём учатся только ученики, которых ты добавил. Сами ученики записаться не могут.')
+                : t('Класс сейчас открыт для всех. Список ниже применится, если его закрыть.')}
             </p>
 
             <h3 style={{ fontSize: 13, color: '#888', fontWeight: 600, letterSpacing: 0.5, marginBottom: 8 }}>
-              УЧЕНИКИ КЛАССА ({accessGrants.length})
+              {t('УЧЕНИКИ КЛАССА (')}{accessGrants.length})
             </h3>
             {accessGrants.length === 0 && (
-              <div style={{ color: '#666', fontSize: 13, padding: '8px 0' }}>Пока никто не добавлен — выбери учеников ниже</div>
+              <div style={{ color: '#666', fontSize: 13, padding: '8px 0' }}>{t('Пока никто не добавлен — выбери учеников ниже')}</div>
             )}
             {accessGrants.map(g => (
               <div key={g.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 0', borderBottom: '1px solid #2a2a3e' }}>
                 <div>
-                  <div style={{ fontWeight: 600, fontSize: 14 }}>{g.profiles?.display_name || g.profiles?.full_name || 'Без имени'}</div>
+                  <div style={{ fontWeight: 600, fontSize: 14 }}>{g.profiles?.display_name || g.profiles?.full_name || t('Без имени')}</div>
                   <div style={{ color: '#888', fontSize: 12 }}>{maskEmail(g.profiles?.email)}</div>
                 </div>
-                <button onClick={() => revokeAccess(g.id)} style={btn('#f5576c')} title="Убрать из класса">Убрать</button>
+                <button onClick={() => revokeAccess(g.id)} style={btn('#f5576c')} title={t('Убрать из класса')}>{t('Убрать')}</button>
               </div>
             ))}
 
             <h3 style={{ fontSize: 13, color: '#888', fontWeight: 600, letterSpacing: 0.5, marginTop: 24, marginBottom: 8 }}>
-              ДОБАВИТЬ УЧЕНИКА
+              {t('ДОБАВИТЬ УЧЕНИКА')}
             </h3>
             <input
               style={input}
-              placeholder="Поиск по имени или email"
+              placeholder={t('Поиск по имени или email')}
               value={accessQuery}
               onChange={e => searchStudents(e.target.value)}
             />
             {(() => {
               const memberIds = new Set(accessGrants.map(g => g.student_id))
               const candidates = accessHits.filter(s => !memberIds.has(s.id))
-              if (!candidates.length) return <div style={{ color: '#666', fontSize: 13, padding: '8px 0' }}>Никого не найдено</div>
+              if (!candidates.length) return <div style={{ color: '#666', fontSize: 13, padding: '8px 0' }}>{t('Никого не найдено')}</div>
               return (
                 <div style={{ border: '1px solid #2a2a3e', borderRadius: 10, overflow: 'hidden' }}>
                   {candidates.map(s => (
                     <div key={s.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10, padding: '8px 12px', borderBottom: '1px solid #2a2a3e', fontSize: 13 }}>
                       <div>
-                        <div style={{ fontWeight: 600 }}>{s.display_name || s.full_name || 'Без имени'}</div>
+                        <div style={{ fontWeight: 600 }}>{s.display_name || s.full_name || t('Без имени')}</div>
                         <div style={{ color: '#888' }}>{maskEmail(s.email)}</div>
                       </div>
-                      <button onClick={() => grantAccess(s.id)} style={btn('#10b981')}>+ Добавить</button>
+                      <button onClick={() => grantAccess(s.id)} style={btn('#10b981')}>{t('+ Добавить')}</button>
                     </div>
                   ))}
                 </div>

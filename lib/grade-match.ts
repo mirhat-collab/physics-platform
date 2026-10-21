@@ -20,3 +20,29 @@ export function getActualGrade(grade: string, lastVisit: string | null): string 
   }
   return Math.min(gradeNum + septembers, 11).toString()
 }
+
+// Совпадает ли класс ученика (profiles.grade — "11", а иногда полное имя)
+// с классом из таблицы classes ("11th Grade", "ЕНТ").
+export function gradeMatchesClass(grade: string | null | undefined, className: string): boolean {
+  if (!grade) return false
+  return gradeVariants(className).includes(grade)
+}
+
+// Учитель сохраняет ДЗ и турниры с class_name = classes.name ("11th Grade"),
+// а у ученика в профиле grade = "11". Собираем все имена классов ученика:
+// открытые классы его параллели + закрытые (ЕНТ), которые RLS ему вернула —
+// то есть те, куда админ выдал доступ. Сам grade тоже оставляем для старых записей.
+export function studentClassNames(grade: string | null | undefined, classes: { name: string; is_locked?: boolean | null }[]): string[] {
+  const names = classes
+    .filter(c => c.is_locked || gradeMatchesClass(grade, c.name))
+    .map(c => c.name)
+  if (grade) names.push(grade)
+  return [...new Set(names)]
+}
+
+// "11" → "11 класс", "ЕНТ" → "ЕНТ", пусто/мусор → "Класс не указан".
+// t — функция перевода из useT(); без неё текст остаётся русским.
+export function gradeLabel(grade: string | null | undefined, t: (text: string, vars?: Record<string, string>) => string = s => s): string {
+  if (!grade || grade === 'NaN') return t('Класс не указан')
+  return /^\d+$/.test(grade) ? t('{g} класс', { g: grade }) : t(grade)
+}

@@ -1,8 +1,11 @@
 'use client'
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
+import { kzDate } from '@/lib/streak'
+import { useT } from '@/app/components/LanguageProvider'
 
 export default function StreakAlert() {
+  const { t } = useT()
   const [show, setShow] = useState(false)
   const [streak, setStreak] = useState(0)
 
@@ -18,8 +21,8 @@ export default function StreakAlert() {
       .from('profiles').select('streak, last_visit').eq('id', user.id).single()
     if (!profile || !profile.last_visit || profile.streak < 2) return
 
-    const today = new Date().toISOString().split('T')[0]
-    const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0]
+    const today = kzDate()
+    const yesterday = kzDate(1)
 
     // Показываем если последний визит был вчера (стрик под угрозой если не зайдёт сегодня)
     // Но раз они зашли — значит стрик уже обновлён StreakTracker'ом
@@ -50,8 +53,8 @@ export default function StreakAlert() {
     }}>
       <span style={{ fontSize: 28 }}>🔥</span>
       <div style={{ flex: 1 }}>
-        <div style={{ fontWeight: 800, color: '#fff', fontSize: 14 }}>Стрик {streak} дней!</div>
-        <div style={{ color: 'rgba(255,255,255,0.85)', fontSize: 12 }}>Заходи каждый день чтобы не потерять</div>
+        <div style={{ fontWeight: 800, color: '#fff', fontSize: 14 }}>{t('Стрик')} {streak} {t('дней!')}</div>
+        <div style={{ color: 'rgba(255,255,255,0.85)', fontSize: 12 }}>{t('Заходи каждый день чтобы не потерять')}</div>
       </div>
       <button onClick={dismiss} style={{
         background: 'rgba(255,255,255,0.2)', border: 'none', borderRadius: 8,

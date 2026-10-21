@@ -1,9 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createSupabaseAdmin } from '@/lib/supabase-admin'
+import { createSupabaseServer } from '@/lib/supabase-server'
+import { getLocale } from '@/lib/i18n/server'
+import { translateFields } from '@/lib/translate'
 import { extractStoragePath, fileExt } from '@/lib/file-protect'
 import { extractTextFromFile } from '@/lib/extract-text'
 
-export const maxDuration = 30
+export const maxDuration = 60
 
 const BUCKET = 'topic-media'
 const EXTRACTABLE_EXT = ['docx', 'pptx', 'pdf']
@@ -27,41 +30,48 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const body = await req.json()
-    const topicId = body.topicId
-    let topicName = body.topicName
-    let theory = body.theory
-    let formulas = body.formulas
-    let examples = body.examples
-    let media: { url: string; name: string }[] = []
+    // Квиз — только для вошедших пользователей и только по теме, которую
+    // им показывает RLS (темы закрытого класса без доступа не отдаём)
+    const supabase = await createSupabaseServer()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) {
+      return NextResponse.json({ error: 'Войди в аккаунт' }, { status: 401 })
+    }
+
+    const body = await req.json().catch(() => null)
+    const topicId = Number(body?.topicId)
+    if (!Number.isInteger(topicId)) {
+      return NextResponse.json({ error: 'Не указана тема' }, { status: 400 })
+    }
+
+    const { data: visible } = await supabase.from('topics').select('id').eq('id', topicId).maybeSingle()
+    if (!visible) {
+      return NextResponse.json({ error: 'Тема не найдена' }, { status: 404 })
+    }
 
     // Квиз для темы один и тот же для всех учеников — генерируем через AI
     // только один раз и переиспользуем, а не на каждое открытие темы.
-    const admin = topicId ? createSupabaseAdmin() : null
-    if (admin) {
-      const { data: topic } = await admin
-        .from('topics')
-        .select('name, theory, formulas, examples, media, quiz')
-        .eq('id', topicId)
-        .single()
+    const admin = createSupabaseAdmin()
+    const { data: topic } = await admin
+      .from('topics')
+      .select('name, theory, formulas, examples, media, quiz')
+      .eq('id', topicId)
+      .single()
 
-      if (topic?.quiz) {
-        return NextResponse.json({ questions: topic.quiz })
-      }
-      if (topic) {
-        topicName = topic.name
-        theory = topic.theory
-        formulas = topic.formulas
-        examples = topic.examples
-        media = topic.media || []
-      }
+    if (!topic) {
+      return NextResponse.json({ error: 'Тема не найдена' }, { status: 404 })
     }
+    if (topic.quiz) {
+      return NextResponse.json({ questions: await localizeQuiz(topicId, topic.quiz) })
+    }
+    const { name: topicName, theory, formulas, examples } = topic
+    const media: { url: string; name: string }[] = topic.media || []
 
     // Дополнительно достаём текст из прикреплённых файлов темы (докладов,
     // презентаций, конспектов) — квиз можно собрать и по ним, не только
     // по полю "теория".
     let filesText = ''
-    if (admin && media.length) {
+    if (media.length) {
       const extractable = media
         .filter(m => EXTRACTABLE_EXT.includes(fileExt(m.name)))
         .slice(0, MAX_FILES)
@@ -128,14 +138,33 @@ ${content}
 
     const questions = JSON.parse(jsonMatch[0])
 
-    if (admin) {
-      await admin.from('topics').update({ quiz: questions }).eq('id', topicId)
-    }
+    await admin.from('topics').update({ quiz: questions }).eq('id', topicId)
 
-    return NextResponse.json({ questions })
+    return NextResponse.json({ questions: await localizeQuiz(topicId, questions) })
 
   } catch (err: any) {
     console.error('Quiz API error:', err) // Только на сервере
     return NextResponse.json({ error: 'Ошибка генерации вопросов' }, { status: 500 })
+  }
+}
+
+type QuizQuestion = { question: string; options: string[]; correct: number }
+
+// Квиз в базе хранится по-русски; для казахского и английского переводим
+// его через ИИ (один раз, перевод кэшируется). При сбое ИИ — русский вариант.
+async function localizeQuiz(topicId: number, questions: QuizQuestion[]): Promise<QuizQuestion[]> {
+  const locale = await getLocale()
+  if (locale === 'ru' || !Array.isArray(questions)) return questions
+  const flat: Record<string, string> = {}
+  questions.forEach((q, i) => {
+    flat[`q${i}`] = String(q.question ?? '')
+    ;(q.options || []).forEach((o, j) => { flat[`q${i}o${j}`] = String(o) })
+  })
+  try {
+    const tr = await translateFields('topic_quiz', topicId, locale, flat)
+    return questions.map((q, i) => ({ ...q, question: tr[`q${i}`] ?? q.question, options: (q.options || []).map((o, j) => tr[`q${i}o${j}`] ?? o) }))
+  } catch (err) {
+    console.error('Quiz translation failed:', err)
+    return questions
   }
 }

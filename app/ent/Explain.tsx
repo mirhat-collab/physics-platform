@@ -3,6 +3,7 @@ import { useState } from 'react'
 import type { EntQuestion } from '@/lib/ent'
 import MathText from '@/app/components/MathText'
 import Icon from '@/app/components/Icon'
+import { useT } from '@/app/components/LanguageProvider'
 
 type Turn = { role: 'user' | 'assistant'; content: string }
 
@@ -13,6 +14,7 @@ export default function Explain({ q, chosen, turns, setTurns }: {
   turns: Turn[]
   setTurns: (t: Turn[]) => void
 }) {
+  const { t } = useT()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [input, setInput] = useState('')
@@ -27,10 +29,10 @@ export default function Explain({ q, chosen, turns, setTurns }: {
         body: JSON.stringify({ question: q.question, options: q.options, correct: q.correct, chosen, solution: q.solution, history }),
       })
       const data = await res.json()
-      if (!res.ok) throw new Error(data.error || 'Ошибка')
+      if (!res.ok) throw new Error(t(data.error || 'Ошибка'))
       setTurns([...history, { role: 'assistant', content: data.text }])
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Ошибка')
+      setError(e instanceof Error ? e.message : t('Ошибка'))
       setTurns(history)
     }
     setLoading(false)
@@ -49,7 +51,7 @@ export default function Explain({ q, chosen, turns, setTurns }: {
     return (
       <div>
         <button className="btn" onClick={() => ask([])} style={{ width: '100%' }}>
-          <Icon name="sparkles" size={18} /> Объясни решение (ИИ)
+          <Icon name="sparkles" size={18} /> {t('Объясни решение (ИИ)')}
         </button>
         {error && <div style={{ color: 'var(--bad)', fontSize: 13, marginTop: 8 }}>{error}</div>}
       </div>
@@ -59,7 +61,7 @@ export default function Explain({ q, chosen, turns, setTurns }: {
   return (
     <div className="card animate-fade-in" style={{ background: 'rgba(139,124,246,0.06)', borderColor: 'rgba(139,124,246,0.3)' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontWeight: 700, color: '#c4bbff', marginBottom: 10 }}>
-        <Icon name="sparkles" size={18} /> Разбор от ИИ
+        <Icon name="sparkles" size={18} /> {t('Разбор от ИИ')}
       </div>
 
       {turns.map((t, i) => t.role === 'assistant'
@@ -73,7 +75,7 @@ export default function Explain({ q, chosen, turns, setTurns }: {
       {loading && (
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: 'var(--muted)', fontSize: 14, padding: '6px 0' }}>
           <span className="spin" style={{ width: 16, height: 16, border: '2px solid var(--line)', borderTopColor: 'var(--accent)', borderRadius: '50%', display: 'inline-block' }} />
-          ИИ думает…
+          {t('ИИ думает…')}
         </div>
       )}
       {error && <div style={{ color: 'var(--bad)', fontSize: 13, marginBottom: 8 }}>{error}</div>}
@@ -84,10 +86,10 @@ export default function Explain({ q, chosen, turns, setTurns }: {
             value={input}
             onChange={e => setInput(e.target.value)}
             onKeyDown={e => { if (e.key === 'Enter') sendFollowUp() }}
-            placeholder="Не понял шаг? Спроси…"
+            placeholder={t('Не понял шаг? Спроси…')}
             style={{ flex: 1, minWidth: 0, padding: '10px 14px', borderRadius: 10, border: '1px solid var(--line)', background: 'var(--bg)', color: 'var(--text)', fontSize: 14, fontFamily: 'inherit' }}
           />
-          <button className="btn" onClick={sendFollowUp} disabled={!input.trim()} style={{ padding: '10px 14px' }} aria-label="Спросить">
+          <button className="btn" onClick={sendFollowUp} disabled={!input.trim()} style={{ padding: '10px 14px' }} aria-label={t('Спросить')}>
             <Icon name="send" size={18} />
           </button>
         </div>
