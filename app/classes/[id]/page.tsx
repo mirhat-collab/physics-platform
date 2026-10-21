@@ -6,6 +6,7 @@ import { supabase } from '@/lib/supabase'
 import { gradeVariants } from '@/lib/grade-match'
 import { sortTopicsByNumber } from '@/lib/topic-order'
 import { useT } from '@/app/components/LanguageProvider'
+import { useTranslatedNames } from '@/app/components/useTranslatedNames'
 
 type Topic = { id: string; name: string; theory: string; grade: string }
 type ClassData = { id: string; name: string; program: string; total_topics: number }
@@ -19,6 +20,8 @@ export default function ClassPage() {
   const [completed, setCompleted] = useState<string[]>([])
   const [loading, setLoading] = useState(true)
   const [hovered, setHovered] = useState<string | null>(null)
+  const topicName = useTranslatedNames('topic', topics.map(t => t.id))
+  const className = useTranslatedNames('class', classData ? [classData.id] : [])
 
   useEffect(() => { loadData() }, [id])
 
@@ -74,7 +77,7 @@ export default function ClassPage() {
 
         {/* Шапка класса */}
         <div style={{ background: 'linear-gradient(135deg, #667eea, #764ba2)', borderRadius: 24, padding: '32px 36px', marginBottom: 28 }}>
-          <div style={{ fontSize: 13, opacity: 0.8, marginBottom: 8 }}>{classData?.program}</div>
+          <div style={{ fontSize: 13, opacity: 0.8, marginBottom: 8 }}>{classData ? className(classData.id, classData.program) : ''}</div>
           <h1 style={{ fontSize: '2.2rem', fontWeight: 800, margin: '0 0 20px' }}>{t(classData?.name ?? '')}</h1>
 
           {/* Прогресс бар */}
@@ -126,7 +129,7 @@ export default function ClassPage() {
                     </div>
                     <div>
                       <div style={{ fontWeight: 600, fontSize: 15, color: isDone ? '#4ade80' : '#fff' }}>
-                        {topic.name}
+                        {topicName(topic.id, topic.name)}
                       </div>
                       <div style={{ color: '#666', fontSize: 12, marginTop: 3 }}>
                         {topic.theory?.slice(0, 60)}...

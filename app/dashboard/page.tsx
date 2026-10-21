@@ -6,6 +6,7 @@ import { supabase } from '@/lib/supabase'
 import Icon from '@/app/components/Icon'
 import { sortTopicsByNumber } from '@/lib/topic-order'
 import { useT } from '@/app/components/LanguageProvider'
+import { useTranslatedNames } from '@/app/components/useTranslatedNames'
 
 type Profile = { id: string; full_name: string; email: string; grade: string; total_xp: number; streak: number }
 type Topic = { id: string; name: string; grade: string }
@@ -19,6 +20,7 @@ export default function DashboardPage() {
   const [topics, setTopics] = useState<Topic[]>([])
   const [completed, setCompleted] = useState<string[]>([])
   const [loading, setLoading] = useState(true)
+  const topicName = useTranslatedNames('topic', topics.map(t => t.id))
 
   useEffect(() => { loadData() }, [])
 
@@ -108,7 +110,7 @@ export default function DashboardPage() {
             <h2 style={{ fontSize: '1rem', fontWeight: 700, marginBottom: 12, color: '#888' }}>{t('▶ СЛЕДУЮЩАЯ ТЕМА')}</h2>
             <Link href={`/topics/${nextTopic.id}`} style={{ textDecoration: 'none' }}>
               <div className="hover-lift animate-pulse-glow" style={{ background: 'linear-gradient(135deg, #1a1a2e, #16213e)', border: '1px solid #667eea', borderRadius: 16, padding: '20px 24px', cursor: 'pointer' }}>
-                <div style={{ fontWeight: 700, fontSize: 16, marginBottom: 6 }}>{nextTopic.name}</div>
+                <div style={{ fontWeight: 700, fontSize: 16, marginBottom: 6 }}>{topicName(nextTopic.id, nextTopic.name)}</div>
                 <div style={{ color: '#667eea', fontSize: 13, fontWeight: 600 }}>{t('Начать → +10 XP')}</div>
               </div>
             </Link>

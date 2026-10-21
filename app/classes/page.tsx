@@ -1,7 +1,8 @@
 import { createSupabaseServer } from '../../lib/supabase-server'
 import { gradeVariants } from '../../lib/grade-match'
 import Link from 'next/link'
-import { getT } from '../../lib/i18n/server'
+import { getLocale, getT } from '../../lib/i18n/server'
+import { cachedTranslations } from '../../lib/translate'
 
 const gradeColors: Record<string, { bg: string; accent: string; icon: string }> = {
   '7th Grade': { bg: 'linear-gradient(135deg, #667eea, #764ba2)', accent: '#a78bfa', icon: '🔬' },
@@ -16,6 +17,11 @@ export default async function ClassesPage() {
   const t = await getT()
   const { data: classes } = await supabase.from('classes').select('*')
   const { data: topics } = await supabase.from('topics').select('grade')
+  const locale = await getLocale()
+  // Описания классов переводит ИИ (при открытии класса); здесь берём готовое из кэша
+  const programs = locale !== 'ru' && classes?.length
+    ? await cachedTranslations('class_name', classes.map(c => c.id), locale).catch(() => new Map())
+    : new Map()
   const topicCount = (grade: string) => topics?.filter(t => gradeVariants(grade).includes(t.grade)).length ?? 0
   return (
     <>
@@ -57,7 +63,7 @@ export default async function ClassesPage() {
                         {t(cls.name)}
                       </h2>
                       <p style={{ color: '#aaa', fontSize: '0.85rem', lineHeight: 1.6 }}>
-                        {cls.program}
+                        {programs.get(cls.id)?.data.text ?? cls.program}
                       </p>
                       <div style={{ marginTop: 16, color: s.accent, fontSize: '0.9rem', fontWeight: 600 }}>
                         {t('Открыть класс →')}

@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import { gradeLabel } from '@/lib/grade-match'
 import { useT } from '@/app/components/LanguageProvider'
+import { useTranslatedNames } from '@/app/components/useTranslatedNames'
 
 type Student = { id: string; full_name: string; email?: string; grade: string; total_xp: number; streak: number }
 type Progress = { topic: string; completed_at: string; name?: string }
@@ -20,6 +21,7 @@ export default function ParentPage() {
   const [linking, setLinking] = useState(false)
   const [linkMsg, setLinkMsg] = useState('')
 
+  const topicName = useTranslatedNames('topic', progress.filter(p => p.name).map(p => p.topic))
   useEffect(() => { loadData() }, [])
 
   // Живые обновления: XP/стрик ученика и новые пройденные темы — без
@@ -159,7 +161,7 @@ export default function ParentPage() {
                       <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                         {progress.slice(0, 10).map((p, i) => (
                           <div key={i} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, padding: '8px 12px', background: '#0f0f1a', borderRadius: 8 }}>
-                            <span style={{ color: '#ccc' }}>✅ {p.name || t('Тема #{topic}', { topic: p.topic })}</span>
+                            <span style={{ color: '#ccc' }}>✅ {p.name ? topicName(p.topic, p.name) : t('Тема #{topic}', { topic: p.topic })}</span>
                             <span style={{ color: '#555' }}>{new Date(p.completed_at).toLocaleDateString(dateLocale)}</span>
                           </div>
                         ))}

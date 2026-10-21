@@ -52,10 +52,13 @@ function FormulaBlock({ text }: { text: string }) {
 }
 
 export default function TopicPage() {
-  const { t, dateLocale } = useT()
+  const { t, dateLocale, locale } = useT()
   const { id } = useParams()
   const router = useRouter()
   const [topic, setTopic] = useState<Topic | null>(null)
+  // Перевод темы на язык интерфейса (делает ИИ на сервере, кэшируется в базе)
+  const [translated, setTranslated] = useState<{ locale: string; fields: Partial<Topic> } | null>(null)
+  const [translating, setTranslating] = useState(false)
   const [loading, setLoading] = useState(true)
   const [completed, setCompleted] = useState(false)
   const [marking, setMarking] = useState(false)
@@ -97,12 +100,30 @@ export default function TopicPage() {
     setBookmarked(!bookmarked)
   }
 
-  // Загружаем квиз в фоне сразу после загрузки темы
+  // Загружаем квиз в фоне сразу после загрузки темы; при смене языка —
+  // заново, сервер отдаёт вопросы на языке интерфейса
   useEffect(() => {
     if (!topic) return
-    if (quiz) return
+    setQuiz(null)
+    setQuizDone(false)
     loadQuiz()
-  }, [topic])
+  }, [topic, locale])
+
+  useEffect(() => {
+    if (!topic || locale === 'ru') return
+    let cancelled = false
+    setTranslating(true)
+    fetch('/api/translate/topic', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ topicId: topic.id }),
+    })
+      .then(r => (r.ok ? r.json() : null))
+      .then(data => { if (!cancelled && data?.fields) setTranslated({ locale, fields: data.fields }) })
+      .catch(() => { /* покажем русский оригинал */ })
+      .finally(() => { if (!cancelled) setTranslating(false) })
+    return () => { cancelled = true }
+  }, [topic, locale])
 
   async function loadQuiz() {
     if (!topic) return
@@ -224,6 +245,8 @@ export default function TopicPage() {
     </div>
   )
 
+  const view = topic && locale !== 'ru' && translated?.locale === locale ? { ...topic, ...translated.fields } : topic
+
   if (!topic) return (
     <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
       <div style={{ color: '#fff' }}>{t('Тема не найдена')}</div>
@@ -246,7 +269,12 @@ export default function TopicPage() {
                   {topic.grade}
                 </span>
               )}
-              <h1 style={{ fontSize: '1.9rem', fontWeight: 800, margin: 0, lineHeight: 1.2 }}>{topic.name}</h1>
+              <h1 style={{ fontSize: '1.9rem', fontWeight: 800, margin: 0, lineHeight: 1.2 }}>{view?.name}</h1>
+              {locale !== 'ru' && (
+                <div style={{ color: '#888', fontSize: 12, marginTop: 8 }}>
+                  {translating ? t('⏳ Переводим тему…') : translated?.locale === locale ? t('🌐 Переведено ИИ — возможны неточности') : null}
+                </div>
+              )}
             </div>
             <button onClick={toggleBookmark} style={{
               background: bookmarked ? 'rgba(245,158,11,0.15)' : 'rgba(255,255,255,0.05)',
@@ -261,7 +289,7 @@ export default function TopicPage() {
 
         {topic.theory && (
           <Section icon="📖" title={t('Теория')} color="#667eea" bg="rgba(102,126,234,0.08)">
-            <p style={{ lineHeight: 1.9, color: '#ccc', whiteSpace: 'pre-wrap', margin: 0, fontSize: 15 }}>{topic.theory}</p>
+            <p style={{ lineHeight: 1.9, color: '#ccc', whiteSpace: 'pre-wrap', margin: 0, fontSize: 15 }}>{view?.theory}</p>
           </Section>
         )}
 
@@ -273,13 +301,13 @@ export default function TopicPage() {
 
         {topic.examples && (
           <Section icon="💡" title={t('Примеры')} color="#10b981" bg="rgba(16,185,129,0.08)">
-            <p style={{ lineHeight: 1.9, color: '#ccc', whiteSpace: 'pre-wrap', margin: 0, fontSize: 15 }}>{topic.examples}</p>
+            <p style={{ lineHeight: 1.9, color: '#ccc', whiteSpace: 'pre-wrap', margin: 0, fontSize: 15 }}>{view?.examples}</p>
           </Section>
         )}
 
         {topic.tasks && (
           <Section icon="🧪" title={t('Практика')} color="#ec4899" bg="rgba(236,72,153,0.08)">
-            <p style={{ lineHeight: 1.9, color: '#ccc', whiteSpace: 'pre-wrap', margin: 0, fontSize: 15 }}>{topic.tasks}</p>
+            <p style={{ lineHeight: 1.9, color: '#ccc', whiteSpace: 'pre-wrap', margin: 0, fontSize: 15 }}>{view?.tasks}</p>
           </Section>
         )}
 

@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
 import { sortTopicsByNumber } from '@/lib/topic-order'
 import { useT } from '@/app/components/LanguageProvider'
+import { useTranslatedNames } from '@/app/components/useTranslatedNames'
 
 type Topic = {
   id: string
@@ -30,6 +31,7 @@ export default function TopicsPage() {
   const [statusFilter, setStatusFilter] = useState<'all' | 'completed' | 'recent' | 'bookmarked'>('all')
   const [bookmarkIds, setBookmarkIds] = useState<Set<string>>(new Set())
   const [search, setSearch] = useState('')
+  const topicName = useTranslatedNames('topic', topics.map(t => t.id))
 
   useEffect(() => {
     load()
@@ -90,7 +92,8 @@ export default function TopicsPage() {
   // Поиск по названию темы
   if (search.trim()) {
     filtered = filtered.filter(t =>
-      t.name.toLowerCase().includes(search.toLowerCase())
+      t.name.toLowerCase().includes(search.toLowerCase()) ||
+      topicName(t.id, t.name).toLowerCase().includes(search.toLowerCase())
     )
   }
 
@@ -239,7 +242,7 @@ export default function TopicsPage() {
                 >
                   <div style={{ flex: 1 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 6, flexWrap: 'wrap' }}>
-                      <h2 style={{ margin: 0, fontSize: '1rem', fontWeight: 700, color: '#fff' }}>{topic.name}</h2>
+                      <h2 style={{ margin: 0, fontSize: '1rem', fontWeight: 700, color: '#fff' }}>{topicName(topic.id, topic.name)}</h2>
                       <span style={{ background: `${color}22`, color, fontSize: 11, fontWeight: 600, padding: '3px 10px', borderRadius: 999, border: `1px solid ${color}44`, whiteSpace: 'nowrap' }}>
                         {t('{g} класс', { g: grade })}
                       </span>

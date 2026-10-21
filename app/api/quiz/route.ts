@@ -1,10 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createSupabaseAdmin } from '@/lib/supabase-admin'
 import { createSupabaseServer } from '@/lib/supabase-server'
+import { getLocale } from '@/lib/i18n/server'
+import { translateFields } from '@/lib/translate'
 import { extractStoragePath, fileExt } from '@/lib/file-protect'
 import { extractTextFromFile } from '@/lib/extract-text'
 
-export const maxDuration = 30
+export const maxDuration = 60
 
 const BUCKET = 'topic-media'
 const EXTRACTABLE_EXT = ['docx', 'pptx', 'pdf']
@@ -60,7 +62,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Тема не найдена' }, { status: 404 })
     }
     if (topic.quiz) {
-      return NextResponse.json({ questions: topic.quiz })
+      return NextResponse.json({ questions: await localizeQuiz(topicId, topic.quiz) })
     }
     const { name: topicName, theory, formulas, examples } = topic
     const media: { url: string; name: string }[] = topic.media || []
@@ -138,10 +140,31 @@ ${content}
 
     await admin.from('topics').update({ quiz: questions }).eq('id', topicId)
 
-    return NextResponse.json({ questions })
+    return NextResponse.json({ questions: await localizeQuiz(topicId, questions) })
 
   } catch (err: any) {
     console.error('Quiz API error:', err) // Только на сервере
     return NextResponse.json({ error: 'Ошибка генерации вопросов' }, { status: 500 })
+  }
+}
+
+type QuizQuestion = { question: string; options: string[]; correct: number }
+
+// Квиз в базе хранится по-русски; для казахского и английского переводим
+// его через ИИ (один раз, перевод кэшируется). При сбое ИИ — русский вариант.
+async function localizeQuiz(topicId: number, questions: QuizQuestion[]): Promise<QuizQuestion[]> {
+  const locale = await getLocale()
+  if (locale === 'ru' || !Array.isArray(questions)) return questions
+  const flat: Record<string, string> = {}
+  questions.forEach((q, i) => {
+    flat[`q${i}`] = String(q.question ?? '')
+    ;(q.options || []).forEach((o, j) => { flat[`q${i}o${j}`] = String(o) })
+  })
+  try {
+    const tr = await translateFields('topic_quiz', topicId, locale, flat)
+    return questions.map((q, i) => ({ ...q, question: tr[`q${i}`] ?? q.question, options: (q.options || []).map((o, j) => tr[`q${i}o${j}`] ?? o) }))
+  } catch (err) {
+    console.error('Quiz translation failed:', err)
+    return questions
   }
 }

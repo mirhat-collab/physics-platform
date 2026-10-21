@@ -1,7 +1,30 @@
 // Генератор задач по шаблонам: числа случайные, ответ считает код,
 // неправильные варианты — результаты типичных ошибок.
 
+import type { Locale } from '@/lib/i18n'
+import { contentFormat, contentLookup } from '@/lib/i18n/content'
+
 export type Generated = { question: string; options: string[]; correct: number; solution: string }
+
+// Язык, на котором сейчас генерируется задание. Генерация синхронная,
+// поэтому достаточно выставить его на время одного вызова gen().
+let locale: Locale = 'ru'
+
+export function withLocale<T>(l: Locale, fn: () => T): T {
+  const prev = locale
+  locale = l
+  try { return fn() } finally { locale = prev }
+}
+
+// Строка с подстановками: tl('Скорость ⟪0⟫ м/с', [v])
+export function tl(key: string, values: unknown[]): string {
+  return contentFormat(locale, key, values)
+}
+
+// Готовая строка без подстановок (варианты ответа, единицы, теория)
+export function tr(text: string): string {
+  return contentLookup(locale, text)
+}
 
 export type Template = {
   topic: string
@@ -26,10 +49,15 @@ export function fx(x: number): string {
     let mant = Number((x / 10 ** exp).toPrecision(3))
     let e = exp
     if (Math.abs(mant) >= 10) { mant /= 10; e += 1 }
-    const m = String(mant).replace('.', '{,}')
+    const m = String(mant).replace('.', decimalMark())
     return m === '1' ? `10^{${e}}` : m === '-1' ? `-10^{${e}}` : `${m} \\cdot 10^{${e}}`
   }
-  return String(Number(x.toPrecision(3))).replace('.', '{,}')
+  return String(Number(x.toPrecision(3))).replace('.', decimalMark())
+}
+
+// В русском и казахском дробная часть пишется через запятую, в английском — через точку
+function decimalMark(): string {
+  return locale === 'en' ? '.' : '{,}'
 }
 
 // Число для обычного текста: 2,5 или $2{,}5 \cdot 10^{5}$ для очень больших и маленьких
@@ -40,6 +68,7 @@ export function fmt(x: number): string {
 
 function withUnit(x: number, unit: string): string {
   if (!unit) return fmt(x)
+  unit = tr(unit)
   return unit === '°' || unit === '%' ? `${fmt(x)}${unit}` : `${fmt(x)} ${unit}`
 }
 
@@ -77,12 +106,14 @@ export function textOptions(correct: string, wrongs: string[], n: number): { opt
   return { options, correct: 0 }
 }
 
+// Всё, что видит ученик, проходит через tr(): строки, собранные через tl(),
+// уже переведены и в словаре не найдутся — останутся как есть.
 export function num(question: string, correct: number, wrongs: number[], n: number, unit: string, solution: string): Generated {
-  return { question, ...numOptions(correct, wrongs, n, unit), solution }
+  return { question: tr(question), ...numOptions(correct, wrongs, n, unit), solution: tr(solution) }
 }
 
 export function txt(question: string, correct: string, wrongs: string[], n: number, solution: string): Generated {
-  return { question, ...textOptions(correct, wrongs, n), solution }
+  return { question: tr(question), ...textOptions(tr(correct), wrongs.map(tr), n), solution: tr(solution) }
 }
 
 // Целые числа, которые не дают одинаковых значений

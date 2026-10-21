@@ -777,4 +777,6 @@ export const en: Record<string, string> = {
   "9th Grade": "9th Grade",
   "10th Grade": "10th Grade",
   "11th Grade": "11th Grade",
+  "⏳ Переводим тему…": "⏳ Translating the topic…",
+  "🌐 Переведено ИИ — возможны неточности": "🌐 Translated by AI — may contain inaccuracies",
 }

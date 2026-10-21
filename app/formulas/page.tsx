@@ -7,6 +7,8 @@ import FormulaView, { type SlotState } from './FormulaView'
 import { logAnswers } from '@/lib/answer-log'
 import { equivalentFill } from '@/lib/formula-check'
 import { useT } from '@/app/components/LanguageProvider'
+import { formulasKk } from '@/lib/i18n/formulas-kk'
+import { formulasEn } from '@/lib/i18n/formulas-en'
 
 type Level = 'easy' | 'medium' | 'hard'
 const LEVELS: { id: Level; label: string; hint: string }[] = [
@@ -80,7 +82,9 @@ function makeQuestion(formula: Formula, level: Level): Question {
 }
 
 export default function FormulasPage() {
-  const { t } = useT()
+  const { t, locale } = useT()
+  // Названия формул и расшифровки букв — из отдельного словаря тренажёра
+  const tf = (text: string) => (locale === 'kk' ? formulasKk : locale === 'en' ? formulasEn : null)?.[text] ?? t(text)
   const [subject, setSubject] = useState<Subject>('physics')
   const [section, setSection] = useState<string>('all')
   const [level, setLevel] = useState<Level>('easy')
@@ -249,11 +253,11 @@ export default function FormulasPage() {
           <div style={{ display: 'grid', gap: 10 }}>
             {available.map(f => (
               <div key={f.id} className="card" style={{ padding: '14px 18px' }}>
-                <div style={{ color: 'var(--muted)', fontSize: 13, marginBottom: 8 }}>{f.name}</div>
+                <div style={{ color: 'var(--muted)', fontSize: 13, marginBottom: 8 }}>{tf(f.name)}</div>
                 <FormulaView toks={parseFormula(f.expr).toks} size={22} />
                 <div style={{ color: 'var(--muted)', fontSize: 12, marginTop: 10, display: 'flex', flexWrap: 'wrap', gap: '4px 14px' }}>
                   {Object.entries(f.legend).map(([k, v]) => (
-                    <span key={k}><i style={{ color: 'var(--text)', fontFamily: 'serif' }}>{k}</i> — {v}</span>
+                    <span key={k}><i style={{ color: 'var(--text)', fontFamily: 'serif' }}>{k}</i> — {tf(v)}</span>
                   ))}
                 </div>
               </div>
@@ -292,7 +296,7 @@ export default function FormulasPage() {
             <div style={{ display: 'grid', gap: 10 }}>
               {mistakes.map(f => (
                 <div key={f.id} className="card" style={{ padding: '14px 18px' }}>
-                  <div style={{ color: 'var(--muted)', fontSize: 13, marginBottom: 8 }}>{f.name}</div>
+                  <div style={{ color: 'var(--muted)', fontSize: 13, marginBottom: 8 }}>{tf(f.name)}</div>
                   <FormulaView toks={parseFormula(f.expr).toks} size={22} />
                 </div>
               ))}
@@ -317,7 +321,7 @@ export default function FormulasPage() {
 
       <div className="card" style={{ textAlign: 'center', padding: '28px 16px' }}>
         <div style={{ color: 'var(--muted)', fontSize: 13, marginBottom: 4 }}>{t(q.formula.section)}</div>
-        <div style={{ fontWeight: 700, fontSize: 18, marginBottom: 26 }}>{q.formula.name}</div>
+        <div style={{ fontWeight: 700, fontSize: 18, marginBottom: 26 }}>{tf(q.formula.name)}</div>
         <div style={{ minHeight: 80, display: 'flex', alignItems: 'center', justifyContent: 'center', overflowX: 'auto' }}>
           <FormulaView toks={q.toks} slots={q.slots} activeSlot={active} onSlotClick={clickSlot} />
         </div>
@@ -335,7 +339,7 @@ export default function FormulasPage() {
             )}
             <div style={{ color: 'var(--muted)', fontSize: 13, display: 'flex', flexWrap: 'wrap', gap: '4px 14px' }}>
               {Object.entries(q.formula.legend).map(([k, v]) => (
-                <span key={k}><i style={{ color: 'var(--text)', fontFamily: 'serif' }}>{k}</i> — {v}</span>
+                <span key={k}><i style={{ color: 'var(--text)', fontFamily: 'serif' }}>{k}</i> — {tf(v)}</span>
               ))}
             </div>
           </div>
