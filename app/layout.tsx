@@ -6,6 +6,8 @@ import LandingFooter from "./components/LandingFooter";
 import StreakTracker from "./components/StreakTracker";
 import StreakAlert from "./components/StreakAlert";
 import PwaInstall from "./components/PwaInstall";
+import { LanguageProvider } from "./components/LanguageProvider";
+import { getLocale } from "@/lib/i18n/server";
 
 const manrope = Manrope({
   subsets: ["latin", "cyrillic"],
@@ -72,13 +74,15 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  // Язык интерфейса — из cookie, которую ставит переключатель языка
+  const locale = await getLocale();
   return (
-    <html lang="ru">
+    <html lang={locale}>
       <head>
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <meta name="theme-color" content="#667eea" />
@@ -98,12 +102,14 @@ export default function RootLayout({
           <div className="aurora-blob aurora-blob-2" />
           <div className="aurora-blob aurora-blob-3" />
         </div>
-        <StreakTracker />
-        <StreakAlert />
-        <PwaInstall />
-        <AppNav />
-        <div className="app-main">{children}</div>
-        <LandingFooter />
+        <LanguageProvider initialLocale={locale}>
+          <StreakTracker />
+          <StreakAlert />
+          <PwaInstall />
+          <AppNav />
+          <div className="app-main">{children}</div>
+          <LandingFooter />
+        </LanguageProvider>
       </body>
     </html>
   );

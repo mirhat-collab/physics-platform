@@ -1,7 +1,9 @@
 'use client'
 import { useEffect, useState } from 'react'
+import { useT } from '@/app/components/LanguageProvider'
 
 export default function ThemeToggle() {
+  const { t } = useT()
   const [dark, setDark] = useState(true)
 
   useEffect(() => {
@@ -34,10 +36,10 @@ export default function ThemeToggle() {
       border: dark ? '1px solid rgba(255,255,255,0.15)' : '1px solid rgba(0,0,0,0.15)',
       borderRadius: 10, padding: '8px 14px', cursor: 'pointer',
       fontSize: 18, transition: 'all 0.2s', display: 'flex', alignItems: 'center', gap: 6
-    }} title={dark ? 'Светлая тема' : 'Тёмная тема'}>
+    }} title={dark ? t('Светлая тема') : t('Тёмная тема')}>
       {dark ? '☀️' : '🌙'}
       <span style={{ fontSize: 12, fontWeight: 600, color: dark ? '#888' : '#555' }}>
-        {dark ? 'Светлая' : 'Тёмная'}
+        {dark ? t('Светлая') : t('Тёмная')}
       </span>
     </button>
   )

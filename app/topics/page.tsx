@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
 import { sortTopicsByNumber } from '@/lib/topic-order'
+import { useT } from '@/app/components/LanguageProvider'
 
 type Topic = {
   id: string
@@ -19,6 +20,7 @@ const gradeColors: Record<string, string> = {
 }
 
 export default function TopicsPage() {
+  const { t } = useT()
   const [topics, setTopics] = useState<Topic[]>([])
   const [completedIds, setCompletedIds] = useState<Set<string>>(new Set())
   const [recentIds, setRecentIds] = useState<string[]>([])
@@ -96,7 +98,7 @@ export default function TopicsPage() {
 
   if (loading) return (
     <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-      <div style={{ color: '#fff', fontSize: 18 }}>Загрузка...</div>
+      <div style={{ color: '#fff', fontSize: 18 }}>{t('Загрузка...')}</div>
     </div>
   )
 
@@ -111,8 +113,8 @@ export default function TopicsPage() {
               📚
             </div>
             <div>
-              <h1 style={{ fontSize: '1.9rem', fontWeight: 800, margin: 0 }}>Темы</h1>
-              <p style={{ color: '#888', margin: 0, fontSize: 14 }}>Выбери тему и начни изучать</p>
+              <h1 style={{ fontSize: '1.9rem', fontWeight: 800, margin: 0 }}>{t('Темы')}</h1>
+              <p style={{ color: '#888', margin: 0, fontSize: 14 }}>{t('Выбери тему и начни изучать')}</p>
             </div>
           </div>
 
@@ -120,23 +122,23 @@ export default function TopicsPage() {
           <div style={{ display: 'flex', gap: 12, marginTop: 16, flexWrap: 'wrap' }}>
             <div style={{ background: 'rgba(102,126,234,0.1)', border: '1px solid rgba(102,126,234,0.2)', borderRadius: 10, padding: '8px 16px', fontSize: 13 }}>
               <span style={{ color: '#a78bfa', fontWeight: 700 }}>{topics.length}</span>
-              <span style={{ color: '#888', marginLeft: 6 }}>тем всего</span>
+              <span style={{ color: '#888', marginLeft: 6 }}>{t('тем всего')}</span>
             </div>
             <div style={{ background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.2)', borderRadius: 10, padding: '8px 16px', fontSize: 13 }}>
               <span style={{ color: '#10b981', fontWeight: 700 }}>{completedIds.size}</span>
-              <span style={{ color: '#888', marginLeft: 6 }}>изучено</span>
+              <span style={{ color: '#888', marginLeft: 6 }}>{t('изучено')}</span>
             </div>
             <div style={{ background: 'rgba(245,158,11,0.1)', border: '1px solid rgba(245,158,11,0.2)', borderRadius: 10, padding: '8px 16px', fontSize: 13 }}>
               <span style={{ color: '#f59e0b', fontWeight: 700 }}>{grades.length - 1}</span>
-              <span style={{ color: '#888', marginLeft: 6 }}>классов</span>
+              <span style={{ color: '#888', marginLeft: 6 }}>{t('классов')}</span>
             </div>
           </div>
 
           {/* Прогресс-бар */}
           <div style={{ marginTop: 16, background: '#1a1a2e', borderRadius: 12, padding: '12px 16px', border: '1px solid #2a2a3e' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, marginBottom: 8 }}>
-              <span style={{ color: '#888' }}>Твой прогресс</span>
-              <span style={{ color: '#a78bfa', fontWeight: 700 }}>{completedIds.size} / {topics.length} тем ({progressPercent}%)</span>
+              <span style={{ color: '#888' }}>{t('Твой прогресс')}</span>
+              <span style={{ color: '#a78bfa', fontWeight: 700 }}>{completedIds.size} / {topics.length} {t('тем (')}{progressPercent}%)</span>
             </div>
             <div style={{ background: '#0f0f1a', borderRadius: 999, height: 8 }}>
               <div style={{
@@ -153,7 +155,7 @@ export default function TopicsPage() {
             <input
               value={search}
               onChange={e => setSearch(e.target.value)}
-              placeholder="Поиск темы..."
+              placeholder={t('Поиск темы...')}
               style={{
                 width: '100%', padding: '10px 16px 10px 40px',
                 borderRadius: 12, border: '1px solid #2a2a3e',
@@ -172,7 +174,7 @@ export default function TopicsPage() {
                 color: gradeFilter === g ? '#fff' : '#888',
                 boxShadow: gradeFilter === g ? `0 0 12px ${gradeColors[g] || '#667eea'}44` : 'none',
               }}>
-                {g === 'all' ? '✦ Все' : `${g} класс`}
+                {g === 'all' ? t('✦ Все') : t('{g} класс', { g: g })}
               </button>
             ))}
           </div>
@@ -180,10 +182,10 @@ export default function TopicsPage() {
           {/* Фильтр по статусу */}
           <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
             {[
-              { key: 'all', label: '📋 Все темы' },
-              { key: 'completed', label: '✅ Изученные' },
-              { key: 'bookmarked', label: '🔖 Закладки' },
-              { key: 'recent', label: '🕐 Недавние' },
+              { key: 'all', label: t('📋 Все темы') },
+              { key: 'completed', label: t('✅ Изученные') },
+              { key: 'bookmarked', label: t('🔖 Закладки') },
+              { key: 'recent', label: t('🕐 Недавние') },
             ].map(({ key, label }) => (
               <button key={key} onClick={() => setStatusFilter(key as typeof statusFilter)} style={{
                 padding: '6px 14px', borderRadius: 999, cursor: 'pointer', fontSize: 12, fontWeight: 600, transition: 'all 0.2s',
@@ -202,7 +204,7 @@ export default function TopicsPage() {
       <div style={{ maxWidth: 900, margin: '0 auto', padding: '1.5rem 2rem' }}>
         {filtered.length === 0 && (
           <div style={{ textAlign: 'center', color: '#555', padding: '60px 0', fontSize: 15 }}>
-            {search ? `😕 Ничего не найдено по запросу "${search}"` : statusFilter === 'completed' ? '😅 Ты ещё не изучил ни одной темы' : statusFilter === 'bookmarked' ? '🔖 Нет сохранённых тем — нажми 📌 на странице темы' : '😅 Нет недавно открытых тем'}
+            {search ? t('😕 Ничего не найдено по запросу "{search}"', { search: search }) : statusFilter === 'completed' ? t('😅 Ты ещё не изучил ни одной темы') : statusFilter === 'bookmarked' ? t('🔖 Нет сохранённых тем — нажми 📌 на странице темы') : t('😅 Нет недавно открытых тем')}
           </div>
         )}
         <div className="stagger-children" style={{ display: 'grid', gap: 12 }}>
@@ -239,11 +241,11 @@ export default function TopicsPage() {
                     <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 6, flexWrap: 'wrap' }}>
                       <h2 style={{ margin: 0, fontSize: '1rem', fontWeight: 700, color: '#fff' }}>{topic.name}</h2>
                       <span style={{ background: `${color}22`, color, fontSize: 11, fontWeight: 600, padding: '3px 10px', borderRadius: 999, border: `1px solid ${color}44`, whiteSpace: 'nowrap' }}>
-                        {grade} класс
+                        {t('{g} класс', { g: grade })}
                       </span>
                       {isDone && (
                         <span style={{ background: 'rgba(16,185,129,0.15)', color: '#10b981', fontSize: 11, fontWeight: 600, padding: '3px 10px', borderRadius: 999, border: '1px solid rgba(16,185,129,0.3)', whiteSpace: 'nowrap' }}>
-                          ✅ Изучено
+                          {t('✅ Изучено')}
                         </span>
                       )}
                     </div>

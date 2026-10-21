@@ -7,6 +7,7 @@ import MathText from '@/app/components/MathText'
 import Icon from '@/app/components/Icon'
 import Explain from './Explain'
 import { entMistakePayload, logAnswers } from '@/lib/answer-log'
+import { useT } from '@/app/components/LanguageProvider'
 
 type Turn = { role: 'user' | 'assistant'; content: string }
 type Attempt = { subject: string; total: number; correct: number; created_at: string }
@@ -15,6 +16,7 @@ const LETTERS = 'ABCDE'
 const SKIPPED = -1
 
 export default function EntPage() {
+  const { t } = useT()
   const [loggedIn, setLoggedIn] = useState<boolean | null>(null)
   const [subject, setSubject] = useState<EntSubject>('physics')
   const [section, setSection] = useState('all')
@@ -69,7 +71,7 @@ export default function EntPage() {
       body: JSON.stringify({ subject, section, topic, difficulty, count: n, exclude }),
     })
     const data = await res.json()
-    if (!res.ok) throw new Error(data.error || 'Ошибка')
+    if (!res.ok) throw new Error(t(data.error || 'Ошибка'))
     return data.questions
   }
 
@@ -95,7 +97,7 @@ export default function EntPage() {
       fetchingRef.current = false
       if (testId !== testIdRef.current) return
       setFetching(false)
-      setFetchError(e instanceof Error ? e.message : 'Ошибка')
+      setFetchError(e instanceof Error ? e.message : t('Ошибка'))
     }
   }
 
@@ -118,7 +120,7 @@ export default function EntPage() {
       setMode('play')
       if (first.length < count) loadMore(first, count)
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Ошибка')
+      setError(e instanceof Error ? e.message : t('Ошибка'))
       setMode('setup')
     }
   }
@@ -174,21 +176,21 @@ export default function EntPage() {
     const totals = attempts.reduce((acc, a) => ({ q: acc.q + a.total, c: acc.c + a.correct }), { q: 0, c: 0 })
     return (
       <div className="page animate-fade-in-up">
-        <h1 className="page-title">Подготовка к ЕНТ</h1>
-        <p className="page-sub">Каждый раз новые задания по выбранной теме: числа и варианты меняются, так что задачи не повторяются. Не получилось решить — нажми «Объясни», и ИИ разберёт задачу по шагам.</p>
+        <h1 className="page-title">{t('Подготовка к ЕНТ')}</h1>
+        <p className="page-sub">{t('Каждый раз новые задания по выбранной теме: числа и варианты меняются, так что задачи не повторяются. Не получилось решить — нажми «Объясни», и ИИ разберёт задачу по шагам.')}</p>
 
         {loggedIn === false && (
           <div className="card" style={{ marginBottom: 16, borderColor: 'rgba(245,158,11,0.4)' }}>
-            <Link href="/login" style={{ color: '#c4bbff' }}>Войди в аккаунт</Link>, чтобы сохранялась статистика и работали объяснения от ИИ.
+            <Link href="/login" style={{ color: '#c4bbff' }}>{t('Войди в аккаунт')}</Link>{t(', чтобы сохранялась статистика и работали объяснения от ИИ.')}
           </div>
         )}
 
         {totals.q > 0 && (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10, marginBottom: 16 }}>
             {[
-              { v: attempts.length, l: 'тестов решено' },
-              { v: totals.q, l: 'заданий' },
-              { v: `${Math.round((totals.c / totals.q) * 100)}%`, l: 'верных ответов' },
+              { v: attempts.length, l: t('тестов решено') },
+              { v: totals.q, l: t('заданий') },
+              { v: `${Math.round((totals.c / totals.q) * 100)}%`, l: t('верных ответов') },
             ].map(s => (
               <div key={s.l} className="card" style={{ textAlign: 'center', padding: 14 }}>
                 <div style={{ fontSize: 22, fontWeight: 800 }}>{s.v}</div>
@@ -199,45 +201,45 @@ export default function EntPage() {
         )}
 
         <div className="card">
-          <div className="label">Предмет</div>
+          <div className="label">{t('Предмет')}</div>
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 18 }}>
             {(Object.keys(ENT_SUBJECTS) as EntSubject[]).map(id => (
               <button key={id} className={`chip${subject === id ? ' on' : ''}`} onClick={() => { setSubject(id); setSection('all'); setTopic('all') }}>
-                {ENT_SUBJECTS[id].label}
+                {t(ENT_SUBJECTS[id].label)}
               </button>
             ))}
           </div>
 
-          <div className="label">Раздел</div>
+          <div className="label">{t('Раздел')}</div>
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 18 }}>
-            <button className={`chip${section === 'all' ? ' on' : ''}`} onClick={() => { setSection('all'); setTopic('all') }}>Вперемешку</button>
+            <button className={`chip${section === 'all' ? ' on' : ''}`} onClick={() => { setSection('all'); setTopic('all') }}>{t('Вперемешку')}</button>
             {sectionNames(subject).map(s => (
-              <button key={s} className={`chip${section === s ? ' on' : ''}`} onClick={() => { setSection(s); setTopic('all') }}>{s}</button>
+              <button key={s} className={`chip${section === s ? ' on' : ''}`} onClick={() => { setSection(s); setTopic('all') }}>{t(s)}</button>
             ))}
           </div>
 
           {section !== 'all' && (
             <>
-              <div className="label">Тема</div>
+              <div className="label">{t('Тема')}</div>
               <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 18 }}>
-                <button className={`chip${topic === 'all' ? ' on' : ''}`} onClick={() => setTopic('all')}>Все темы раздела</button>
-                {topicsOf(subject, section).map(t => (
-                  <button key={t} className={`chip${topic === t ? ' on' : ''}`} onClick={() => setTopic(t)}>{t}</button>
+                <button className={`chip${topic === 'all' ? ' on' : ''}`} onClick={() => setTopic('all')}>{t('Все темы раздела')}</button>
+                {topicsOf(subject, section).map(name => (
+                  <button key={name} className={`chip${topic === name ? ' on' : ''}`} onClick={() => setTopic(name)}>{t(name)}</button>
                 ))}
               </div>
             </>
           )}
 
-          <div className="label">Сложность</div>
+          <div className="label">{t('Сложность')}</div>
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 18 }}>
             {(Object.keys(ENT_DIFFICULTIES) as EntDifficulty[]).map(id => (
               <button key={id} className={`chip${difficulty === id ? ' on' : ''}`} onClick={() => setDifficulty(id)}>
-                {ENT_DIFFICULTIES[id].label} <span style={{ opacity: 0.6, fontWeight: 500 }}>· {ENT_DIFFICULTIES[id].hint}</span>
+                {t(ENT_DIFFICULTIES[id].label)} <span style={{ opacity: 0.6, fontWeight: 500 }}>· {t(ENT_DIFFICULTIES[id].hint)}</span>
               </button>
             ))}
           </div>
 
-          <div className="label">Количество заданий</div>
+          <div className="label">{t('Количество заданий')}</div>
           <div style={{ display: 'flex', gap: 8, marginBottom: 22 }}>
             {ENT_COUNTS.map(n => (
               <button key={n} className={`chip${count === n ? ' on' : ''}`} onClick={() => setCount(n)}>{n}</button>
@@ -248,10 +250,10 @@ export default function EntPage() {
             {mode === 'loading' ? (
               <>
                 <span className="spin" style={{ width: 16, height: 16, border: '2px solid rgba(255,255,255,0.3)', borderTopColor: '#fff', borderRadius: '50%', display: 'inline-block' }} />
-                Готовлю задания…
+                {t('Готовлю задания…')}
               </>
             ) : (
-              <><Icon name="sparkles" size={18} /> Начать</>
+              <><Icon name="sparkles" size={18} /> {t('Начать')}</>
             )}
           </button>
           {error && <div style={{ color: 'var(--bad)', fontSize: 14, marginTop: 10 }}>{error}</div>}
@@ -271,15 +273,15 @@ export default function EntPage() {
           <div style={{ fontSize: 46, fontWeight: 800, color: pct >= 70 ? 'var(--good)' : pct >= 40 ? '#f59e0b' : 'var(--bad)' }}>
             {correct} / {done.length}
           </div>
-          <div style={{ color: 'var(--muted)', marginTop: 4 }}>{pct}% верных ответов</div>
+          <div style={{ color: 'var(--muted)', marginTop: 4 }}>{pct}{t('% верных ответов')}</div>
           {xpMsg && <div style={{ marginTop: 8, color: '#c4bbff', fontWeight: 700 }}>{xpMsg}</div>}
           <div style={{ display: 'flex', gap: 10, justifyContent: 'center', marginTop: 20, flexWrap: 'wrap' }}>
-            <button className="btn" onClick={generate}><Icon name="refresh" size={18} /> Новые задания</button>
-            <button className="btn btn-ghost" onClick={() => setMode('setup')}>Сменить тему</button>
+            <button className="btn" onClick={generate}><Icon name="refresh" size={18} /> {t('Новые задания')}</button>
+            <button className="btn btn-ghost" onClick={() => setMode('setup')}>{t('Сменить тему')}</button>
           </div>
         </div>
 
-        <div className="label">Разбор заданий</div>
+        <div className="label">{t('Разбор заданий')}</div>
         <div style={{ display: 'grid', gap: 10 }}>
           {done.map(({ q, a, i }) => {
             const ok = a === q.correct
@@ -315,7 +317,7 @@ export default function EntPage() {
   const answeredCount = answers.filter(a => a !== null).length
   const header = (
     <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 18 }}>
-      <button className="nav-icon-btn" onClick={() => setMode('setup')} aria-label="Назад"><Icon name="arrowLeft" /></button>
+      <button className="nav-icon-btn" onClick={() => setMode('setup')} aria-label={t('Назад')}><Icon name="arrowLeft" /></button>
       {total <= 15 ? (
         <div style={{ flex: 1, display: 'flex', gap: 4 }}>
           {Array.from({ length: total }, (_, i) => {
@@ -337,7 +339,7 @@ export default function EntPage() {
       <span style={{ color: 'var(--muted)', fontSize: 13, fontWeight: 600 }}>{index + 1} / {total}</span>
       {answeredCount > 0 && index + 1 < total && (
         <button onClick={finish} style={{ background: 'none', border: 'none', color: 'var(--muted)', fontSize: 13, cursor: 'pointer', fontFamily: 'inherit', textDecoration: 'underline' }}>
-          Завершить
+          {t('Завершить')}
         </button>
       )}
     </div>
@@ -354,14 +356,14 @@ export default function EntPage() {
             <>
               <div style={{ color: 'var(--bad)', marginBottom: 14 }}>{fetchError}</div>
               <div style={{ display: 'flex', gap: 10, justifyContent: 'center', flexWrap: 'wrap' }}>
-                <button className="btn" onClick={() => loadMore(questions, total)}><Icon name="refresh" size={18} /> Попробовать снова</button>
-                <button className="btn btn-ghost" onClick={finish}>Завершить тест</button>
+                <button className="btn" onClick={() => loadMore(questions, total)}><Icon name="refresh" size={18} /> {t('Попробовать снова')}</button>
+                <button className="btn btn-ghost" onClick={finish}>{t('Завершить тест')}</button>
               </div>
             </>
           ) : (
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, color: 'var(--muted)' }}>
               <span className="spin" style={{ width: 18, height: 18, border: '2px solid var(--line)', borderTopColor: 'var(--accent)', borderRadius: '50%', display: 'inline-block' }} />
-              {fetching ? 'Готовлю следующие задания…' : 'Загрузка…'}
+              {fetching ? t('Готовлю следующие задания…') : t('Загрузка…')}
             </div>
           )}
         </div>
@@ -377,7 +379,7 @@ export default function EntPage() {
       {header}
 
       <div className="card" style={{ padding: '20px 18px' }}>
-        <div style={{ color: 'var(--muted)', fontSize: 12, fontWeight: 700, marginBottom: 8 }}>ЗАДАНИЕ {index + 1}</div>
+        <div style={{ color: 'var(--muted)', fontSize: 12, fontWeight: 700, marginBottom: 8 }}>{t('ЗАДАНИЕ')} {index + 1}</div>
         <MathText text={q.question} style={{ fontSize: 16, lineHeight: 1.6, marginBottom: 18 }} />
 
         <div style={{ display: 'grid', gap: 8 }}>
@@ -397,7 +399,7 @@ export default function EntPage() {
 
         {!answered && (
           <button onClick={() => answer(SKIPPED)} style={{ marginTop: 12, background: 'none', border: 'none', color: 'var(--muted)', fontSize: 14, cursor: 'pointer', fontFamily: 'inherit', textDecoration: 'underline' }}>
-            Не знаю, как решить
+            {t('Не знаю, как решить')}
           </button>
         )}
       </div>
@@ -406,19 +408,19 @@ export default function EntPage() {
         <div className="animate-fade-in" style={{ marginTop: 14, display: 'grid', gap: 12 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontWeight: 700, color: isRight ? 'var(--good)' : 'var(--bad)' }}>
             <Icon name={isRight ? 'check' : 'x'} size={20} />
-            {isRight ? 'Правильно!' : chosen === SKIPPED ? `Правильный ответ: ${LETTERS[q.correct]}` : `Неверно. Правильный ответ: ${LETTERS[q.correct]}`}
+            {isRight ? t('Правильно!') : chosen === SKIPPED ? t('Правильный ответ: {v0}', { v0: LETTERS[q.correct] }) : t('Неверно. Правильный ответ: {v0}', { v0: LETTERS[q.correct] })}
           </div>
 
           {isRight ? (
             showSolution
               ? <div className="card"><MathText text={q.solution} /></div>
-              : <button className="btn btn-ghost" onClick={() => setShowSolution(true)}>Показать решение</button>
+              : <button className="btn btn-ghost" onClick={() => setShowSolution(true)}>{t('Показать решение')}</button>
           ) : (
             <Explain q={q} chosen={chosen === SKIPPED ? null : chosen} turns={dialogs[index] || []} setTurns={t => setDialogs(d => ({ ...d, [index]: t }))} />
           )}
 
           <button className="btn" onClick={next}>
-            {index + 1 < total ? 'Следующее задание' : 'Завершить'} <Icon name="arrowRight" size={18} />
+            {index + 1 < total ? t('Следующее задание') : t('Завершить')} <Icon name="arrowRight" size={18} />
           </button>
         </div>
       )}
@@ -427,6 +429,7 @@ export default function EntPage() {
 }
 
 function QuestionBody({ q, chosen }: { q: EntQuestion; chosen: number | null }) {
+  const { t } = useT()
   return (
     <div>
       <MathText text={q.question} style={{ fontSize: 15, lineHeight: 1.6, marginBottom: 10 }} />
@@ -435,12 +438,12 @@ function QuestionBody({ q, chosen }: { q: EntQuestion; chosen: number | null }) 
           <div key={i} style={{ display: 'flex', gap: 8, alignItems: 'baseline', color: i === q.correct ? 'var(--good)' : i === chosen ? 'var(--bad)' : 'var(--muted)', fontWeight: i === q.correct || i === chosen ? 700 : 400 }}>
             <span>{LETTERS[i]})</span>
             <MathText text={opt} />
-            {i === q.correct && <span style={{ fontSize: 12 }}>— верный</span>}
-            {i === chosen && i !== q.correct && <span style={{ fontSize: 12 }}>— твой ответ</span>}
+            {i === q.correct && <span style={{ fontSize: 12 }}>{t('— верный')}</span>}
+            {i === chosen && i !== q.correct && <span style={{ fontSize: 12 }}>{t('— твой ответ')}</span>}
           </div>
         ))}
       </div>
-      {chosen === SKIPPED && <div style={{ color: 'var(--muted)', fontSize: 13, marginTop: 6 }}>Ты пропустил это задание</div>}
+      {chosen === SKIPPED && <div style={{ color: 'var(--muted)', fontSize: 13, marginTop: 6 }}>{t('Ты пропустил это задание')}</div>}
     </div>
   )
 }

@@ -1,6 +1,7 @@
 import { createSupabaseServer } from '../../lib/supabase-server'
 import { gradeVariants } from '../../lib/grade-match'
 import Link from 'next/link'
+import { getT } from '../../lib/i18n/server'
 
 const gradeColors: Record<string, { bg: string; accent: string; icon: string }> = {
   '7th Grade': { bg: 'linear-gradient(135deg, #667eea, #764ba2)', accent: '#a78bfa', icon: '🔬' },
@@ -12,6 +13,7 @@ const gradeColors: Record<string, { bg: string; accent: string; icon: string }> 
 
 export default async function ClassesPage() {
   const supabase = await createSupabaseServer()
+  const t = await getT()
   const { data: classes } = await supabase.from('classes').select('*')
   const { data: topics } = await supabase.from('topics').select('grade')
   const topicCount = (grade: string) => topics?.filter(t => gradeVariants(grade).includes(t.grade)).length ?? 0
@@ -33,10 +35,10 @@ export default async function ClassesPage() {
       <main style={{ minHeight: '100vh', padding: '2rem' }}>
         <div style={{ maxWidth: 900, margin: '0 auto' }}>
           <h1 style={{ fontSize: '2.5rem', fontWeight: 800, color: '#fff', marginBottom: 8 }}>
-            ⚡ Классы физики
+            {t('⚡ Классы физики')}
           </h1>
           <p style={{ color: '#888', marginBottom: 40, fontSize: '1.1rem' }}>
-            Выбери свой класс и начни изучать
+            {t('Выбери свой класс и начни изучать')}
           </p>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: '1.5rem' }}>
             {classes?.map((cls) => {
@@ -47,18 +49,18 @@ export default async function ClassesPage() {
                     <div style={{ background: s.bg, padding: '1.5rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                       <span style={{ fontSize: '2.5rem' }}>{s.icon}</span>
                       <span style={{ background: 'rgba(255,255,255,0.2)', color: '#fff', borderRadius: 20, padding: '4px 12px', fontSize: '0.8rem', fontWeight: 600 }}>
-                        {topicCount(cls.name)} тем
+                        {t('{n} тем', { n: topicCount(cls.name) })}
                       </span>
                     </div>
                     <div style={{ padding: '1.2rem' }}>
                       <h2 style={{ color: '#fff', fontSize: '1.3rem', fontWeight: 700, marginBottom: 8 }}>
-                        {cls.name}
+                        {t(cls.name)}
                       </h2>
                       <p style={{ color: '#aaa', fontSize: '0.85rem', lineHeight: 1.6 }}>
                         {cls.program}
                       </p>
                       <div style={{ marginTop: 16, color: s.accent, fontSize: '0.9rem', fontWeight: 600 }}>
-                        Открыть класс →
+                        {t('Открыть класс →')}
                       </div>
                     </div>
                   </div>

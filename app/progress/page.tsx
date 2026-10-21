@@ -2,11 +2,13 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import { gradeLabel } from '@/lib/grade-match'
+import { useT } from '@/app/components/LanguageProvider'
 
 type Profile = { id: string; full_name: string; email?: string; grade: string; total_xp: number; streak: number }
 type ClassStat = { name: string; total_topics: number; completed_topics: number; avg_xp: number; student_count: number; locked: boolean }
 
 export default function ProgressPage() {
+  const { t } = useT()
   const [profiles, setProfiles] = useState<Profile[]>([])
   const [currentUser, setCurrentUser] = useState<Profile | null>(null)
   const [classStats, setClassStats] = useState<ClassStat[]>([])
@@ -54,7 +56,7 @@ export default function ProgressPage() {
 
   if (loading) return (
     <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-      <div style={{ color: '#fff', fontSize: 18 }}>Загрузка...</div>
+      <div style={{ color: '#fff', fontSize: 18 }}>{t('Загрузка...')}</div>
     </div>
   )
 
@@ -67,8 +69,8 @@ export default function ProgressPage() {
               🏆
             </div>
             <div>
-              <h1 style={{ fontSize: '1.9rem', fontWeight: 800, margin: 0 }}>Рейтинг</h1>
-              <p style={{ color: '#888', margin: 0, fontSize: 14 }}>Кто набрал больше всего XP</p>
+              <h1 style={{ fontSize: '1.9rem', fontWeight: 800, margin: 0 }}>{t('Рейтинг')}</h1>
+              <p style={{ color: '#888', margin: 0, fontSize: 14 }}>{t('Кто набрал больше всего XP')}</p>
             </div>
           </div>
 
@@ -76,9 +78,9 @@ export default function ProgressPage() {
             <div style={{ background: 'linear-gradient(135deg, #667eea, #764ba2)', borderRadius: 16, padding: '16px 20px', marginBottom: 16 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12 }}>
                 <div>
-                  <div style={{ fontSize: 12, opacity: 0.8, marginBottom: 2 }}>Твой профиль</div>
-                  <div style={{ fontSize: '1.2rem', fontWeight: 800 }}>{currentUser.full_name || 'Без имени'}</div>
-                  <div style={{ opacity: 0.8, fontSize: 13, marginTop: 2 }}>{gradeLabel(currentUser.grade)}</div>
+                  <div style={{ fontSize: 12, opacity: 0.8, marginBottom: 2 }}>{t('Твой профиль')}</div>
+                  <div style={{ fontSize: '1.2rem', fontWeight: 800 }}>{currentUser.full_name || t('Без имени')}</div>
+                  <div style={{ opacity: 0.8, fontSize: 13, marginTop: 2 }}>{gradeLabel(currentUser.grade, t)}</div>
                 </div>
                 <div style={{ display: 'flex', gap: 20 }}>
                   <div style={{ textAlign: 'center' }}>
@@ -87,11 +89,11 @@ export default function ProgressPage() {
                   </div>
                   <div style={{ textAlign: 'center' }}>
                     <div style={{ fontSize: '1.6rem', fontWeight: 800 }}>🔥{currentUser.streak}</div>
-                    <div style={{ fontSize: 11, opacity: 0.8 }}>дней</div>
+                    <div style={{ fontSize: 11, opacity: 0.8 }}>{t('дней')}</div>
                   </div>
                   <div style={{ textAlign: 'center' }}>
                     <div style={{ fontSize: '1.6rem', fontWeight: 800 }}>#{profiles.findIndex(p => p.id === currentUser.id) + 1}</div>
-                    <div style={{ fontSize: 11, opacity: 0.8 }}>место</div>
+                    <div style={{ fontSize: 11, opacity: 0.8 }}>{t('место')}</div>
                   </div>
                 </div>
               </div>
@@ -100,10 +102,10 @@ export default function ProgressPage() {
 
           <div style={{ display: 'flex', gap: 8 }}>
             <button onClick={() => setTab('leaderboard')} style={{ padding: '8px 18px', borderRadius: 999, border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 600, background: tab === 'leaderboard' ? '#667eea' : '#1a1a2e', color: '#fff', transition: 'all 0.2s' }}>
-              👤 Ученики
+              {t('👤 Ученики')}
             </button>
             <button onClick={() => setTab('classes')} style={{ padding: '8px 18px', borderRadius: 999, border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 600, background: tab === 'classes' ? '#667eea' : '#1a1a2e', color: '#fff', transition: 'all 0.2s' }}>
-              📚 Классы
+              {t('📚 Классы')}
             </button>
           </div>
         </div>
@@ -113,7 +115,7 @@ export default function ProgressPage() {
         {tab === 'leaderboard' && (
           <div style={{ background: '#1a1a2e', borderRadius: 20, border: '1px solid #2a2a3e', overflow: 'hidden' }}>
             {profiles.length === 0 && (
-              <div style={{ padding: 40, textAlign: 'center', color: '#888' }}>Пока нет данных!</div>
+              <div style={{ padding: 40, textAlign: 'center', color: '#888' }}>{t('Пока нет данных!')}</div>
             )}
             {profiles.map((profile, index) => {
               const isMe = profile.id === currentUser?.id
@@ -125,8 +127,8 @@ export default function ProgressPage() {
                     <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                       <span style={{ fontSize: 18, minWidth: 32 }}>{medal}</span>
                       <div>
-                        <div style={{ fontWeight: 600 }}>{profile.full_name || 'Без имени'}</div>
-                        <div style={{ color: '#888', fontSize: 12 }}>{gradeLabel(profile.grade)} {profile.streak > 0 && `🔥 ${profile.streak} дней`}</div>
+                        <div style={{ fontWeight: 600 }}>{profile.full_name || t('Без имени')}</div>
+                        <div style={{ color: '#888', fontSize: 12 }}>{gradeLabel(profile.grade, t)} {profile.streak > 0 && t('🔥 {streak} дней', { streak: profile.streak })}</div>
                       </div>
                     </div>
                     <div style={{ fontWeight: 800, color: '#a78bfa', fontSize: 18 }}>{profile.total_xp} XP</div>
@@ -151,21 +153,21 @@ export default function ProgressPage() {
                     <div>
                       <div style={{ fontWeight: 700, fontSize: 18 }}>{cls.name}</div>
                       <div style={{ color: '#888', fontSize: 13, marginTop: 2 }}>{cls.locked
-                          ? (currentUser ? '🔒 закрытый класс' : `🔒 по списку администратора · ${cls.student_count} учеников`)
-                          : `${cls.student_count} учеников`}</div>
+                          ? (currentUser ? t('🔒 закрытый класс') : t('🔒 по списку администратора · {student_count} учеников', { student_count: cls.student_count }))
+                          : t('{student_count} учеников', { student_count: cls.student_count })}</div>
                     </div>
                     <div style={{ display: 'flex', gap: 20, textAlign: 'center' }}>
                       <div>
                         <div style={{ fontSize: 22, fontWeight: 800, color: '#a78bfa' }}>{cls.avg_xp}</div>
-                        <div style={{ color: '#888', fontSize: 11 }}>ср. XP</div>
+                        <div style={{ color: '#888', fontSize: 11 }}>{t('ср. XP')}</div>
                       </div>
                       <div>
                         <div style={{ fontSize: 22, fontWeight: 800, color: '#60a5fa' }}>{cls.completed_topics}/{cls.total_topics}</div>
-                        <div style={{ color: '#888', fontSize: 11 }}>тем</div>
+                        <div style={{ color: '#888', fontSize: 11 }}>{t('тем')}</div>
                       </div>
                       <div>
                         <div style={{ fontSize: 22, fontWeight: 800, color: percent >= 75 ? '#10b981' : percent >= 40 ? '#f59e0b' : '#667eea' }}>{percent}%</div>
-                        <div style={{ color: '#888', fontSize: 11 }}>прогресс</div>
+                        <div style={{ color: '#888', fontSize: 11 }}>{t('прогресс')}</div>
                       </div>
                     </div>
                   </div>

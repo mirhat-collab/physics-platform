@@ -5,11 +5,13 @@ import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
 import { gradeVariants } from '@/lib/grade-match'
 import { sortTopicsByNumber } from '@/lib/topic-order'
+import { useT } from '@/app/components/LanguageProvider'
 
 type Topic = { id: string; name: string; theory: string; grade: string }
 type ClassData = { id: string; name: string; program: string; total_topics: number }
 
 export default function ClassPage() {
+  const { t } = useT()
   const { id } = useParams()
   const router = useRouter()
   const [classData, setClassData] = useState<ClassData | null>(null)
@@ -44,7 +46,7 @@ export default function ClassPage() {
 
   if (loading) return (
     <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-      <div style={{ color: '#fff', fontSize: 18 }}>Загрузка...</div>
+      <div style={{ color: '#fff', fontSize: 18 }}>{t('Загрузка...')}</div>
     </div>
   )
 
@@ -52,9 +54,9 @@ export default function ClassPage() {
     <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
       <div style={{ background: '#1a1a2e', borderRadius: 24, padding: 48, width: '100%', maxWidth: 400, border: '1px solid #2a2a3e', textAlign: 'center' }}>
         <div style={{ fontSize: 48, marginBottom: 16 }}>🔒</div>
-        <h1 style={{ color: '#fff', fontSize: '1.4rem', fontWeight: 800, marginBottom: 8 }}>Класс закрыт</h1>
-        <p style={{ color: '#666', marginBottom: 32, fontSize: 14 }}>У тебя нет доступа к этому классу. Обратись к администратору.</p>
-        <Link href="/classes" style={{ display: 'inline-block', width: '100%', boxSizing: 'border-box', padding: '14px', borderRadius: 12, background: 'linear-gradient(135deg, #667eea, #764ba2)', color: '#fff', fontSize: 16, fontWeight: 700, textDecoration: 'none' }}>← Все классы</Link>
+        <h1 style={{ color: '#fff', fontSize: '1.4rem', fontWeight: 800, marginBottom: 8 }}>{t('Класс закрыт')}</h1>
+        <p style={{ color: '#666', marginBottom: 32, fontSize: 14 }}>{t('У тебя нет доступа к этому классу. Обратись к администратору.')}</p>
+        <Link href="/classes" style={{ display: 'inline-block', width: '100%', boxSizing: 'border-box', padding: '14px', borderRadius: 12, background: 'linear-gradient(135deg, #667eea, #764ba2)', color: '#fff', fontSize: 16, fontWeight: 700, textDecoration: 'none' }}>{t('← Все классы')}</Link>
       </div>
     </div>
   )
@@ -67,30 +69,30 @@ export default function ClassPage() {
       <div style={{ maxWidth: 800, margin: '0 auto' }}>
 
         <Link href="/classes" style={{ color: '#666', textDecoration: 'none', fontSize: 14, display: 'inline-flex', alignItems: 'center', gap: 6, marginBottom: 32 }}>
-          ← Все классы
+          {t('← Все классы')}
         </Link>
 
         {/* Шапка класса */}
         <div style={{ background: 'linear-gradient(135deg, #667eea, #764ba2)', borderRadius: 24, padding: '32px 36px', marginBottom: 28 }}>
           <div style={{ fontSize: 13, opacity: 0.8, marginBottom: 8 }}>{classData?.program}</div>
-          <h1 style={{ fontSize: '2.2rem', fontWeight: 800, margin: '0 0 20px' }}>{classData?.name}</h1>
+          <h1 style={{ fontSize: '2.2rem', fontWeight: 800, margin: '0 0 20px' }}>{t(classData?.name ?? '')}</h1>
 
           {/* Прогресс бар */}
           <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, opacity: 0.9, marginBottom: 8 }}>
-            <span>Прогресс</span>
-            <span>{doneCount} / {topics.length} тем</span>
+            <span>{t('Прогресс')}</span>
+            <span>{doneCount} / {topics.length} {t('тем')}</span>
           </div>
           <div style={{ background: 'rgba(255,255,255,0.2)', borderRadius: 999, height: 10, overflow: 'hidden' }}>
             <div style={{ height: '100%', width: `${percent}%`, background: '#fff', borderRadius: 999, transition: 'width 0.6s ease' }} />
           </div>
-          <div style={{ fontSize: 13, opacity: 0.8, marginTop: 8 }}>{percent}% завершено</div>
+          <div style={{ fontSize: 13, opacity: 0.8, marginTop: 8 }}>{percent}{t('% завершено')}</div>
         </div>
 
         {/* Список тем */}
-        <h2 style={{ fontSize: '1.2rem', fontWeight: 700, marginBottom: 16 }}>📚 Темы</h2>
+        <h2 style={{ fontSize: '1.2rem', fontWeight: 700, marginBottom: 16 }}>{t('📚 Темы')}</h2>
 
         {topics.length === 0 && (
-          <div style={{ color: '#888', textAlign: 'center', padding: 40 }}>Темы ещё не добавлены</div>
+          <div style={{ color: '#888', textAlign: 'center', padding: 40 }}>{t('Темы ещё не добавлены')}</div>
         )}
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>

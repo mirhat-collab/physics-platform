@@ -5,12 +5,15 @@ import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
 import { gradeLabel } from '@/lib/grade-match'
 import ThemeToggle from '@/app/components/ThemeToggle'
+import LanguageSwitcher from '@/app/components/LanguageSwitcher'
+import { useT } from '@/app/components/LanguageProvider'
 
 type Profile = { id: string; full_name: string; email: string; grade: string; total_xp: number; streak: number; avatar_url?: string; role?: string }
 
 const GRADES = ['7', '8', '9', '10', '11']
 
 export default function ProfilePage() {
+  const { t } = useT()
   const router = useRouter()
   const [profile, setProfile] = useState<Profile | null>(null)
   const [loading, setLoading] = useState(true)
@@ -51,7 +54,7 @@ export default function ProfilePage() {
       .upload(userId + '.jpg', file, { upsert: true })
 
     if (uploadError) {
-      setMsg('❌ Ошибка загрузки: ' + uploadError.message)
+      setMsg(t('❌ Ошибка загрузки: ') + uploadError.message)
       setAvatarUploading(false)
       setTimeout(() => setMsg(''), 5000)
       return
@@ -69,7 +72,7 @@ export default function ProfilePage() {
       .eq('id', userId)
 
     if (updateError) {
-      setMsg('❌ Ошибка сохранения: ' + updateError.message)
+      setMsg(t('❌ Ошибка сохранения: ') + updateError.message)
       setAvatarUploading(false)
       setTimeout(() => setMsg(''), 5000)
       return
@@ -79,7 +82,7 @@ export default function ProfilePage() {
     setAvatarUrl(publicUrl + '?t=' + Date.now())
     setProfile({ ...profile, avatar_url: publicUrl })
     setAvatarUploading(false)
-    setMsg('✅ Фото обновлено!')
+    setMsg(t('✅ Фото обновлено!'))
     setTimeout(() => setMsg(''), 3000)
   }
 
@@ -88,7 +91,7 @@ export default function ProfilePage() {
     setSaving(true)
     const { error } = await supabase.from('profiles').update({ full_name: newName.trim() }).eq('id', profile.id)
     if (error) {
-      setMsg('❌ Ошибка: ' + error.message)
+      setMsg(t('❌ Ошибка: ') + error.message)
       setSaving(false)
       setTimeout(() => setMsg(''), 5000)
       return
@@ -96,7 +99,7 @@ export default function ProfilePage() {
     setProfile({ ...profile, full_name: newName.trim() })
     setEditing(false)
     setSaving(false)
-    setMsg('✅ Имя сохранено!')
+    setMsg(t('✅ Имя сохранено!'))
     setTimeout(() => setMsg(''), 3000)
   }
 
@@ -106,12 +109,12 @@ export default function ProfilePage() {
     if (!profile) return
     const { error } = await supabase.from('profiles').update({ grade }).eq('id', profile.id)
     if (error) {
-      setMsg('❌ Ошибка: ' + error.message)
+      setMsg(t('❌ Ошибка: ') + error.message)
       setTimeout(() => setMsg(''), 5000)
       return
     }
     setProfile({ ...profile, grade })
-    setMsg('✅ Класс сохранён!')
+    setMsg(t('✅ Класс сохранён!'))
     setTimeout(() => setMsg(''), 3000)
   }
 
@@ -122,7 +125,7 @@ export default function ProfilePage() {
 
   if (loading) return (
     <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-      <div style={{ color: '#fff', fontSize: 18 }}>Загрузка...</div>
+      <div style={{ color: '#fff', fontSize: 18 }}>{t('Загрузка...')}</div>
     </div>
   )
 
@@ -141,8 +144,13 @@ export default function ProfilePage() {
       <div style={{ maxWidth: 500, margin: '0 auto' }}>
 
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
-          <h1 style={{ fontSize: '1.8rem', fontWeight: 800, margin: 0 }}>👤 Профиль</h1>
+          <h1 style={{ fontSize: '1.8rem', fontWeight: 800, margin: 0 }}>{t('👤 Профиль')}</h1>
           <ThemeToggle />
+        </div>
+
+        <div style={{ background: '#1a1a2e', borderRadius: 16, padding: '14px 18px', marginBottom: 20, border: '1px solid #2a2a3e', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
+          <span style={{ fontWeight: 600 }}>🌐 {t('Язык')}</span>
+          <LanguageSwitcher compact />
         </div>
 
         {/* Аватар и имя */}
@@ -207,19 +215,19 @@ export default function ProfilePage() {
           </div>
 
           <div style={{ fontSize: '1.5rem', fontWeight: 800, marginBottom: 4 }}>
-            {profile?.full_name || 'Без имени'}
+            {profile?.full_name || t('Без имени')}
           </div>
           <div style={{ opacity: 0.8, fontSize: 14 }}>{profile?.email}</div>
-          <div style={{ opacity: 0.8, fontSize: 14, marginTop: 4 }}>{profile?.role === 'student' ? gradeLabel(profile?.grade) + ' · ' : ''}Уровень {level}</div>
+          <div style={{ opacity: 0.8, fontSize: 14, marginTop: 4 }}>{profile?.role === 'student' ? gradeLabel(profile?.grade, t) + ' · ' : ''}{t('Уровень')} {level}</div>
         </div>
 
         {profile?.role === 'student' && !GRADES.includes(profile.grade) && (
           <div style={{ background: '#2a1a0e', borderRadius: 16, padding: '16px 20px', marginBottom: 20, border: '1px solid #f59e0b55' }}>
-            <div style={{ fontWeight: 600, marginBottom: 10 }}>Выбери свой класс</div>
+            <div style={{ fontWeight: 600, marginBottom: 10 }}>{t('Выбери свой класс')}</div>
             <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
               {GRADES.map(g => (
                 <button key={g} onClick={() => saveGrade(g)} style={{ padding: '8px 16px', borderRadius: 10, border: '1px solid #2a2a3e', background: '#0f0f1a', color: '#fff', cursor: 'pointer', fontSize: 14 }}>
-                  {g} класс
+                  {t('{g} класс', { g: g })}
                 </button>
               ))}
             </div>
@@ -230,22 +238,22 @@ export default function ProfilePage() {
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12, marginBottom: 20 }}>
           <div style={{ background: '#1a1a2e', borderRadius: 16, padding: 16, border: '1px solid #2a2a3e', textAlign: 'center' }}>
             <div style={{ fontSize: 26, fontWeight: 800, color: '#a78bfa' }}>{profile?.total_xp}</div>
-            <div style={{ color: '#888', fontSize: 12, marginTop: 4 }}>Всего XP</div>
+            <div style={{ color: '#888', fontSize: 12, marginTop: 4 }}>{t('Всего XP')}</div>
           </div>
           <div style={{ background: '#1a1a2e', borderRadius: 16, padding: 16, border: '1px solid #2a2a3e', textAlign: 'center' }}>
             <div style={{ fontSize: 26, fontWeight: 800, color: '#f59e0b' }}>🔥{profile?.streak}</div>
-            <div style={{ color: '#888', fontSize: 12, marginTop: 4 }}>Дней подряд</div>
+            <div style={{ color: '#888', fontSize: 12, marginTop: 4 }}>{t('Дней подряд')}</div>
           </div>
           <div style={{ background: '#1a1a2e', borderRadius: 16, padding: 16, border: '1px solid #2a2a3e', textAlign: 'center' }}>
             <div style={{ fontSize: 26, fontWeight: 800, color: '#10b981' }}>{level}</div>
-            <div style={{ color: '#888', fontSize: 12, marginTop: 4 }}>Уровень</div>
+            <div style={{ color: '#888', fontSize: 12, marginTop: 4 }}>{t('Уровень')}</div>
           </div>
         </div>
 
         {/* XP прогресс */}
         <div style={{ background: '#1a1a2e', borderRadius: 16, padding: '16px 20px', marginBottom: 20, border: '1px solid #2a2a3e' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, marginBottom: 8 }}>
-            <span style={{ color: '#888' }}>До уровня {level + 1}</span>
+            <span style={{ color: '#888' }}>{t('До уровня')} {level + 1}</span>
             <span style={{ color: '#a78bfa', fontWeight: 600 }}>{xpInLevel} / 100 XP</span>
           </div>
           <div style={{ background: '#0f0f1a', borderRadius: 999, height: 8 }}>
@@ -259,8 +267,8 @@ export default function ProfilePage() {
             <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
               <span style={{ fontSize: 24 }}>📊</span>
               <div>
-                <div style={{ fontWeight: 600, fontSize: 15 }}>Моя статистика</div>
-                <div style={{ color: '#888', fontSize: 12, marginTop: 2 }}>Сильные и слабые темы, работа над ошибками</div>
+                <div style={{ fontWeight: 600, fontSize: 15 }}>{t('Моя статистика')}</div>
+                <div style={{ color: '#888', fontSize: 12, marginTop: 2 }}>{t('Сильные и слабые темы, работа над ошибками')}</div>
               </div>
             </div>
             <span style={{ color: '#555', fontSize: 20 }}>→</span>
@@ -273,8 +281,8 @@ export default function ProfilePage() {
             <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
               <span style={{ fontSize: 24 }}>🏅</span>
               <div>
-                <div style={{ fontWeight: 600, fontSize: 15 }}>Достижения</div>
-                <div style={{ color: '#888', fontSize: 12, marginTop: 2 }}>Твои награды и значки</div>
+                <div style={{ fontWeight: 600, fontSize: 15 }}>{t('Достижения')}</div>
+                <div style={{ color: '#888', fontSize: 12, marginTop: 2 }}>{t('Твои награды и значки')}</div>
               </div>
             </div>
             <span style={{ color: '#555', fontSize: 20 }}>→</span>
@@ -283,22 +291,22 @@ export default function ProfilePage() {
 
         {/* Редактировать имя */}
         <div style={{ background: '#1a1a2e', borderRadius: 16, padding: '20px', marginBottom: 20, border: '1px solid #2a2a3e' }}>
-          <div style={{ fontWeight: 600, marginBottom: 12 }}>✏️ Изменить имя</div>
+          <div style={{ fontWeight: 600, marginBottom: 12 }}>{t('✏️ Изменить имя')}</div>
           {editing ? (
             <div>
-              <input style={input} value={newName} onChange={e => setNewName(e.target.value)} placeholder="Твоё имя" />
+              <input style={input} value={newName} onChange={e => setNewName(e.target.value)} placeholder={t('Твоё имя')} />
               <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
                 <button onClick={saveName} disabled={saving} style={{ flex: 1, padding: '10px', borderRadius: 10, border: 'none', background: '#43e97b', color: '#fff', fontWeight: 700, cursor: 'pointer', fontSize: 14 }}>
-                  {saving ? 'Сохраняю...' : '💾 Сохранить'}
+                  {saving ? t('Сохраняю...') : t('💾 Сохранить')}
                 </button>
                 <button onClick={() => setEditing(false)} style={{ padding: '10px 16px', borderRadius: 10, border: 'none', background: '#2a2a3e', color: '#fff', cursor: 'pointer', fontSize: 14 }}>
-                  Отмена
+                  {t('Отмена')}
                 </button>
               </div>
             </div>
           ) : (
             <button onClick={() => setEditing(true)} style={{ width: '100%', padding: '10px', borderRadius: 10, border: '1px solid #2a2a3e', background: '#0f0f1a', color: '#a78bfa', fontWeight: 600, cursor: 'pointer', fontSize: 14 }}>
-              Изменить имя
+              {t('Изменить имя')}
             </button>
           )}
           {msg && <div style={{ color: '#4ade80', fontSize: 13, marginTop: 8 }}>{msg}</div>}
@@ -310,8 +318,8 @@ export default function ProfilePage() {
             <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
               <span style={{ fontSize: 24 }}>📲</span>
               <div>
-                <div style={{ fontWeight: 600, fontSize: 15 }}>Установить приложение</div>
-                <div style={{ color: '#888', fontSize: 12, marginTop: 2 }}>Добавь на экран телефона — бесплатно!</div>
+                <div style={{ fontWeight: 600, fontSize: 15 }}>{t('Установить приложение')}</div>
+                <div style={{ color: '#888', fontSize: 12, marginTop: 2 }}>{t('Добавь на экран телефона — бесплатно!')}</div>
               </div>
             </div>
             <span style={{ color: '#667eea', fontSize: 20 }}>→</span>
@@ -323,7 +331,7 @@ export default function ProfilePage() {
           onClick={handleLogout}
           style={{ width: '100%', padding: '14px', borderRadius: 14, border: '1px solid #f5576c33', background: '#2d1a1a', color: '#f5576c', fontSize: 16, fontWeight: 700, cursor: 'pointer' }}
         >
-          🚪 Выйти из аккаунта
+          {t('🚪 Выйти из аккаунта')}
         </button>
 
       </div>

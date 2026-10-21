@@ -1,13 +1,15 @@
 import { NextResponse } from 'next/server'
 import { aiErrorResponse, chat, checkAiQuota } from '@/lib/ai'
 import { createSupabaseServer } from '@/lib/supabase-server'
+import { AI_LANGUAGE } from '@/lib/i18n'
+import { getLocale } from '@/lib/i18n/server'
 import { SOURCE_LABEL, SUBJECT_LABEL, sectionStats, type LogRow } from '@/lib/stats'
 
 export const maxDuration = 100
 
 const SYSTEM = `Ты — опытный репетитор по физике и математике, готовишь школьника из Казахстана к ЕНТ.
 Тебе дают статистику ученика с учебной платформы: точность по разделам в тренажёре ЕНТ и в тренажёре формул.
-Составь короткий личный план на русском языке:
+Составь короткий личный план:
 1. **Сильные стороны** — 1-2 предложения.
 2. **Что подтянуть в первую очередь** — 2-4 самых слабых раздела, для каждого: почему это важно для ЕНТ и что конкретно повторить (законы, формулы, типы задач).
 3. **План на неделю** — по дням, 15-30 минут в день, используя разделы платформы: «Тренажёр формул» (выбрать раздел) и «Подготовка к ЕНТ» (выбрать тему).
@@ -48,7 +50,8 @@ export async function POST() {
 
   try {
     const text = await chat([
-      { role: 'system', content: SYSTEM },
+      // План — на языке интерфейса ученика (рус/қаз/англ)
+      { role: 'system', content: `${SYSTEM}\n- Пиши только на ${AI_LANGUAGE[await getLocale()]} языке. Названия разделов платформы переводи на этот язык.` },
       { role: 'user', content: `Статистика ученика за последние 60 дней:\n${lines}` },
     ], { maxTokens: 4000, effort: 'low' })
     await quota.record()

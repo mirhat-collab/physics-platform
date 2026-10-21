@@ -6,6 +6,7 @@ import { supabase } from '@/lib/supabase'
 import katex from 'katex'
 import 'katex/dist/katex.min.css'
 import ProtectedFileViewer from '@/app/components/ProtectedFileViewer'
+import { useT } from '@/app/components/LanguageProvider'
 
 type MediaItem = { url: string; type: 'image' | 'video' | 'file'; name: string }
 
@@ -51,6 +52,7 @@ function FormulaBlock({ text }: { text: string }) {
 }
 
 export default function TopicPage() {
+  const { t, dateLocale } = useT()
   const { id } = useParams()
   const router = useRouter()
   const [topic, setTopic] = useState<Topic | null>(null)
@@ -137,7 +139,7 @@ export default function TopicPage() {
     if (prog) setCompleted(true)
 
     const { data: profile } = await supabase.from('profiles').select('full_name, email').eq('id', user.id).single()
-    if (profile) setUserName(profile.full_name || profile.email || 'Аноним')
+    if (profile) setUserName(profile.full_name || profile.email || t('Аноним'))
 
     loadComments()
     setLoading(false)
@@ -218,13 +220,13 @@ export default function TopicPage() {
 
   if (loading) return (
     <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-      <div style={{ color: '#fff', fontSize: 18 }}>Загрузка...</div>
+      <div style={{ color: '#fff', fontSize: 18 }}>{t('Загрузка...')}</div>
     </div>
   )
 
   if (!topic) return (
     <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-      <div style={{ color: '#fff' }}>Тема не найдена</div>
+      <div style={{ color: '#fff' }}>{t('Тема не найдена')}</div>
     </div>
   )
 
@@ -233,7 +235,7 @@ export default function TopicPage() {
       <div style={{ maxWidth: 800, margin: '0 auto' }}>
 
         <Link href="/topics" style={{ color: '#666', textDecoration: 'none', fontSize: 14, display: 'inline-flex', alignItems: 'center', gap: 6, marginBottom: 32 }}>
-          ← Все темы
+          {t('← Все темы')}
         </Link>
 
         <div style={{ background: 'linear-gradient(135deg, #1a1a2e, #16213e)', border: '1px solid #2a2a3e', borderRadius: 24, padding: '32px 36px', marginBottom: 24 }}>
@@ -251,46 +253,46 @@ export default function TopicPage() {
               border: bookmarked ? '1px solid rgba(245,158,11,0.4)' : '1px solid #2a2a3e',
               borderRadius: 12, padding: '10px 14px', cursor: 'pointer',
               fontSize: 20, transition: 'all 0.2s', flexShrink: 0
-            }} title={bookmarked ? 'Убрать из закладок' : 'Добавить в закладки'}>
+            }} title={bookmarked ? t('Убрать из закладок') : t('Добавить в закладки')}>
               {bookmarked ? '🔖' : '📌'}
             </button>
           </div>
         </div>
 
         {topic.theory && (
-          <Section icon="📖" title="Теория" color="#667eea" bg="rgba(102,126,234,0.08)">
+          <Section icon="📖" title={t('Теория')} color="#667eea" bg="rgba(102,126,234,0.08)">
             <p style={{ lineHeight: 1.9, color: '#ccc', whiteSpace: 'pre-wrap', margin: 0, fontSize: 15 }}>{topic.theory}</p>
           </Section>
         )}
 
         {topic.formulas && (
-          <Section icon="🔢" title="Формулы" color="#f59e0b" bg="rgba(245,158,11,0.08)">
+          <Section icon="🔢" title={t('Формулы')} color="#f59e0b" bg="rgba(245,158,11,0.08)">
             <FormulaBlock text={topic.formulas} />
           </Section>
         )}
 
         {topic.examples && (
-          <Section icon="💡" title="Примеры" color="#10b981" bg="rgba(16,185,129,0.08)">
+          <Section icon="💡" title={t('Примеры')} color="#10b981" bg="rgba(16,185,129,0.08)">
             <p style={{ lineHeight: 1.9, color: '#ccc', whiteSpace: 'pre-wrap', margin: 0, fontSize: 15 }}>{topic.examples}</p>
           </Section>
         )}
 
         {topic.tasks && (
-          <Section icon="🧪" title="Практика" color="#ec4899" bg="rgba(236,72,153,0.08)">
+          <Section icon="🧪" title={t('Практика')} color="#ec4899" bg="rgba(236,72,153,0.08)">
             <p style={{ lineHeight: 1.9, color: '#ccc', whiteSpace: 'pre-wrap', margin: 0, fontSize: 15 }}>{topic.tasks}</p>
           </Section>
         )}
 
         {topic.resource && (
-          <Section icon="🌐" title="Образовательный ресурс" color="#06b6d4" bg="rgba(6,182,212,0.08)">
+          <Section icon="🌐" title={t('Образовательный ресурс')} color="#06b6d4" bg="rgba(6,182,212,0.08)">
             <a href={topic.resource} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: 10, padding: '12px 20px', background: 'rgba(6,182,212,0.12)', border: '1px solid rgba(6,182,212,0.35)', borderRadius: 12, color: '#67e8f9', textDecoration: 'none', fontSize: 14, fontWeight: 600 }}>
-              🔗 Открыть ресурс <span style={{ fontSize: 12, opacity: 0.7 }}>↗</span>
+              {t('🔗 Открыть ресурс')} <span style={{ fontSize: 12, opacity: 0.7 }}>↗</span>
             </a>
           </Section>
         )}
 
         {topic.media && topic.media.length > 0 && (
-          <Section icon="🖼" title="Материалы" color="#a78bfa" bg="rgba(167,139,250,0.08)">
+          <Section icon="🖼" title={t('Материалы')} color="#a78bfa" bg="rgba(167,139,250,0.08)">
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 12 }}>
               {topic.media.map((item, i) => (
                 <button
@@ -304,7 +306,7 @@ export default function TopicPage() {
                 >
                   <span style={{ fontSize: 22 }}>{item.type === 'image' ? '🖼' : item.type === 'video' ? '🎬' : fileIcon(item.name)}</span>
                   <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.name}</span>
-                  <span style={{ marginLeft: 'auto', color: '#888', fontSize: 12 }}>Открыть ↗</span>
+                  <span style={{ marginLeft: 'auto', color: '#888', fontSize: 12 }}>{t('Открыть ↗')}</span>
                 </button>
               ))}
             </div>
@@ -315,7 +317,7 @@ export default function TopicPage() {
           <ProtectedFileViewer
             fileUrl={viewerItem.url}
             fileName={viewerItem.name}
-            watermarkLabel={`Mirha_Edu · ${userName || 'Ученик'} · ${new Date().toLocaleString('ru-RU')}`}
+            watermarkLabel={`Mirha_Edu · ${userName || t('Ученик')} · ${new Date().toLocaleString(dateLocale)}`}
             onClose={() => setViewerItem(null)}
           />
         )}
@@ -335,9 +337,9 @@ export default function TopicPage() {
                 animation: 'popIn 0.4s ease'
               }}>
                 <div style={{ fontSize: 56, marginBottom: 12 }}>🎉</div>
-                <div style={{ fontSize: 22, fontWeight: 800, color: '#fff', marginBottom: 6 }}>Тема завершена!</div>
+                <div style={{ fontSize: 22, fontWeight: 800, color: '#fff', marginBottom: 6 }}>{t('Тема завершена!')}</div>
                 <div style={{ fontSize: 36, fontWeight: 800, color: '#4ade80', marginBottom: 8 }}>+10 XP ⭐</div>
-                <div style={{ color: '#888', fontSize: 14 }}>Продолжай в том же духе!</div>
+                <div style={{ color: '#888', fontSize: 14 }}>{t('Продолжай в том же духе!')}</div>
               </div>
             </div>
           )}
@@ -352,10 +354,10 @@ export default function TopicPage() {
               boxShadow: completed ? '0 8px 32px rgba(16,185,129,0.35)' : '0 8px 32px rgba(102,126,234,0.35)',
             }}
           >
-            {completed ? '✅ Тема завершена!' : marking ? '⏳ Сохраняем...' : '🎯 Завершить тему (+10 XP)'}
+            {completed ? t('✅ Тема завершена!') : marking ? t('⏳ Сохраняем...') : t('🎯 Завершить тему (+10 XP)')}
           </button>
           {completed && (
-            <p style={{ color: '#666', fontSize: 13, marginTop: 14 }}>Отличная работа! Ты уже прошёл эту тему.</p>
+            <p style={{ color: '#666', fontSize: 13, marginTop: 14 }}>{t('Отличная работа! Ты уже прошёл эту тему.')}</p>
           )}
         </div>
 
@@ -370,26 +372,26 @@ export default function TopicPage() {
             color: '#fff', boxShadow: quizLoading ? 'none' : '0 8px 24px rgba(245,158,11,0.3)',
             transition: 'all 0.3s'
           }}>
-            {quizLoading ? '⏳ Готовим вопросы...' : quiz ? '🧠 Проверить знания (квиз готов!)' : '🧠 Проверить знания (квиз)'}
+            {quizLoading ? t('⏳ Готовим вопросы...') : quiz ? t('🧠 Проверить знания (квиз готов!)') : t('🧠 Проверить знания (квиз)')}
           </button>
         </div>
 
         {/* Квиз */}
         {showQuiz && (
           <div style={{ background: '#1a1a2e', borderRadius: 20, padding: '28px', border: '1px solid #2a2a3e', marginBottom: 40 }}>
-            <h2 style={{ margin: '0 0 20px', fontSize: '1.2rem', fontWeight: 800 }}>🧠 Мини-тест по теме</h2>
+            <h2 style={{ margin: '0 0 20px', fontSize: '1.2rem', fontWeight: 800 }}>{t('🧠 Мини-тест по теме')}</h2>
             {quizLoading && (
               <div style={{ textAlign: 'center', color: '#888', padding: '40px 0' }}>
                 <div style={{ fontSize: 32, marginBottom: 12 }}>⏳</div>
-                AI генерирует вопросы...
+                {t('AI генерирует вопросы...')}
               </div>
             )}
             {!quizLoading && quizError && (
               <div style={{ textAlign: 'center', padding: '30px 0' }}>
                 <div style={{ fontSize: 32, marginBottom: 12 }}>😕</div>
-                <div style={{ color: '#888', marginBottom: 16, fontSize: 14 }}>Не удалось загрузить вопросы</div>
+                <div style={{ color: '#888', marginBottom: 16, fontSize: 14 }}>{t('Не удалось загрузить вопросы')}</div>
                 <button onClick={loadQuiz} style={{ padding: '10px 24px', borderRadius: 10, border: 'none', background: 'linear-gradient(135deg,#667eea,#764ba2)', color: '#fff', fontWeight: 700, cursor: 'pointer', fontSize: 14 }}>
-                  🔄 Попробовать снова
+                  {t('🔄 Попробовать снова')}
                 </button>
               </div>
             )}
@@ -430,21 +432,21 @@ export default function TopicPage() {
                   background: quizAnswers.some(a => a === null) ? '#2a2a3e' : 'linear-gradient(135deg, #667eea, #764ba2)',
                   color: '#fff', fontSize: 15, fontWeight: 700, cursor: quizAnswers.some(a => a === null) ? 'not-allowed' : 'pointer'
                 }}>
-                Проверить ответы
+                {t('Проверить ответы')}
               </button>
             )}
             {quizDone && (
               <div style={{ textAlign: 'center', padding: '20px', background: quizScore >= 3 ? 'rgba(16,185,129,0.1)' : 'rgba(245,158,11,0.1)', borderRadius: 14, border: `1px solid ${quizScore >= 3 ? '#10b98155' : '#f59e0b55'}` }}>
                 <div style={{ fontSize: 40, marginBottom: 8 }}>{quizScore === 4 ? '🏆' : quizScore >= 3 ? '🎉' : quizScore >= 2 ? '😊' : '📚'}</div>
                 <div style={{ fontSize: 22, fontWeight: 800, color: quizScore >= 3 ? '#10b981' : '#f59e0b' }}>
-                  {quizScore} из {quiz?.length ?? 0} правильно
+                  {t('{a} из {b} правильно', { a: quizScore, b: quiz?.length ?? 0 })}
                 </div>
                 <div style={{ color: '#888', marginTop: 6, fontSize: 14 }}>
-                  {quizScore === 4 ? 'Отлично! Ты отлично знаешь тему!' : quizScore >= 3 ? 'Хорошо! Почти всё правильно!' : quizScore >= 2 ? 'Неплохо, но стоит повторить материал' : 'Советуем перечитать теорию ещё раз'}
+                  {quizScore === 4 ? t('Отлично! Ты отлично знаешь тему!') : quizScore >= 3 ? t('Хорошо! Почти всё правильно!') : quizScore >= 2 ? t('Неплохо, но стоит повторить материал') : t('Советуем перечитать теорию ещё раз')}
                 </div>
                 <button onClick={() => { setQuizAnswers(new Array(quiz?.length ?? 0).fill(null)); setQuizDone(false) }}
                   style={{ marginTop: 16, padding: '10px 28px', borderRadius: 10, border: 'none', background: '#2a2a3e', color: '#fff', cursor: 'pointer', fontSize: 14, fontWeight: 600 }}>
-                  Пройти снова
+                  {t('Пройти снова')}
                 </button>
               </div>
             )}
@@ -453,14 +455,14 @@ export default function TopicPage() {
 
         {/* Комментарии */}
         <div style={{ background: '#1a1a2e', borderRadius: 20, padding: '24px', border: '1px solid #2a2a3e', marginBottom: 40 }}>
-          <h2 style={{ margin: '0 0 20px', fontSize: '1.1rem', fontWeight: 800 }}>💬 Вопросы и комментарии</h2>
+          <h2 style={{ margin: '0 0 20px', fontSize: '1.1rem', fontWeight: 800 }}>{t('💬 Вопросы и комментарии')}</h2>
 
           {/* Форма отправки */}
           <div style={{ marginBottom: 24 }}>
             <textarea
               value={commentText}
               onChange={e => setCommentText(e.target.value)}
-              placeholder="Задай вопрос или оставь комментарий..."
+              placeholder={t('Задай вопрос или оставь комментарий...')}
               rows={3}
               style={{
                 width: '100%', padding: '12px 16px', borderRadius: 12,
@@ -478,23 +480,23 @@ export default function TopicPage() {
                 color: '#fff', fontWeight: 700, cursor: commentText.trim() ? 'pointer' : 'not-allowed',
                 fontSize: 14, transition: 'all 0.2s'
               }}>
-              {sendingComment ? 'Отправляем...' : '📨 Отправить'}
+              {sendingComment ? t('Отправляем...') : t('📨 Отправить')}
             </button>
           </div>
 
           {/* Список комментариев */}
           {comments.length === 0 && (
             <div style={{ color: '#555', textAlign: 'center', padding: '20px 0', fontSize: 14 }}>
-              Пока нет комментариев. Будь первым!
+              {t('Пока нет комментариев. Будь первым!')}
             </div>
           )}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
             {comments.map(c => (
               <div key={c.id} style={{ background: '#0f0f1a', borderRadius: 12, padding: '14px 16px', border: '1px solid #2a2a3e' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
-                  <span style={{ fontWeight: 700, fontSize: 13, color: '#a78bfa' }}>{c.user_name || 'Аноним'}</span>
+                  <span style={{ fontWeight: 700, fontSize: 13, color: '#a78bfa' }}>{c.user_name || t('Аноним')}</span>
                   <span style={{ color: '#555', fontSize: 12 }}>
-                    {new Date(c.created_at).toLocaleDateString('ru-RU', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                    {new Date(c.created_at).toLocaleDateString(dateLocale, { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
                   </span>
                 </div>
                 <div style={{ color: '#ccc', fontSize: 14, lineHeight: 1.6 }}>{c.text}</div>

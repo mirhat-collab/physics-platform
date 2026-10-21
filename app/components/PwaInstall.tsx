@@ -1,7 +1,9 @@
 'use client'
 import { useEffect, useState } from 'react'
+import { useT } from '@/app/components/LanguageProvider'
 
 export default function PwaInstall() {
+  const { t } = useT()
   const [prompt, setPrompt] = useState<any>(null)
   const [show, setShow] = useState(false)
 
@@ -47,14 +49,14 @@ export default function PwaInstall() {
     }}>
       <span style={{ fontSize: 28 }}>📲</span>
       <div style={{ flex: 1 }}>
-        <div style={{ fontWeight: 800, color: '#fff', fontSize: 14 }}>Установи как приложение</div>
-        <div style={{ color: 'rgba(255,255,255,0.8)', fontSize: 12 }}>Работает без интернета!</div>
+        <div style={{ fontWeight: 800, color: '#fff', fontSize: 14 }}>{t('Установи как приложение')}</div>
+        <div style={{ color: 'rgba(255,255,255,0.8)', fontSize: 12 }}>{t('Работает без интернета!')}</div>
       </div>
       <button onClick={install} style={{
         background: '#fff', border: 'none', borderRadius: 8,
         color: '#667eea', cursor: 'pointer', padding: '6px 12px',
         fontSize: 12, fontWeight: 700
-      }}>Установить</button>
+      }}>{t('Установить')}</button>
       <button onClick={dismiss} style={{
         background: 'rgba(255,255,255,0.2)', border: 'none', borderRadius: 8,
         color: '#fff', cursor: 'pointer', padding: '4px 8px', fontSize: 14

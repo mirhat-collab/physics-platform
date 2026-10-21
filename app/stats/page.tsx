@@ -14,6 +14,7 @@ import {
 import MathText from '@/app/components/MathText'
 import Icon from '@/app/components/Icon'
 import Explain from '@/app/ent/Explain'
+import { useT } from '@/app/components/LanguageProvider'
 
 type Mistake = { id: number; subject: 'physics' | 'math'; section: string | null; topic: string | null; created_at: string; payload: MistakePayload }
 type Turn = { role: 'user' | 'assistant'; content: string }
@@ -36,6 +37,7 @@ function practiceHref(s: SectionStat): string | null {
 }
 
 export default function StatsPage() {
+  const { t, dateLocale } = useT()
   const router = useRouter()
   const [loading, setLoading] = useState(true)
   const [rows, setRows] = useState<LogRow[]>([])
@@ -74,10 +76,10 @@ export default function StatsPage() {
     try {
       const res = await fetch('/api/stats/advice', { method: 'POST' })
       const data = await res.json()
-      if (!res.ok) throw new Error(data.error || 'Ошибка')
+      if (!res.ok) throw new Error(t(data.error || 'Ошибка'))
       setAdvice(data.text)
     } catch (e) {
-      setAdviceError(e instanceof Error ? e.message : 'Ошибка')
+      setAdviceError(e instanceof Error ? e.message : t('Ошибка'))
     }
     setAdviceLoading(false)
   }
@@ -91,7 +93,7 @@ export default function StatsPage() {
   }
 
   if (loading) return (
-    <div className="page" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '60vh', color: 'var(--muted)' }}>Загрузка…</div>
+    <div className="page" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '60vh', color: 'var(--muted)' }}>{t('Загрузка…')}</div>
   )
 
   const stats = sectionStats(rows)
@@ -109,13 +111,13 @@ export default function StatsPage() {
   if (!total) {
     return (
       <div className="page animate-fade-in-up">
-        <h1 className="page-title">Моя статистика</h1>
-        <p className="page-sub">Здесь будет видно, какие темы получаются хорошо, а какие стоит подтянуть.</p>
+        <h1 className="page-title">{t('Моя статистика')}</h1>
+        <p className="page-sub">{t('Здесь будет видно, какие темы получаются хорошо, а какие стоит подтянуть.')}</p>
         <div className="card" style={{ textAlign: 'center', padding: '36px 20px' }}>
-          <div style={{ fontSize: 15, marginBottom: 18 }}>Пока нет данных. Реши несколько заданий — и статистика появится.</div>
+          <div style={{ fontSize: 15, marginBottom: 18 }}>{t('Пока нет данных. Реши несколько заданий — и статистика появится.')}</div>
           <div style={{ display: 'flex', gap: 10, justifyContent: 'center', flexWrap: 'wrap' }}>
-            <Link href="/ent" className="btn" style={{ textDecoration: 'none' }}><Icon name="target" size={18} /> Задания ЕНТ</Link>
-            <Link href="/formulas" className="btn btn-ghost" style={{ textDecoration: 'none' }}><Icon name="formula" size={18} /> Тренажёр формул</Link>
+            <Link href="/ent" className="btn" style={{ textDecoration: 'none' }}><Icon name="target" size={18} /> {t('Задания ЕНТ')}</Link>
+            <Link href="/formulas" className="btn btn-ghost" style={{ textDecoration: 'none' }}><Icon name="formula" size={18} /> {t('Тренажёр формул')}</Link>
           </div>
         </div>
       </div>
@@ -124,16 +126,16 @@ export default function StatsPage() {
 
   return (
     <div className="page animate-fade-in-up">
-      <h1 className="page-title">Моя статистика</h1>
-      <p className="page-sub">По последним ответам (до 1000 за 90 дней): где получается хорошо, где ошибаешься чаще и что делать дальше.</p>
+      <h1 className="page-title">{t('Моя статистика')}</h1>
+      <p className="page-sub">{t('По последним ответам (до 1000 за 90 дней): где получается хорошо, где ошибаешься чаще и что делать дальше.')}</p>
 
       {/* Итоги */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 10, marginBottom: 16 }}>
         {[
-          { v: total, l: 'ответов всего' },
-          { v: pct(correct / total), l: 'верных ответов', c: accColor(correct / total) },
-          { v: weekRows.length ? pct(weekAcc) : '—', l: 'точность за неделю', c: weekRows.length ? accColor(weekAcc) : undefined },
-          { v: tests, l: 'тестов ЕНТ' },
+          { v: total, l: t('ответов всего') },
+          { v: pct(correct / total), l: t('верных ответов'), c: accColor(correct / total) },
+          { v: weekRows.length ? pct(weekAcc) : '—', l: t('точность за неделю'), c: weekRows.length ? accColor(weekAcc) : undefined },
+          { v: tests, l: t('тестов ЕНТ') },
         ].map(s => (
           <div key={s.l} className="card" style={{ textAlign: 'center', padding: 14 }}>
             <div style={{ fontSize: 24, fontWeight: 800, color: s.c }}>{s.v}</div>
@@ -144,12 +146,12 @@ export default function StatsPage() {
 
       {/* Активность за 2 недели */}
       <div className="card" style={{ marginBottom: 16 }}>
-        <div className="label">Активность за 2 недели</div>
+        <div className="label">{t('Активность за 2 недели')}</div>
         <div style={{ display: 'flex', alignItems: 'flex-end', gap: 6, height: 110 }}>
           {days.map(d => {
             const acc = d.total ? d.correct / d.total : 0
             return (
-              <div key={d.date} title={`${new Date(d.date).toLocaleDateString('ru-RU')}: ${d.correct} из ${d.total}`}
+              <div key={d.date} title={t('{date}: {correct} из {total}', { date: new Date(d.date).toLocaleDateString(dateLocale), correct: d.correct, total: d.total })}
                 style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, height: '100%', justifyContent: 'flex-end' }}>
                 <div style={{ width: '100%', maxWidth: 28, height: `${(d.total / maxDay) * 90}%`, minHeight: d.total ? 4 : 2, borderRadius: 6, background: d.total ? accColor(acc) : 'var(--surface-2)', opacity: d.total ? 0.85 : 1 }} />
                 <span style={{ fontSize: 10, color: 'var(--muted)' }}>{new Date(d.date).getDate()}</span>
@@ -158,15 +160,15 @@ export default function StatsPage() {
           })}
         </div>
         <div style={{ display: 'flex', gap: 14, marginTop: 10, fontSize: 12, color: 'var(--muted)', flexWrap: 'wrap' }}>
-          <span>Высота — сколько заданий решено</span>
+          <span>{t('Высота — сколько заданий решено')}</span>
           <span><span style={{ color: 'var(--good)' }}>■</span> 80%+</span>
           <span><span style={{ color: '#f59e0b' }}>■</span> 60–80%</span>
-          <span><span style={{ color: 'var(--bad)' }}>■</span> меньше 60%</span>
+          <span><span style={{ color: 'var(--bad)' }}>■</span> {t('меньше 60%')}</span>
         </div>
       </div>
 
       {/* Слабые места */}
-      <div className="label" style={{ marginTop: 22 }}>Что подтянуть</div>
+      <div className="label" style={{ marginTop: 22 }}>{t('Что подтянуть')}</div>
       {weak.length ? (
         <div style={{ display: 'grid', gap: 10, marginBottom: 16 }}>
           {weak.slice(0, 5).map(s => {
@@ -174,14 +176,14 @@ export default function StatsPage() {
             return (
               <div key={`${s.source}${s.subject}${s.section}${s.topic}`} className="card" style={{ display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap', borderColor: 'rgba(248,113,113,0.3)' }}>
                 <div style={{ flex: 1, minWidth: 200 }}>
-                  <div style={{ fontWeight: 700 }}>{s.label}</div>
+                  <div style={{ fontWeight: 700 }}>{t(s.label)}</div>
                   <div style={{ color: 'var(--muted)', fontSize: 13, marginTop: 2 }}>
-                    {SUBJECT_LABEL[s.subject]} · {s.topic ? `${s.section} · ` : ''}{SOURCE_LABEL[s.source]} · ошибся {s.wrong} раз из {s.total}
-                    {s.recentWrong >= 3 && <span style={{ color: 'var(--bad)' }}> · {s.recentWrong} ошибок за 2 недели</span>}
+                    {t(SUBJECT_LABEL[s.subject])} · {s.topic ? `${t(s.section)} · ` : ''}{t(SOURCE_LABEL[s.source])} {t('· ошибся {wrong} раз из {total}', { wrong: s.wrong, total: s.total })}
+                    {s.recentWrong >= 3 && <span style={{ color: 'var(--bad)' }}> · {s.recentWrong} {t('ошибок за 2 недели')}</span>}
                   </div>
                 </div>
                 <div style={{ fontSize: 20, fontWeight: 800, color: accColor(s.accuracy) }}>{pct(s.accuracy)}</div>
-                {href && <Link href={href} className="btn" style={{ textDecoration: 'none', padding: '9px 14px', fontSize: 14 }}>Тренировать</Link>}
+                {href && <Link href={href} className="btn" style={{ textDecoration: 'none', padding: '9px 14px', fontSize: 14 }}>{t('Тренировать')}</Link>}
               </div>
             )
           })}
@@ -189,18 +191,18 @@ export default function StatsPage() {
       ) : (
         <div className="card" style={{ marginBottom: 16, color: 'var(--muted)', fontSize: 14 }}>
           {stats.some(s => s.total >= MIN_FOR_RANKING)
-            ? 'Явно слабых тем нет — так держать! Попробуй сложность «Выше ЕНТ».'
-            : `Чтобы найти слабые темы, реши хотя бы по ${MIN_FOR_RANKING} задания в нескольких разделах.`}
+            ? t('Явно слабых тем нет — так держать! Попробуй сложность «Выше ЕНТ».')
+            : t('Чтобы найти слабые темы, реши хотя бы по {MIN_FOR_RANKING} задания в нескольких разделах.', { MIN_FOR_RANKING: MIN_FOR_RANKING })}
         </div>
       )}
 
       {strong.length > 0 && (
         <>
-          <div className="label">Сильные стороны</div>
+          <div className="label">{t('Сильные стороны')}</div>
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 16 }}>
             {strong.slice(0, 8).map(s => (
               <span key={`${s.source}${s.subject}${s.section}${s.topic}`} className="chip on" style={{ cursor: 'default', borderColor: 'rgba(52,211,153,0.4)', background: 'rgba(52,211,153,0.1)', color: 'var(--good)' }}>
-                {s.label} · {pct(s.accuracy)}
+                {t(s.label)} · {pct(s.accuracy)}
               </span>
             ))}
           </div>
@@ -210,15 +212,15 @@ export default function StatsPage() {
       {/* Совет от ИИ */}
       <div className="card" style={{ marginBottom: 16, background: 'rgba(139,124,246,0.06)', borderColor: 'rgba(139,124,246,0.3)' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontWeight: 700, color: '#c4bbff', marginBottom: advice ? 12 : 6 }}>
-          <Icon name="sparkles" size={18} /> Как поднять балл
+          <Icon name="sparkles" size={18} /> {t('Как поднять балл')}
         </div>
         {advice ? (
           <MathText text={advice} />
         ) : (
           <>
-            <div style={{ color: 'var(--muted)', fontSize: 14, marginBottom: 12 }}>ИИ посмотрит на твою статистику и составит личный план подготовки на неделю.</div>
+            <div style={{ color: 'var(--muted)', fontSize: 14, marginBottom: 12 }}>{t('ИИ посмотрит на твою статистику и составит личный план подготовки на неделю.')}</div>
             <button className="btn" onClick={getAdvice} disabled={adviceLoading}>
-              {adviceLoading ? 'ИИ анализирует…' : 'Получить план'}
+              {adviceLoading ? t('ИИ анализирует…') : t('Получить план')}
             </button>
           </>
         )}
@@ -227,24 +229,24 @@ export default function StatsPage() {
 
       {/* Все разделы */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', margin: '22px 0 10px', flexWrap: 'wrap', gap: 8 }}>
-        <div className="label" style={{ margin: 0 }}>Все разделы</div>
+        <div className="label" style={{ margin: 0 }}>{t('Все разделы')}</div>
         <div style={{ display: 'flex', gap: 6 }}>
-          {(['ent', 'formula'] as const).map(t => (
-            <button key={t} className={`chip${tab === t ? ' on' : ''}`} onClick={() => setTab(t)}>{t === 'ent' ? 'Задания ЕНТ' : 'Формулы'}</button>
+          {(['ent', 'formula'] as const).map(item => (
+            <button key={item} className={`chip${tab === item ? ' on' : ''}`} onClick={() => setTab(item)}>{item === 'ent' ? t('Задания ЕНТ') : t('Формулы')}</button>
           ))}
         </div>
       </div>
       <div className="card" style={{ marginBottom: 16 }}>
-        {tabStats.length === 0 && <div style={{ color: 'var(--muted)', fontSize: 14 }}>Здесь пока пусто.</div>}
+        {tabStats.length === 0 && <div style={{ color: 'var(--muted)', fontSize: 14 }}>{t('Здесь пока пусто.')}</div>}
         {(['physics', 'math'] as const).map(subj => {
           const list = tabStats.filter(s => s.subject === subj).sort((a, b) => a.accuracy - b.accuracy)
           if (!list.length) return null
           return (
             <div key={subj} style={{ marginBottom: 14 }}>
-              <div style={{ fontWeight: 700, marginBottom: 8 }}>{SUBJECT_LABEL[subj]}</div>
+              <div style={{ fontWeight: 700, marginBottom: 8 }}>{t(SUBJECT_LABEL[subj])}</div>
               {list.map(s => (
                 <div key={s.section + s.topic} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '6px 0', fontSize: 14 }}>
-                  <span style={{ flex: '0 0 42%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={s.topic ? `${s.section} → ${s.topic}` : s.section}>{s.label}</span>
+                  <span style={{ flex: '0 0 42%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={s.topic ? `${t(s.section)} → ${t(s.topic)}` : t(s.section)}>{t(s.label)}</span>
                   <div style={{ flex: 1, height: 8, borderRadius: 999, background: 'var(--surface-2)', overflow: 'hidden' }}>
                     <div style={{ width: pct(s.accuracy), height: '100%', background: accColor(s.accuracy) }} />
                   </div>
@@ -257,9 +259,9 @@ export default function StatsPage() {
       </div>
 
       {/* Работа над ошибками */}
-      <div className="label" style={{ marginTop: 22 }}>Работа над ошибками</div>
+      <div className="label" style={{ marginTop: 22 }}>{t('Работа над ошибками')}</div>
       {mistakes.length === 0 ? (
-        <div className="card" style={{ color: 'var(--muted)', fontSize: 14 }}>Ошибок в заданиях ЕНТ пока нет.</div>
+        <div className="card" style={{ color: 'var(--muted)', fontSize: 14 }}>{t('Ошибок в заданиях ЕНТ пока нет.')}</div>
       ) : (
         <div style={{ display: 'grid', gap: 10 }}>
           {mistakes.map(m => {
@@ -274,7 +276,7 @@ export default function StatsPage() {
                   </span>
                   <span style={{ flex: 1, minWidth: 0 }}>
                     <span style={{ display: 'block', fontSize: 14, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{m.payload.question.replace(/\$/g, '')}</span>
-                    <span style={{ fontSize: 12, color: 'var(--muted)' }}>{SUBJECT_LABEL[m.subject]}{m.section ? ` · ${m.section}` : ''} · {new Date(m.created_at).toLocaleDateString('ru-RU')}</span>
+                    <span style={{ fontSize: 12, color: 'var(--muted)' }}>{t(SUBJECT_LABEL[m.subject])}{m.section ? ` · ${t(m.section)}` : ''} · {new Date(m.created_at).toLocaleDateString(dateLocale)}</span>
                   </span>
                   <Icon name="arrowRight" size={16} style={{ transform: open ? 'rotate(90deg)' : 'none', transition: 'transform 0.2s', color: 'var(--muted)' }} />
                 </button>
@@ -282,7 +284,7 @@ export default function StatsPage() {
                   <div style={{ padding: '0 16px 16px' }}>
                     <MathText text={m.payload.question} style={{ fontSize: 15, marginBottom: 12 }} />
                     <div style={{ color: 'var(--muted)', fontSize: 13, marginBottom: 8 }}>
-                      {tried === undefined ? 'Попробуй решить ещё раз:' : tried === m.payload.correct ? 'Теперь верно!' : 'Снова неверно — посмотри разбор ниже.'}
+                      {tried === undefined ? t('Попробуй решить ещё раз:') : tried === m.payload.correct ? t('Теперь верно!') : t('Снова неверно — посмотри разбор ниже.')}
                     </div>
                     <div style={{ display: 'grid', gap: 6, marginBottom: 12 }}>
                       {m.payload.options.map((opt, i) => {

@@ -40,8 +40,9 @@ export function studentClassNames(grade: string | null | undefined, classes: { n
   return [...new Set(names)]
 }
 
-// "11" → "11 класс", "ЕНТ" → "ЕНТ", пусто/мусор → "Класс не указан"
-export function gradeLabel(grade: string | null | undefined): string {
-  if (!grade || grade === 'NaN') return 'Класс не указан'
-  return /^\d+$/.test(grade) ? `${grade} класс` : grade
+// "11" → "11 класс", "ЕНТ" → "ЕНТ", пусто/мусор → "Класс не указан".
+// t — функция перевода из useT(); без неё текст остаётся русским.
+export function gradeLabel(grade: string | null | undefined, t: (text: string, vars?: Record<string, string>) => string = s => s): string {
+  if (!grade || grade === 'NaN') return t('Класс не указан')
+  return /^\d+$/.test(grade) ? t('{g} класс', { g: grade }) : t(grade)
 }

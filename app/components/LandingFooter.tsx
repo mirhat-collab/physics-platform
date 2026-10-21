@@ -1,9 +1,11 @@
 'use client'
 import { usePathname } from 'next/navigation'
+import { useT } from '@/app/components/LanguageProvider'
 
 // Подвал с контактами — только на лендинге и странице входа.
 // Внутри приложения навигацию рисует AppNav.
 export default function LandingFooter() {
+  const { t } = useT()
   const path = usePathname()
   if (path !== '/' && path !== '/login') return null
 
@@ -23,7 +25,7 @@ export default function LandingFooter() {
           ✉️ sultanovmirhat@gmail.com
         </a>
       </div>
-      <div style={{ marginTop: 12, fontSize: 11, color: '#555' }}>© 2025 Mirha_Edu · Все права защищены</div>
+      <div style={{ marginTop: 12, fontSize: 11, color: '#555' }}>{t('© 2025 Mirha_Edu · Все права защищены')}</div>
     </div>
   )
 }

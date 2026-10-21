@@ -1,8 +1,10 @@
 'use client'
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
+import { useT } from '@/app/components/LanguageProvider'
 
 export default function StreakAlert() {
+  const { t } = useT()
   const [show, setShow] = useState(false)
   const [streak, setStreak] = useState(0)
 
@@ -50,8 +52,8 @@ export default function StreakAlert() {
     }}>
       <span style={{ fontSize: 28 }}>🔥</span>
       <div style={{ flex: 1 }}>
-        <div style={{ fontWeight: 800, color: '#fff', fontSize: 14 }}>Стрик {streak} дней!</div>
-        <div style={{ color: 'rgba(255,255,255,0.85)', fontSize: 12 }}>Заходи каждый день чтобы не потерять</div>
+        <div style={{ fontWeight: 800, color: '#fff', fontSize: 14 }}>{t('Стрик')} {streak} {t('дней!')}</div>
+        <div style={{ color: 'rgba(255,255,255,0.85)', fontSize: 12 }}>{t('Заходи каждый день чтобы не потерять')}</div>
       </div>
       <button onClick={dismiss} style={{
         background: 'rgba(255,255,255,0.2)', border: 'none', borderRadius: 8,

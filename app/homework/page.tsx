@@ -3,11 +3,13 @@ import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import { gradeLabel, gradeVariants, studentClassNames } from '@/lib/grade-match'
+import { useT } from '@/app/components/LanguageProvider'
 
 type Homework = { id: number; title: string; description: string; class_name: string; due_date: string; created_at: string; media_urls?: string[] }
 type Submission = { id: number; homework_id: number; answer: string; grade: string; media_url?: string }
 
 export default function HomeworkPage() {
+  const { t, dateLocale } = useT()
   const router = useRouter()
   const [homeworks, setHomeworks] = useState<Homework[]>([])
   const [submissions, setSubmissions] = useState<Submission[]>([])
@@ -95,7 +97,7 @@ export default function HomeworkPage() {
       setUploading(null)
       if (error) {
         setSending(null)
-        alert('Не удалось загрузить файл: ' + error.message)
+        alert(t('Не удалось загрузить файл: ') + error.message)
         return
       }
       mediaUrl = supabase.storage.from('homework-media').getPublicUrl(path).data.publicUrl
@@ -107,7 +109,7 @@ export default function HomeworkPage() {
     }).select().single()
     setSending(null)
     if (error || !data) {
-      alert('Не удалось отправить ответ, попробуй ещё раз')
+      alert(t('Не удалось отправить ответ, попробуй ещё раз'))
       return
     }
     setSubmissions(prev => [...prev, data])
@@ -116,7 +118,7 @@ export default function HomeworkPage() {
 
   if (loading) return (
     <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-      <div style={{ color: '#fff' }}>Загрузка...</div>
+      <div style={{ color: '#fff' }}>{t('Загрузка...')}</div>
     </div>
   )
 
@@ -124,13 +126,13 @@ export default function HomeworkPage() {
     <div style={{ minHeight: '100vh', color: '#fff', padding: '2rem' }}>
       <div style={{ maxWidth: 700, margin: '0 auto' }}>
         <div style={{ background: 'linear-gradient(135deg, #1a1a3e, #0f0f1a)', borderBottom: '1px solid #2a2a3e', borderRadius: 20, padding: '24px', marginBottom: 24 }}>
-          <h1 style={{ fontSize: '1.8rem', fontWeight: 800, margin: '0 0 4px' }}>📝 Домашние задания</h1>
-          <p style={{ color: '#888', margin: 0, fontSize: 14 }}>{preview ? userGrade : gradeLabel(userGrade)}</p>
+          <h1 style={{ fontSize: '1.8rem', fontWeight: 800, margin: '0 0 4px' }}>{t('📝 Домашние задания')}</h1>
+          <p style={{ color: '#888', margin: 0, fontSize: 14 }}>{preview ? userGrade : gradeLabel(userGrade, t)}</p>
         </div>
 
         {preview && (
           <div style={{ background: 'rgba(139,124,246,0.08)', border: '1px solid rgba(139,124,246,0.3)', borderRadius: 14, padding: '14px 16px', marginBottom: 20 }}>
-            <div style={{ fontSize: 14, color: '#c4bbff', fontWeight: 600, marginBottom: 10 }}>Так эту страницу видят ученики. Выбери класс:</div>
+            <div style={{ fontSize: 14, color: '#c4bbff', fontWeight: 600, marginBottom: 10 }}>{t('Так эту страницу видят ученики. Выбери класс:')}</div>
             <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
               {previewClasses.map(name => (
                 <button key={name} className={`chip${userGrade === name ? ' on' : ''}`} onClick={() => switchPreviewClass(name)}>{name}</button>
@@ -142,7 +144,7 @@ export default function HomeworkPage() {
         {homeworks.length === 0 && (
           <div style={{ textAlign: 'center', color: '#555', padding: '60px 0' }}>
             <div style={{ fontSize: 40, marginBottom: 12 }}>📭</div>
-            Заданий пока нет
+            {t('Заданий пока нет')}
           </div>
         )}
 
@@ -160,13 +162,13 @@ export default function HomeworkPage() {
                   <div>
                     <div style={{ fontWeight: 700, fontSize: 16 }}>{hw.title}</div>
                     <div style={{ color: '#888', fontSize: 12, marginTop: 4 }}>
-                      {hw.due_date ? `До ${new Date(hw.due_date).toLocaleDateString('ru-RU')}` : 'Без срока'}
-                      {isOverdue && !isSent && <span style={{ color: '#f5576c', marginLeft: 8 }}>⚠️ Просрочено</span>}
+                      {hw.due_date ? t('До {date}', { date: new Date(hw.due_date).toLocaleDateString(dateLocale) }) : t('Без срока')}
+                      {isOverdue && !isSent && <span style={{ color: '#f5576c', marginLeft: 8 }}>{t('⚠️ Просрочено')}</span>}
                     </div>
                   </div>
                   {isSent && (
                     <span style={{ background: 'rgba(16,185,129,0.15)', color: '#10b981', padding: '4px 12px', borderRadius: 999, fontSize: 12, fontWeight: 600 }}>
-                      {mySub?.grade ? `Оценка: ${mySub.grade}` : '✅ Сдано'}
+                      {mySub?.grade ? t('Оценка: {grade}', { grade: mySub.grade }) : t('✅ Сдано')}
                     </span>
                   )}
                 </div>
@@ -189,16 +191,16 @@ export default function HomeworkPage() {
 
                 {preview ? (
                   <div style={{ color: '#888', fontSize: 13, background: '#0f0f1a', borderRadius: 10, padding: '10px 14px', border: '1px dashed #2a2a3e' }}>
-                    Здесь ученик пишет ответ и прикрепляет фото или видео.
+                    {t('Здесь ученик пишет ответ и прикрепляет фото или видео.')}
                   </div>
                 ) : isSent ? (
                   <div style={{ background: '#0f0f1a', borderRadius: 10, padding: '12px 16px', border: '1px solid #2a2a3e' }}>
-                    <div style={{ color: '#888', fontSize: 12, marginBottom: 6 }}>Твой ответ:</div>
+                    <div style={{ color: '#888', fontSize: 12, marginBottom: 6 }}>{t('Твой ответ:')}</div>
                     {mySub?.answer && <div style={{ color: '#ccc', fontSize: 14, marginBottom: mySub.media_url ? 10 : 0 }}>{mySub.answer}</div>}
                     {mySub?.media_url && (
                       mySub.media_url.match(/\.(mp4|webm|mov)$/i)
                         ? <video src={mySub.media_url} controls style={{ maxWidth: '100%', borderRadius: 8, marginTop: 8 }} />
-                        : <img src={mySub.media_url} alt="Твоя работа" style={{ maxWidth: '100%', borderRadius: 8, marginTop: 8 }} />
+                        : <img src={mySub.media_url} alt={t('Твоя работа')} style={{ maxWidth: '100%', borderRadius: 8, marginTop: 8 }} />
                     )}
                   </div>
                 ) : (
@@ -206,7 +208,7 @@ export default function HomeworkPage() {
                     <textarea
                       rows={3} value={answers[hw.id] || ''}
                       onChange={e => setAnswers({ ...answers, [hw.id]: e.target.value })}
-                      placeholder="Напиши свой ответ..."
+                      placeholder={t('Напиши свой ответ...')}
                       style={{ width: '100%', padding: '12px', borderRadius: 10, border: '1px solid #2a2a3e', background: '#0f0f1a', color: '#fff', fontSize: 14, resize: 'vertical', boxSizing: 'border-box', outline: 'none', fontFamily: 'sans-serif', marginBottom: 10 }}
                     />
 
@@ -229,14 +231,14 @@ export default function HomeworkPage() {
                     ) : (
                       <button onClick={() => fileRefs.current[hw.id]?.click()}
                         style={{ width: '100%', padding: '10px', borderRadius: 10, border: '2px dashed #2a2a3e', background: 'transparent', color: '#888', fontSize: 13, cursor: 'pointer', marginBottom: 10 }}>
-                        📎 Прикрепить фото или видео
+                        {t('📎 Прикрепить фото или видео')}
                       </button>
                     )}
 
                     <button onClick={() => submitAnswer(hw.id)}
                       disabled={sending === hw.id || uploading === hw.id || (!answers[hw.id]?.trim() && !mediaFiles[hw.id])}
                       style={{ padding: '10px 24px', borderRadius: 10, border: 'none', background: (answers[hw.id]?.trim() || mediaFiles[hw.id]) ? 'linear-gradient(135deg,#667eea,#764ba2)' : '#2a2a3e', color: '#fff', fontWeight: 700, cursor: 'pointer', fontSize: 14 }}>
-                      {uploading === hw.id ? '⏳ Загружаю файл...' : sending === hw.id ? 'Отправляем...' : '📨 Сдать'}
+                      {uploading === hw.id ? t('⏳ Загружаю файл...') : sending === hw.id ? t('Отправляем...') : t('📨 Сдать')}
                     </button>
                   </div>
                 )}
