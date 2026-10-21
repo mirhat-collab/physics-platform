@@ -21,9 +21,11 @@ export function tl(key: string, values: unknown[]): string {
   return contentFormat(locale, key, values)
 }
 
-// Готовая строка без подстановок (варианты ответа, единицы, теория)
+// Готовая строка без подстановок (варианты ответа, единицы, теория).
+// В английском дробная часть через точку — правим и числа, вписанные в шаблон как есть.
 export function tr(text: string): string {
-  return contentLookup(locale, text)
+  const out = contentLookup(locale, text)
+  return locale === 'en' ? out.replace(/\{,\}/g, '.') : out
 }
 
 export type Template = {

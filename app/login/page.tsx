@@ -2,11 +2,14 @@
 import { useState } from 'react'
 import { getActualGrade } from '@/lib/grade-match'
 import { supabase } from '@/lib/supabase'
+import { kzDate, nextStreak } from '@/lib/streak'
 import { useRouter } from 'next/navigation'
 import { useT } from '@/app/components/LanguageProvider'
 import LanguageSwitcher from '@/app/components/LanguageSwitcher'
 
 const GRADES = ['7', '8', '9', '10', '11']
+
+const PENDING_TEACHER_CODE = 'pendingTeacherCode'
 
 export default function LoginPage() {
   const { t } = useT()
@@ -20,6 +23,22 @@ export default function LoginPage() {
   const [teacherCode, setTeacherCode] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+
+  // Код учителя, сохранённый при регистрации с подтверждением почты
+  async function applyPendingTeacherCode() {
+    let code: string | null = null
+    try { code = localStorage.getItem(PENDING_TEACHER_CODE) } catch { return }
+    if (!code) return
+    const res = await fetch('/api/register-teacher', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ code }),
+    }).catch(() => null)
+    // Неверный код повторять бессмысленно; сетевую ошибку — попробуем при следующем входе
+    if (res && (res.ok || res.status === 403)) {
+      try { localStorage.removeItem(PENDING_TEACHER_CODE) } catch { /* нет доступа к storage */ }
+    }
+  }
 
   async function handleSubmit() {
     setLoading(true)
@@ -48,11 +67,10 @@ export default function LoginPage() {
       if (error) { setError(error.message); setLoading(false); return }
 
       if (data.user && data.session) {
-        const now = new Date().toISOString()
         await supabase.from('profiles').update({
           full_name: fullName,
           grade: profileGrade,
-          last_visit: now.split('T')[0],
+          last_visit: kzDate(),
         }).eq('id', data.user.id)
 
         if (role === 'teacher') {
@@ -69,7 +87,14 @@ export default function LoginPage() {
           }
         }
       } else if (data.user) {
-        setError(t('Проверь почту и подтверди регистрацию, затем войди.'))
+        // Без подтверждённой почты сессии ещё нет, и роль учителя выдать нельзя.
+        // Запоминаем код в этом браузере — роль применится при первом входе.
+        if (role === 'teacher') {
+          try { localStorage.setItem(PENDING_TEACHER_CODE, teacherCode) } catch { /* нет доступа к storage */ }
+          setError(t('Проверь почту и подтверди регистрацию, затем войди — роль учителя включится автоматически. Если войдёшь с другого устройства, введи код учителя в профиле.'))
+        } else {
+          setError(t('Проверь почту и подтверди регистрацию, затем войди.'))
+        }
         setLoading(false)
         return
       }
@@ -81,15 +106,12 @@ export default function LoginPage() {
 
       const { data: { user } } = await supabase.auth.getUser()
       if (user) {
-        const today = new Date().toISOString().split('T')[0]
+        await applyPendingTeacherCode()
+        const today = kzDate()
         const { data: profile } = await supabase.from('profiles').select('*').eq('id', user.id).single()
 
         if (profile) {
-          const lastVisit = profile.last_visit
-          const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0]
-          const newStreak = lastVisit === yesterday
-            ? (profile.streak || 0) + 1
-            : lastVisit === today ? profile.streak : 1
+          const newStreak = nextStreak(profile.last_visit, profile.streak)
 
           // Класс «переводим» только ученикам — у учителя/админа/родителя
           // в grade не номер класса (раньше так у админа появился grade = "NaN")

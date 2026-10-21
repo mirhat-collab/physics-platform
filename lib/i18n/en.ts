@@ -779,4 +779,8 @@ export const en: Record<string, string> = {
   "11th Grade": "11th Grade",
   "⏳ Переводим тему…": "⏳ Translating the topic…",
   "🌐 Переведено ИИ — возможны неточности": "🌐 Translated by AI — may contain inaccuracies",
+  "Проверь почту и подтверди регистрацию, затем войди — роль учителя включится автоматически. Если войдёшь с другого устройства, введи код учителя в профиле.": "Check your email and confirm your registration, then sign in — the teacher role will turn on automatically. If you sign in from another device, enter the teacher code in your profile.",
+  "Я учитель": "I am a teacher",
+  "Если ты регистрировался как учитель, но попал в кабинет ученика, введи код учителя.": "If you signed up as a teacher but ended up in the student area, enter the teacher code.",
+  "Подтвердить": "Confirm",
 }

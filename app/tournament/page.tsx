@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import { gradeLabel, gradeVariants, studentClassNames } from '@/lib/grade-match'
 import { useT } from '@/app/components/LanguageProvider'
+import { useTranslatedItems } from '@/app/components/useTranslatedItems'
 
 type Tournament = { id: number; title: string; description?: string; type?: string; class_name: string; status: string; ends_at?: string; media_url?: string; prize?: string }
 type TournamentSub = { id: number; tournament_id: number; student_name: string; text_answer: string; media_url?: string; place?: number; teacher_comment?: string; submitted_at: string }
@@ -23,6 +24,7 @@ export default function TournamentPage() {
   const [tournaments, setTournaments] = useState<Tournament[]>([])
   const [mySubs, setMySubs] = useState<TournamentSub[]>([])
   const [allSubs, setAllSubs] = useState<TournamentSub[]>([])
+  const tri = useTranslatedItems('tournament', tournaments.map(x => x.id))
   const [selected, setSelected] = useState<number | null>(null)
   const [answers, setAnswers] = useState<Record<number, string>>({})
   const [mediaFiles, setMediaFiles] = useState<Record<number, File | null>>({})
@@ -167,13 +169,13 @@ export default function TournamentPage() {
                             </span>
                             {mySub && <span style={{ background: '#10b98122', color: '#10b981', padding: '3px 8px', borderRadius: 999, fontSize: 11, fontWeight: 600 }}>{t('✅ Сдано')}</span>}
                           </div>
-                          <div style={{ fontWeight: 800, fontSize: 17 }}>{item.title}</div>
+                          <div style={{ fontWeight: 800, fontSize: 17 }}>{tri(item.id, 'title', item.title)}</div>
                           {item.ends_at && (
                             <div style={{ color: isOverdue ? '#f5576c' : '#888', fontSize: 12, marginTop: 4 }}>
                               {isOverdue ? t('⚠️ Приём работ завершён') : t('⏰ До {date}', { date: new Date(item.ends_at).toLocaleDateString(dateLocale) })}
                             </div>
                           )}
-                          {item.prize && <div style={{ color: '#f59e0b', fontSize: 12, marginTop: 4 }}>🎁 {item.prize}</div>}
+                          {item.prize && <div style={{ color: '#f59e0b', fontSize: 12, marginTop: 4 }}>🎁 {tri(item.id, 'prize', item.prize)}</div>}
                         </div>
                         <span style={{ color: '#555', marginLeft: 12 }}>{isOpen ? '▲' : '▼'}</span>
                       </div>
@@ -181,7 +183,7 @@ export default function TournamentPage() {
 
                     {isOpen && (
                       <div style={{ borderTop: '1px solid #2a2a3e', padding: '16px 20px' }}>
-                        {item.description && <p style={{ color: '#ccc', fontSize: 14, lineHeight: 1.7, marginBottom: 14 }}>{item.description}</p>}
+                        {item.description && <p style={{ color: '#ccc', fontSize: 14, lineHeight: 1.7, marginBottom: 14 }}>{tri(item.id, 'description', item.description)}</p>}
                         {item.media_url && (item.media_url.match(/\.(mp4|webm|mov)$/i)
                           ? <video src={item.media_url} controls style={{ maxWidth: '100%', borderRadius: 10, marginBottom: 14 }} />
                           : <img src={item.media_url} alt="" style={{ maxWidth: '100%', maxHeight: 220, borderRadius: 10, marginBottom: 14, objectFit: 'cover' }} />
@@ -277,7 +279,7 @@ export default function TournamentPage() {
                   <div key={item.id} style={{ background: '#1a1a2e', borderRadius: 14, padding: '16px 20px', border: '1px solid #2a2a3e', opacity: 0.8 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
                       <span style={{ background: '#ffffff11', color: '#888', padding: '2px 8px', borderRadius: 999, fontSize: 11 }}>{t(TYPE_LABELS[item.type || 'other'])}</span>
-                      <span style={{ fontWeight: 700 }}>{item.title}</span>
+                      <span style={{ fontWeight: 700 }}>{tri(item.id, 'title', item.title)}</span>
                     </div>
                     {tSubs.length > 0 && (
                       <div style={{ display: 'flex', gap: 12, marginTop: 8 }}>

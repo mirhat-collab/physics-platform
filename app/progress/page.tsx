@@ -27,14 +27,15 @@ export default function ProgressPage() {
     }
     const { data: classes } = await supabase.from('classes').select('id, name, is_locked')
     // Закрытый класс (например, ЕНТ) — ученики только из списка админа.
-    // Ученик видит лишь свою строку доступа, учитель/админ — все.
-    const { data: access } = await supabase.from('class_access').select('class_id, student_id')
+    // RLS отдаёт ученику лишь его строку доступа, поэтому состав классов
+    // берём через функцию class_access_members (только id, без лишних данных).
+    const { data: access } = await supabase.rpc('class_access_members')
     const { data: topics } = await supabase.from('topics').select('id, grade')
     const { data: progress } = await supabase.from('progress').select('student, topic, status').eq('status', 'completed')
     if (classes && profilesData && progress) {
       const stats: ClassStat[] = classes.map(cls => {
         const gradeNum = cls.name.replace(/\D/g, '')
-        const members = new Set((access || []).filter(a => a.class_id === cls.id).map(a => a.student_id))
+        const members = new Set(((access || []) as { class_id: number; student_id: string }[]).filter(a => a.class_id === cls.id).map(a => a.student_id))
         const students = cls.is_locked
           ? profilesData.filter(p => members.has(p.id))
           : profilesData.filter(p => (gradeNum && p.grade === gradeNum) || p.grade === cls.name)

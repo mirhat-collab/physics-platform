@@ -1,6 +1,7 @@
 'use client'
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
+import { kzDate } from '@/lib/streak'
 import { useT } from '@/app/components/LanguageProvider'
 
 export default function StreakAlert() {
@@ -20,8 +21,8 @@ export default function StreakAlert() {
       .from('profiles').select('streak, last_visit').eq('id', user.id).single()
     if (!profile || !profile.last_visit || profile.streak < 2) return
 
-    const today = new Date().toISOString().split('T')[0]
-    const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0]
+    const today = kzDate()
+    const yesterday = kzDate(1)
 
     // Показываем если последний визит был вчера (стрик под угрозой если не зайдёт сегодня)
     // Но раз они зашли — значит стрик уже обновлён StreakTracker'ом

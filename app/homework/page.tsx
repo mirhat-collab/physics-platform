@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import { gradeLabel, gradeVariants, studentClassNames } from '@/lib/grade-match'
 import { useT } from '@/app/components/LanguageProvider'
+import { useTranslatedItems } from '@/app/components/useTranslatedItems'
 
 type Homework = { id: number; title: string; description: string; class_name: string; due_date: string; created_at: string; media_urls?: string[] }
 type Submission = { id: number; homework_id: number; answer: string; grade: string; media_url?: string }
@@ -25,6 +26,7 @@ export default function HomeworkPage() {
   const [uploading, setUploading] = useState<number | null>(null)
   const [sending, setSending] = useState<number | null>(null)
   const [sent, setSent] = useState<Record<number, boolean>>({})
+  const tri = useTranslatedItems('homework', homeworks.map(h => h.id))
   const fileRefs = useRef<Record<number, HTMLInputElement | null>>({})
   // Учитель и админ видят страницу так, как её видит ученик выбранного класса
   const [preview, setPreview] = useState(false)
@@ -160,7 +162,7 @@ export default function HomeworkPage() {
               <div key={hw.id} style={{ background: '#1a1a2e', borderRadius: 16, padding: '20px', border: `1px solid ${isSent ? '#10b98144' : isOverdue ? '#f5576c33' : '#2a2a3e'}` }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
                   <div>
-                    <div style={{ fontWeight: 700, fontSize: 16 }}>{hw.title}</div>
+                    <div style={{ fontWeight: 700, fontSize: 16 }}>{tri(hw.id, 'title', hw.title)}</div>
                     <div style={{ color: '#888', fontSize: 12, marginTop: 4 }}>
                       {hw.due_date ? t('До {date}', { date: new Date(hw.due_date).toLocaleDateString(dateLocale) }) : t('Без срока')}
                       {isOverdue && !isSent && <span style={{ color: '#f5576c', marginLeft: 8 }}>{t('⚠️ Просрочено')}</span>}
@@ -173,7 +175,7 @@ export default function HomeworkPage() {
                   )}
                 </div>
 
-                {hw.description && <p style={{ color: '#ccc', fontSize: 14, lineHeight: 1.7, marginBottom: 12 }}>{hw.description}</p>}
+                {hw.description && <p style={{ color: '#ccc', fontSize: 14, lineHeight: 1.7, marginBottom: 12 }}>{tri(hw.id, 'description', hw.description)}</p>}
 
                 {/* Медиа от учителя */}
                 {hw.media_urls && hw.media_urls.length > 0 && (

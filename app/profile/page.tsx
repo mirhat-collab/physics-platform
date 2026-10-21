@@ -118,6 +118,22 @@ export default function ProfilePage() {
     setTimeout(() => setMsg(''), 3000)
   }
 
+  // Учитель, который регистрировался с подтверждением почты на другом
+  // устройстве, получает роль здесь — вводит код учителя ещё раз
+  const [teacherCode, setTeacherCode] = useState('')
+  const [teacherMsg, setTeacherMsg] = useState('')
+  async function becomeTeacher() {
+    if (!teacherCode.trim()) return
+    const res = await fetch('/api/register-teacher', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ code: teacherCode.trim() }),
+    }).catch(() => null)
+    const data = await res?.json().catch(() => null)
+    if (!res?.ok) { setTeacherMsg('❌ ' + t(data?.error || 'Ошибка')); return }
+    router.push('/teacher')
+  }
+
   async function handleLogout() {
     await supabase.auth.signOut()
     router.push('/login')
@@ -232,6 +248,19 @@ export default function ProfilePage() {
               ))}
             </div>
           </div>
+        )}
+
+        {profile?.role === 'student' && (
+          <details style={{ background: '#1a1a2e', borderRadius: 16, padding: '14px 18px', marginBottom: 20, border: '1px solid #2a2a3e' }}>
+            <summary style={{ cursor: 'pointer', fontWeight: 600 }}>👨‍🏫 {t('Я учитель')}</summary>
+            <div style={{ color: '#888', fontSize: 13, margin: '10px 0' }}>{t('Если ты регистрировался как учитель, но попал в кабинет ученика, введи код учителя.')}</div>
+            <div style={{ display: 'flex', gap: 8 }}>
+              <input type="password" value={teacherCode} onChange={e => setTeacherCode(e.target.value)} placeholder={t('Введи секретный код учителя')}
+                style={{ flex: 1, padding: '10px 14px', borderRadius: 10, border: '1px solid #2a2a3e', background: '#0f0f1a', color: '#fff', fontSize: 14 }} />
+              <button onClick={becomeTeacher} style={{ padding: '10px 16px', borderRadius: 10, border: 'none', background: '#10b981', color: '#fff', fontWeight: 600, cursor: 'pointer' }}>{t('Подтвердить')}</button>
+            </div>
+            {teacherMsg && <div style={{ color: '#f5576c', fontSize: 13, marginTop: 8 }}>{teacherMsg}</div>}
+          </details>
         )}
 
         {/* Статистика */}
