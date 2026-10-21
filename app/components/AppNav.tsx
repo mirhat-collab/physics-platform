@@ -143,9 +143,7 @@ export default function AppNav() {
     </div>
   ))
 
-  const footerActions = (
-    <>
-    <div style={{ marginTop: 10 }}><LanguageSwitcher /></div>
+  const themeLogout = (
     <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
       <button onClick={toggleTheme} className="nav-action" title={dark ? t('Светлая тема') : t('Тёмная тема')}>
         <Icon name={dark ? 'sun' : 'moon'} size={18} />
@@ -156,6 +154,12 @@ export default function AppNav() {
         {t('Выйти')}
       </button>
     </div>
+  )
+
+  const footerActions = (
+    <>
+      <div style={{ marginTop: 10 }}><LanguageSwitcher /></div>
+      {themeLogout}
     </>
   )
 
@@ -198,12 +202,14 @@ export default function AppNav() {
                 <Icon name="close" />
               </button>
             </div>
+            {/* Язык — сразу наверху, чтобы не искать его под всеми пунктами меню */}
+            <div style={{ marginBottom: 16 }}><LanguageSwitcher /></div>
             {groupList}
             <Link href="/install" className="nav-link">
               <Icon name="phone" />
               {t('Установить приложение')}
             </Link>
-            {footerActions}
+            {themeLogout}
           </div>
         </div>
       )}
