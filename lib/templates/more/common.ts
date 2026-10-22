@@ -4,7 +4,7 @@
 import type { Template, Generated } from '../helpers'
 
 export { theory } from '../theory'
-export { num, txt, rnd, pick, fmt, fx, frac, gcd, distinct, signed, term, lead, pi } from '../helpers'
+export { lt, num, txt, rnd, pick, fmt, fx, frac, gcd, distinct, signed, term, lead, pi } from '../helpers'
 
 export const G = 10 // g, м/с²
 export const PI = 3.14

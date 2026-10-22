@@ -21,6 +21,14 @@ export function tl(key: string, values: unknown[]): string {
   return contentFormat(locale, key, values)
 }
 
+// Тег для строк заданий: lt`Скорость ${v} м/с` ищет перевод по ключу
+// «Скорость ⟪0⟫ м/с» и подставляет значения — числа размечать вручную не нужно
+export function lt(strings: TemplateStringsArray, ...values: unknown[]): string {
+  let key = strings[0]
+  for (let i = 0; i < values.length; i++) key += `⟪${i}⟫` + strings[i + 1]
+  return contentFormat(locale, key, values)
+}
+
 // Готовая строка без подстановок (варианты ответа, единицы, теория).
 // В английском дробная часть через точку — правим и числа, вписанные в шаблон как есть.
 export function tr(text: string): string {

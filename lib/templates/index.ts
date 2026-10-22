@@ -11,8 +11,8 @@ const ALL: Record<EntSubject, Template[]> = {
   math: [...MATH_TEMPLATES, ...MATH_THEORY, ...MATH_MORE],
 }
 
-// Дополнительные задания пока только на русском
-const RU_ONLY = new Set<Template>([...PHYSICS_MORE, ...MATH_MORE])
+// Дополнительные задания переведены на казахский, английского перевода пока нет
+const NO_EN = new Set<Template>([...PHYSICS_MORE, ...MATH_MORE])
 
 export function templatesFor(subject: EntSubject, topic: string): Template[] {
   return ALL[subject].filter(t => t.topic === topic)
@@ -29,9 +29,9 @@ const HARD_SHARE: Record<EntDifficulty, number> = { ent: 0.35, hard: 0.75 }
 export function generateFromTemplate(subject: EntSubject, topic: string, nOptions: number, locale: Locale = 'ru', difficulty: EntDifficulty = 'ent'): Generated | null {
   let list = templatesFor(subject, topic)
   if (!list.length) return null
-  // На казахском и английском берём переведённые задания, если они есть у темы
-  if (locale !== 'ru') {
-    const translated = list.filter(t => !RU_ONLY.has(t))
+  // На английском берём переведённые задания, если они есть у темы
+  if (locale === 'en') {
+    const translated = list.filter(t => !NO_EN.has(t))
     if (translated.length) list = translated
   }
   const hard = list.filter(t => t.hard)
