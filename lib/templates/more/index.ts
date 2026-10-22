@@ -9,6 +9,7 @@ import { MATH_EQUATIONS } from './math-equations'
 import { MATH_FUNCTIONS } from './math-functions'
 import { MATH_CALCULUS } from './math-calculus'
 import { MATH_GEOMETRY } from './math-geometry'
+import { MATH_HARD } from './math-hard'
 
 // При неудачных случайных числах неправильные варианты могут совпасть
 // между собой — тогда просто генерируем задание заново.
@@ -25,4 +26,4 @@ function robust(t: Template): Template {
 }
 
 export const PHYSICS_MORE: Template[] = [...PHYSICS_MECHANICS, ...PHYSICS_THERMO, ...PHYSICS_ELECTRO, ...PHYSICS_WAVES, ...PHYSICS_HARD].map(robust)
-export const MATH_MORE: Template[] = [...MATH_NUMBERS, ...MATH_EQUATIONS, ...MATH_FUNCTIONS, ...MATH_CALCULUS, ...MATH_GEOMETRY].map(robust)
+export const MATH_MORE: Template[] = [...MATH_NUMBERS, ...MATH_EQUATIONS, ...MATH_FUNCTIONS, ...MATH_CALCULUS, ...MATH_GEOMETRY, ...MATH_HARD].map(robust)
