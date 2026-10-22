@@ -45,6 +45,7 @@ function buildGroups(role: string | null): NavGroup[] {
       items: [
         { href: '/formulas', icon: 'formula', label: 'Тренажёр формул' },
         { href: '/ent', icon: 'target', label: 'Подготовка к ЕНТ' },
+        { href: '/reference', icon: 'book', label: 'Справочник ЕНТ' },
       ],
     },
     {

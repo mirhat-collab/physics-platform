@@ -6,10 +6,11 @@ import { translateFields } from '@/lib/translate'
 
 export const maxDuration = 120
 
-// Перевод домашних заданий и турниров, которые пишут учителя
+// Перевод домашних заданий, турниров и справочника ЕНТ — их пишут люди
 const SOURCES = {
   homework: { table: 'homework', columns: ['title', 'description'] },
   tournament: { table: 'tournaments', columns: ['title', 'description', 'prize'] },
+  material: { table: 'ent_materials', columns: ['title', 'body'] },
 } as const
 
 export async function POST(req: NextRequest) {

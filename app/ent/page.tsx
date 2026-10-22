@@ -194,6 +194,9 @@ export default function EntPage() {
       <div className="page animate-fade-in-up">
         <h1 className="page-title">{t('Подготовка к ЕНТ')}</h1>
         <p className="page-sub">{t('Каждый раз новые задания по выбранной теме: числа и варианты меняются, так что задачи не повторяются. Не получилось решить — нажми «Объясни», и ИИ разберёт задачу по шагам.')}</p>
+        <Link href="/reference" className="card" style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16, padding: '12px 16px', color: 'var(--text)', textDecoration: 'none' }}>
+          <Icon name="book" size={18} /> <span style={{ flex: 1 }}>{t('Справочник ЕНТ: формулы и важные материалы')}</span> <Icon name="arrowRight" size={16} />
+        </Link>
 
         {loggedIn === false && (
           <div className="card" style={{ marginBottom: 16, borderColor: 'rgba(245,158,11,0.4)' }}>
