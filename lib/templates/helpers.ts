@@ -46,6 +46,8 @@ export function fx(x: number): string {
   if (!Number.isFinite(x)) return '—'
   if (x === 0) return '0'
   const abs = Math.abs(x)
+  // Целые числа пишем точно: 1188, а не 1190
+  if (Number.isInteger(x) && abs < 1e5) return String(x)
   if (abs >= 1e5 || abs < 1e-2) {
     const exp = Math.floor(Math.log10(abs))
     let mant = Number((x / 10 ** exp).toPrecision(3))
