@@ -2,7 +2,7 @@
 import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
-import { sectionNames, topicsOf, ENT_BATCH, ENT_COUNTS, ENT_DIFFICULTIES, ENT_SUBJECTS, type EntDifficulty, type EntQuestion, type EntSubject } from '@/lib/ent'
+import { sectionNames, sectionOfTopic, topicsOf, ENT_BATCH, ENT_COUNTS, ENT_DIFFICULTIES, ENT_SUBJECTS, type EntDifficulty, type EntQuestion, type EntSubject } from '@/lib/ent'
 import MathText from '@/app/components/MathText'
 import Icon from '@/app/components/Icon'
 import Explain from './Explain'
@@ -20,7 +20,7 @@ export default function EntPage() {
   const [loggedIn, setLoggedIn] = useState<boolean | null>(null)
   const [subject, setSubject] = useState<EntSubject>('physics')
   const [section, setSection] = useState('all')
-  const [topic, setTopic] = useState('all')
+  const [topics, setTopics] = useState<string[]>([]) // выбранные темы, можно из разных разделов; пусто — весь раздел
   const [difficulty, setDifficulty] = useState<EntDifficulty>('ent')
   const [count, setCount] = useState<number>(5)
   const [attempts, setAttempts] = useState<Attempt[]>([])
@@ -52,7 +52,7 @@ export default function EntPage() {
         if (sec && sectionNames(subj).includes(sec)) {
           setSection(sec)
           const top = params.get('topic')
-          if (top && topicsOf(subj, sec).includes(top)) setTopic(top)
+          if (top && topicsOf(subj, sec).includes(top)) setTopics([top])
         }
       }
       setLoggedIn(!!user)
@@ -64,11 +64,27 @@ export default function EntPage() {
     })
   }, [])
 
+  // Раздел для статистики попыток: общий раздел выбранных тем или «вперемешку»
+  const topicSections = [...new Set(topics.map(name => sectionOfTopic(subject, name)))]
+  const testSection = topics.length ? (topicSections.length === 1 ? topicSections[0]! : 'all') : section
+
+  function toggleTopic(name: string) {
+    setTopics(prev => prev.includes(name) ? prev.filter(x => x !== name) : [...prev, name])
+  }
+
+  // «Все темы раздела»: добавить все темы раздела к выбору или убрать их
+  function toggleSectionTopics(sec: string) {
+    const list = topicsOf(subject, sec)
+    setTopics(prev => list.every(x => prev.includes(x))
+      ? prev.filter(x => !list.includes(x))
+      : [...prev, ...list.filter(x => !prev.includes(x))])
+  }
+
   async function fetchBatch(n: number, exclude: number[]): Promise<EntQuestion[]> {
     const res = await fetch('/api/ent/generate', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ subject, section, topic, difficulty, count: n, exclude }),
+      body: JSON.stringify({ subject, section: testSection, topics, difficulty, count: n, exclude }),
     })
     const data = await res.json()
     if (!res.ok) throw new Error(t(data.error || 'Ошибка'))
@@ -132,8 +148,8 @@ export default function EntPage() {
     const ok = choice === q.correct
     logAnswers([{
       source: 'ent', subject,
-      section: q.section ?? (section !== 'all' ? section : null),
-      topic: q.topic ?? (topic !== 'all' ? topic : null),
+      section: q.section ?? (testSection !== 'all' ? testSection : null),
+      topic: q.topic ?? (topics.length === 1 ? topics[0] : null),
       correct: ok,
       payload: ok ? null : { ...entMistakePayload(q, choice === SKIPPED ? null : choice) },
     }])
@@ -147,7 +163,7 @@ export default function EntPage() {
     if (!answered) return
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return
-    const row = { user_id: user.id, subject, section, difficulty, total: answered, correct }
+    const row = { user_id: user.id, subject, section: testSection, difficulty, total: answered, correct }
     await supabase.from('ent_attempts').insert(row)
     setAttempts(prev => [{ ...row, created_at: new Date().toISOString() }, ...prev])
     // 2 XP за каждый верный ответ
@@ -204,7 +220,7 @@ export default function EntPage() {
           <div className="label">{t('Предмет')}</div>
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 18 }}>
             {(Object.keys(ENT_SUBJECTS) as EntSubject[]).map(id => (
-              <button key={id} className={`chip${subject === id ? ' on' : ''}`} onClick={() => { setSubject(id); setSection('all'); setTopic('all') }}>
+              <button key={id} className={`chip${subject === id ? ' on' : ''}`} onClick={() => { setSubject(id); setSection('all'); setTopics([]) }}>
                 {t(ENT_SUBJECTS[id].label)}
               </button>
             ))}
@@ -212,22 +228,36 @@ export default function EntPage() {
 
           <div className="label">{t('Раздел')}</div>
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 18 }}>
-            <button className={`chip${section === 'all' ? ' on' : ''}`} onClick={() => { setSection('all'); setTopic('all') }}>{t('Вперемешку')}</button>
-            {sectionNames(subject).map(s => (
-              <button key={s} className={`chip${section === s ? ' on' : ''}`} onClick={() => { setSection(s); setTopic('all') }}>{t(s)}</button>
-            ))}
+            <button className={`chip${section === 'all' && !topics.length ? ' on' : ''}`} onClick={() => { setSection('all'); setTopics([]) }}>{t('Вперемешку')}</button>
+            {sectionNames(subject).map(s => {
+              const picked = topicsOf(subject, s).filter(x => topics.includes(x)).length
+              return (
+                <button key={s} className={`chip${section === s ? ' on' : ''}`} onClick={() => setSection(s)}>
+                  {t(s)}{picked > 0 && <span style={{ opacity: 0.7, fontWeight: 500 }}> · {picked}</span>}
+                </button>
+              )
+            })}
           </div>
 
           {section !== 'all' && (
             <>
-              <div className="label">{t('Тема')}</div>
+              <div className="label">{t('Темы')} <span style={{ opacity: 0.6, fontWeight: 500, textTransform: 'none' }}>· {t('можно выбрать несколько, в том числе из разных разделов')}</span></div>
               <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 18 }}>
-                <button className={`chip${topic === 'all' ? ' on' : ''}`} onClick={() => setTopic('all')}>{t('Все темы раздела')}</button>
+                <button className={`chip${!topics.length || topicsOf(subject, section).every(x => topics.includes(x)) ? ' on' : ''}`} onClick={() => toggleSectionTopics(section)}>{t('Все темы раздела')}</button>
                 {topicsOf(subject, section).map(name => (
-                  <button key={name} className={`chip${topic === name ? ' on' : ''}`} onClick={() => setTopic(name)}>{t(name)}</button>
+                  <button key={name} className={`chip${topics.includes(name) ? ' on' : ''}`} onClick={() => toggleTopic(name)}>{t(name)}</button>
                 ))}
               </div>
             </>
+          )}
+
+          {topics.length > 0 && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', marginTop: -6, marginBottom: 18, fontSize: 13, color: 'var(--muted)' }}>
+              <span>{t('Выбрано тем: {n}', { n: topics.length })}{topicSections.length > 1 ? ` · ${t('разделов: {n}', { n: topicSections.length })}` : ''}</span>
+              <button onClick={() => setTopics([])} style={{ background: 'none', border: 'none', color: 'var(--muted)', fontSize: 13, cursor: 'pointer', fontFamily: 'inherit', textDecoration: 'underline', padding: 0 }}>
+                {t('Сбросить выбор')}
+              </button>
+            </div>
           )}
 
           <div className="label">{t('Сложность')}</div>
