@@ -77,8 +77,8 @@ function planSlots(subject: EntSubject, section: string, topics: string[], count
   return slots
 }
 
-function fromTemplate(subject: EntSubject, slot: Slot, nOptions: number, locale: Locale): EntQuestion | null {
-  const g = generateFromTemplate(subject, slot.topic, nOptions, locale)
+function fromTemplate(subject: EntSubject, slot: Slot, nOptions: number, locale: Locale, difficulty: EntDifficulty): EntQuestion | null {
+  const g = generateFromTemplate(subject, slot.topic, nOptions, locale, difficulty)
   return g ? { ...g, section: slot.section, topic: slot.topic } : null
 }
 
@@ -154,7 +154,7 @@ export async function POST(req: NextRequest) {
   for (const slot of slots) {
     const r = Math.random()
     if (r < share.template) {
-      slot.q = fromTemplate(subject, slot, nOptions, locale) ?? undefined
+      slot.q = fromTemplate(subject, slot, nOptions, locale, difficulty) ?? undefined
     } else if (r < share.template + share.bank) {
       // Подходящая задача из банка: та же тема, а если тема не указана — тот же раздел
       const idx = bank.findIndex(b => b.topic ? b.topic === slot.topic : b.section === slot.section)
@@ -177,7 +177,7 @@ export async function POST(req: NextRequest) {
         console.error('ENT AI fallback to templates:', err)
       }
     }
-    for (const slot of aiSlots) if (!slot.q) slot.q = fromTemplate(subject, slot, nOptions, locale) ?? undefined
+    for (const slot of aiSlots) if (!slot.q) slot.q = fromTemplate(subject, slot, nOptions, locale, difficulty) ?? undefined
   }
 
   if (locale !== 'ru') await localizeBank(slots, locale)

@@ -1,4 +1,4 @@
-import type { EntSubject } from '@/lib/ent'
+import type { EntDifficulty, EntSubject } from '@/lib/ent'
 import type { Locale } from '@/lib/i18n'
 import { withLocale, type Generated, type Template } from './helpers'
 import { PHYSICS_TEMPLATES } from './physics'
@@ -22,14 +22,21 @@ export function hasTemplates(subject: EntSubject, topic: string): boolean {
   return ALL[subject].some(t => t.topic === topic)
 }
 
+// Доля задач в несколько действий: на уровне ЕНТ — треть, выше ЕНТ — большинство
+const HARD_SHARE: Record<EntDifficulty, number> = { ent: 0.35, hard: 0.75 }
+
 // Задача по шаблону для темы (или null, если шаблонов нет)
-export function generateFromTemplate(subject: EntSubject, topic: string, nOptions: number, locale: Locale = 'ru'): Generated | null {
+export function generateFromTemplate(subject: EntSubject, topic: string, nOptions: number, locale: Locale = 'ru', difficulty: EntDifficulty = 'ent'): Generated | null {
   let list = templatesFor(subject, topic)
   if (!list.length) return null
   // На казахском и английском берём переведённые задания, если они есть у темы
   if (locale !== 'ru') {
     const translated = list.filter(t => !RU_ONLY.has(t))
     if (translated.length) list = translated
+  }
+  const hard = list.filter(t => t.hard)
+  if (hard.length && hard.length < list.length) {
+    list = Math.random() < HARD_SHARE[difficulty] ? hard : list.filter(t => !t.hard)
   }
   const template = list[Math.floor(Math.random() * list.length)]
   return withLocale(locale, () => template.gen(nOptions))

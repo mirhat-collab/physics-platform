@@ -14,6 +14,11 @@ export function calc(topic: string, gen: (n: number) => Generated): Template {
   return { topic, gen }
 }
 
+// Сложная задача в несколько действий: чаще попадается на уровне «Выше ЕНТ»
+export function hardCalc(topic: string, gen: (n: number) => Generated): Template {
+  return { topic, gen, hard: true }
+}
+
 // Округление для промежуточных значений в решениях
 export function r(x: number, digits = 3): number {
   return Number(x.toPrecision(digits))

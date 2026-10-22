@@ -31,6 +31,7 @@ export function tr(text: string): string {
 export type Template = {
   topic: string
   gen: (nOptions: number) => Generated
+  hard?: boolean // задача в несколько действий
 }
 
 export function rnd(min: number, max: number): number {
