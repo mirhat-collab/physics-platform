@@ -6,6 +6,7 @@ export type Q = [question: string, correct: string, wrongs: string[], why: strin
 export function theory(topic: string, items: Q[]): Template[] {
   return items.map(([q, a, w, why]) => ({
     topic,
+    theory: true,
     gen: n => txt(q, a, [...w].sort(() => Math.random() - 0.5), n, why),
   }))
 }

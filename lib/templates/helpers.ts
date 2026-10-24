@@ -40,6 +40,7 @@ export type Template = {
   topic: string
   gen: (nOptions: number) => Generated
   hard?: boolean // задача в несколько действий
+  theory?: boolean // теоретический вопрос: определение, явление, закон
 }
 
 export function rnd(min: number, max: number): number {

@@ -1,5 +1,4 @@
 // Настройки тренажёра ЕНТ — общие для страницы и API.
-import { ENT_SPEC } from './ent-spec'
 
 export type EntSubject = 'physics' | 'math'
 export type EntDifficulty = 'ent' | 'hard'
@@ -283,53 +282,10 @@ export const MOCK = { count: 40, hardFrom: 30, minutes: 240, levelB: 20, levelC:
 export const mockPoints = (index: number) => (index >= MOCK.hardFrom ? 2 : 1)
 export const MOCK_MAX = MOCK.hardFrom + (MOCK.count - MOCK.hardFrom) * 2
 
-function shuffled<T>(arr: T[]): T[] {
-  const a = [...arr]
-  for (let i = a.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [a[i], a[j]] = [a[j], a[i]]
-  }
-  return a
-}
-
-// Темы варианта: каждая тема спецификации хотя бы раз, оставшиеся задания —
-// случайным темам спецификации. Внутри темы спецификации берём разные темы тренажёра.
-export function mockPlan(subject: EntSubject): string[] {
-  const spec = ENT_SPEC[subject]
-  const counts = spec.map(() => Math.floor(MOCK.count / spec.length))
-  for (const i of shuffled(spec.map((_, k) => k)).slice(0, MOCK.count - counts.reduce((a, b) => a + b, 0))) counts[i]++
-  const plan: string[] = []
-  spec.forEach((st, i) => {
-    const pool = shuffled(st.ours)
-    for (let k = 0; k < counts[i]; k++) plan.push(pool[k % pool.length])
-  })
-  return shuffled(plan)
-}
-
 // Сложность задания пробного ЕНТ по номеру: A — шаблоны уровня ЕНТ без сложных,
 // B — уровень ЕНТ, C — «выше ЕНТ»
 export function mockLevel(index: number): 'A' | 'B' | 'C' {
   return index >= MOCK.levelC ? 'C' : index >= MOCK.levelB ? 'B' : 'A'
-}
-
-// Запросы к генератору для варианта: порции до ENT_BATCH заданий одного уровня
-// трудности и одной цены в баллах, по порядку плана
-export type MockBatch = { topics: string[]; level: 'A' | 'B' | 'C' }
-export function mockBatches(plan: string[]): MockBatch[] {
-  const batches: MockBatch[] = []
-  plan.forEach((topic, i) => {
-    const last = batches[batches.length - 1]
-    const same = last && last.level === mockLevel(i) && last.topics.length < ENT_BATCH && mockPoints(i) === mockPoints(i - 1)
-    if (same) last.topics.push(topic)
-    else batches.push({ topics: [topic], level: mockLevel(i) })
-  })
-  return batches
-}
-
-// Параметры запроса к /api/ent/generate для порции: A — только базовые шаблоны,
-// B — уровень ЕНТ, C — повышенный (5 вариантов ответа)
-export function mockRequest(level: MockBatch['level']): { difficulty: EntDifficulty; base: boolean } {
-  return { difficulty: level === 'C' ? 'hard' : 'ent', base: level === 'A' }
 }
 
 // Решение по шагам для подсказок: режем по точкам, точкам с запятой и запятым

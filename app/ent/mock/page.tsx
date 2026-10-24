@@ -2,7 +2,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
-import { ENT_SUBJECTS, MOCK, MOCK_MAX, mockBatches, mockPlan, mockPoints, mockRequest, type EntQuestion, type EntSubject } from '@/lib/ent'
+import { ENT_SUBJECTS, MOCK, MOCK_MAX, mockPoints, type EntQuestion, type EntSubject } from '@/lib/ent'
 import MathText from '@/app/components/MathText'
 import Icon from '@/app/components/Icon'
 import Explain from '../Explain'
@@ -113,20 +113,14 @@ export default function MockEntPage() {
     setPhase('loading')
     setError('')
     try {
-      const batches = mockBatches(mockPlan(subject))
-      const parts = await Promise.all(batches.map(async ({ topics, level }) => {
-        const res = await fetch('/api/ent/generate', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            subject, section: 'all', topics, count: topics.length, templatesOnly: true, ...mockRequest(level),
-          }),
-        })
-        const data = await res.json()
-        if (!res.ok) throw new Error(t(data.error || 'Ошибка'))
-        return data.questions as EntQuestion[]
-      }))
-      const qs = parts.flat()
+      const res = await fetch('/api/ent/mock', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ subject }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(t(data.error || 'Ошибка'))
+      const qs = (data.questions || []) as EntQuestion[]
       if (qs.length < MOCK.count) throw new Error(t('Не удалось подготовить задания, попробуй ещё раз'))
       const end = Date.now() + MOCK.minutes * 60 * 1000
       const ans = qs.map(() => null)

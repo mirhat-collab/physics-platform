@@ -1,6 +1,7 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { ENT_SUBJECTS, MOCK, MOCK_MAX, mockLevel, mockPlan, mockPoints, sectionOfTopic, solutionHints, type EntSubject } from '@/lib/ent'
+import { ENT_SUBJECTS, MOCK, MOCK_MAX, mockLevel, mockPoints, sectionOfTopic, solutionHints, type EntSubject } from '@/lib/ent'
+import { mockPlan } from '@/lib/mock-build'
 import { ENT_SPEC } from '@/lib/ent-spec'
 import { contentFormat } from '@/lib/i18n/content'
 
@@ -23,7 +24,7 @@ test('спецификация НЦТ: все темы тренажёра рас
       for (const topic of sec.topics) assert.ok(mapped.includes(topic), `${s}: тема «${topic}» не привязана к спецификации`)
     }
     for (let run = 0; run < 20; run++) {
-      const plan = mockPlan(s)
+      const plan = mockPlan(s).map(x => x.topic)
       assert.equal(plan.length, MOCK.count)
       for (const st of spec) assert.ok(plan.some(t => st.ours.includes(t)), `${s}: в варианте нет темы спецификации «${st.topic}»`)
     }

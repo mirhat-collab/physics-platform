@@ -1,9 +1,10 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { ENT_DIFFICULTIES, ENT_BATCH, ENT_SUBJECTS, MOCK, MOCK_MAX, mockBatches, mockLevel, mockPlan, mockPoints, mockRequest, type EntQuestion, type EntSubject } from '@/lib/ent'
+import { ENT_SUBJECTS, MOCK, MOCK_MAX, mockLevel, mockPoints, type EntQuestion, type EntSubject } from '@/lib/ent'
+import { MOCK_THEORY, buildMock, mockPlan } from '@/lib/mock-build'
 import { ENT_SPEC, specSections } from '@/lib/ent-spec'
 import { mockResult, mockSummary, type MockAttempt } from '@/lib/mock-result'
-import { HARD_SHARE, generateFromTemplate } from '@/lib/templates'
+import { generateFromTemplate, topicKinds } from '@/lib/templates'
 
 const SUBJECTS = Object.keys(ENT_SUBJECTS) as EntSubject[]
 
@@ -14,44 +15,50 @@ test('пробный ЕНТ: 30 заданий по 1 баллу и 10 по 2', 
   assert.equal(MOCK.minutes, 240)
 })
 
-test('пробный ЕНТ: порции к генератору — 40 заданий, уровни и баллы не смешиваются', () => {
+const isTheoryQ = (q: EntQuestion) => q.options.every(o => !/\d/.test(o))
+
+test('пробный ЕНТ: собранный вариант — количество, уровни, теория только среди простых', () => {
   for (const s of SUBJECTS) {
-    for (let run = 0; run < 20; run++) {
+    let theoryTotal = 0
+    const RUNS = 15
+    for (let run = 0; run < RUNS; run++) {
       const plan = mockPlan(s)
-      const batches = mockBatches(plan)
-      assert.deepEqual(batches.flatMap(b => b.topics), plan)
-      let i = 0
-      for (const b of batches) {
-        assert.ok(b.topics.length >= 1 && b.topics.length <= ENT_BATCH)
-        const idx = b.topics.map(() => i++)
-        assert.ok(idx.every(k => mockLevel(k) === b.level), 'уровень внутри порции один')
-        assert.ok(idx.every(k => mockPoints(k) === mockPoints(idx[0])), 'цена внутри порции одна')
-      }
-      const count = (l: string) => batches.filter(b => b.level === l).reduce((n, b) => n + b.topics.length, 0)
-      assert.deepEqual([count('A'), count('B'), count('C')], [20, 12, 8])
+      assert.equal(plan.length, MOCK.count)
+      const qs = buildMock(s, run % 3 === 0 ? 'kk' : 'ru')
+      assert.equal(qs.length, MOCK.count)
+      assert.equal(new Set(qs.map(q => q.question)).size, MOCK.count, `${s}: повтор условия`)
+      qs.forEach((q, i) => {
+        const n = mockLevel(i) === 'C' ? 5 : 4
+        assert.equal(q.options.length, n, `${s} №${i + 1}: вариантов ${q.options.length}`)
+        assert.equal(new Set(q.options).size, n)
+        assert.ok(q.correct >= 0 && q.correct < n)
+        assert.ok(q.topic && q.section, `${s} №${i + 1}: нет темы`)
+        if (mockPoints(i) === 2) assert.ok(!isTheoryQ(q), `${s} №${i + 1} (2 балла) — теория: ${q.question}`)
+      })
+      // Теория — только на местах A и не больше MOCK_THEORY
+      const theoryAt = qs.map((q, i) => (isTheoryQ(q) ? i : -1)).filter(i => i >= 0)
+      assert.ok(plan.filter(x => x.kind === 'theory').length <= MOCK_THEORY)
+      plan.forEach((x, i) => { if (x.kind === 'theory') assert.equal(mockLevel(i), 'A') })
+      // Уровень C — из тем со сложными задачами
+      plan.forEach((x, i) => { if (mockLevel(i) === 'C') assert.ok(topicKinds(s, x.topic).hard, `${s}: «${x.topic}» на уровне C без сложных задач`) })
+      theoryTotal += theoryAt.length
     }
+    // Вопросы без чисел в ответах (теория и качественные задачи) — в среднем немного
+    assert.ok(theoryTotal / RUNS <= MOCK_THEORY + 1.5, `${s}: в среднем ${theoryTotal / RUNS}`)
   }
-  // Уровень A — без сложных шаблонов, C — с пятью вариантами
-  assert.equal(HARD_SHARE[mockRequest('A').base ? 'base' : 'ent'], 0)
-  assert.equal(ENT_DIFFICULTIES[mockRequest('B').difficulty].options, 4)
-  assert.equal(ENT_DIFFICULTIES[mockRequest('C').difficulty].options, 5)
 })
 
-test('пробный ЕНТ: по каждой теме плана генерируется корректное задание', () => {
-  for (const s of SUBJECTS) {
-    for (let run = 0; run < 5; run++) {
-      const plan = mockPlan(s)
-      plan.forEach((topic, i) => {
-        const { difficulty, base } = mockRequest(mockLevel(i))
-        const n = ENT_DIFFICULTIES[difficulty].options
-        const g = generateFromTemplate(s, topic, n, 'ru', base ? 'base' : difficulty)
-        assert.ok(g, `${s}: нет шаблона для «${topic}»`)
-        assert.equal(g.options.length, n, `${s} «${topic}»: вариантов ${g.options.length}`)
-        assert.equal(new Set(g.options).size, n, `${s} «${topic}»: повтор вариантов`)
-        assert.ok(g.correct >= 0 && g.correct < n)
-      })
+test('тренажёр: теория выпадает нечасто', () => {
+  let theory = 0, total = 0
+  for (const sec of ENT_SUBJECTS.physics.sections) for (const topic of sec.topics) {
+    for (let k = 0; k < 20; k++) {
+      const g = generateFromTemplate('physics', topic, 4, 'ru', 'ent')
+      if (!g) continue
+      total++
+      if (g.options.every(o => !/\d/.test(o))) theory++
     }
   }
+  assert.ok(theory / total < 0.25, `теории ${Math.round((theory / total) * 100)}%`)
 })
 
 function fake(subject: EntSubject, topics: string[]): EntQuestion[] {
@@ -60,7 +67,7 @@ function fake(subject: EntSubject, topics: string[]): EntQuestion[] {
 
 test('итог пробного ЕНТ: баллы и разделы спецификации', () => {
   for (const s of SUBJECTS) {
-    const qs = fake(s, mockPlan(s))
+    const qs = fake(s, mockPlan(s).map(x => x.topic))
     const all = mockResult(s, qs, qs.map(() => 0))
     assert.equal(all.score, MOCK_MAX)
     assert.equal(all.max, MOCK_MAX)

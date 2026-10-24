@@ -132,10 +132,8 @@ export async function POST(req: NextRequest) {
     : topic !== 'all' ? [topic] : []
   const count = Number(body?.count)
   const exclude: number[] = Array.isArray(body?.exclude) ? body.exclude.filter(Number.isInteger).slice(0, 200) : []
-  // Пробный ЕНТ: только задачи по шаблонам — быстро, без лимита ИИ и всегда с верным ответом
+  // Похожая задача при разборе ошибок: только по шаблонам — быстро и без лимита ИИ
   const templatesOnly = body?.templatesOnly === true
-  // Уровень A пробного ЕНТ: только задачи в одно-два действия
-  const level: TemplateLevel = templatesOnly && body?.base === true ? 'base' : difficulty
 
   if (!ENT_SUBJECTS[subject] || !ENT_DIFFICULTIES[difficulty] || !(count >= 1 && count <= ENT_BATCH)) {
     return NextResponse.json({ error: 'Неверные параметры' }, { status: 400 })
@@ -157,7 +155,7 @@ export async function POST(req: NextRequest) {
 
   for (const slot of slots) {
     if (templatesOnly) {
-      slot.q = fromTemplate(subject, slot, nOptions, locale, level) ?? undefined
+      slot.q = fromTemplate(subject, slot, nOptions, locale, difficulty) ?? undefined
       continue
     }
     const r = Math.random()

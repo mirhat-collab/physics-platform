@@ -17,6 +17,7 @@ function robust(t: Template): Template {
   return {
     topic: t.topic,
     hard: t.hard,
+    theory: t.theory,
     gen: n => {
       let g: Generated = t.gen(n)
       for (let i = 0; i < 20 && (g.options.length < n || new Set(g.options).size < g.options.length); i++) g = t.gen(n)
