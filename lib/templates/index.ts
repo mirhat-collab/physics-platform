@@ -22,11 +22,13 @@ export function hasTemplates(subject: EntSubject, topic: string): boolean {
   return ALL[subject].some(t => t.topic === topic)
 }
 
-// Доля задач в несколько действий: на уровне ЕНТ — треть, выше ЕНТ — большинство
-const HARD_SHARE: Record<EntDifficulty, number> = { ent: 0.35, hard: 0.75 }
+// Доля задач в несколько действий: на уровне ЕНТ — треть, выше ЕНТ — большинство.
+// base — только задачи в одно-два действия (уровень A в пробном ЕНТ).
+export type TemplateLevel = EntDifficulty | 'base'
+const HARD_SHARE: Record<TemplateLevel, number> = { base: 0, ent: 0.35, hard: 0.75 }
 
 // Задача по шаблону для темы (или null, если шаблонов нет)
-export function generateFromTemplate(subject: EntSubject, topic: string, nOptions: number, locale: Locale = 'ru', difficulty: EntDifficulty = 'ent'): Generated | null {
+export function generateFromTemplate(subject: EntSubject, topic: string, nOptions: number, locale: Locale = 'ru', difficulty: TemplateLevel = 'ent'): Generated | null {
   let list = templatesFor(subject, topic)
   if (!list.length) return null
   // На английском берём переведённые задания, если они есть у темы

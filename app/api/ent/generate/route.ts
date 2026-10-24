@@ -5,7 +5,7 @@ import {
   ENT_BATCH, ENT_DIFFICULTIES, ENT_SUBJECTS, sectionNames, sectionOfTopic, topicsOf,
   type EntDifficulty, type EntQuestion, type EntSubject,
 } from '@/lib/ent'
-import { generateFromTemplate } from '@/lib/templates'
+import { generateFromTemplate, type TemplateLevel } from '@/lib/templates'
 import { AI_LANGUAGE, type Locale } from '@/lib/i18n'
 import { getLocale } from '@/lib/i18n/server'
 import { translateFields } from '@/lib/translate'
@@ -77,7 +77,7 @@ function planSlots(subject: EntSubject, section: string, topics: string[], count
   return slots
 }
 
-function fromTemplate(subject: EntSubject, slot: Slot, nOptions: number, locale: Locale, difficulty: EntDifficulty): EntQuestion | null {
+function fromTemplate(subject: EntSubject, slot: Slot, nOptions: number, locale: Locale, difficulty: TemplateLevel): EntQuestion | null {
   const g = generateFromTemplate(subject, slot.topic, nOptions, locale, difficulty)
   return g ? { ...g, section: slot.section, topic: slot.topic } : null
 }
@@ -134,6 +134,8 @@ export async function POST(req: NextRequest) {
   const exclude: number[] = Array.isArray(body?.exclude) ? body.exclude.filter(Number.isInteger).slice(0, 200) : []
   // Пробный ЕНТ: только задачи по шаблонам — быстро, без лимита ИИ и всегда с верным ответом
   const templatesOnly = body?.templatesOnly === true
+  // Уровень A пробного ЕНТ: только задачи в одно-два действия
+  const level: TemplateLevel = templatesOnly && body?.base === true ? 'base' : difficulty
 
   if (!ENT_SUBJECTS[subject] || !ENT_DIFFICULTIES[difficulty] || !(count >= 1 && count <= ENT_BATCH)) {
     return NextResponse.json({ error: 'Неверные параметры' }, { status: 400 })
@@ -155,7 +157,7 @@ export async function POST(req: NextRequest) {
 
   for (const slot of slots) {
     if (templatesOnly) {
-      slot.q = fromTemplate(subject, slot, nOptions, locale, difficulty) ?? undefined
+      slot.q = fromTemplate(subject, slot, nOptions, locale, level) ?? undefined
       continue
     }
     const r = Math.random()

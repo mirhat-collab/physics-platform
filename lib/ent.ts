@@ -1,4 +1,5 @@
 // Настройки тренажёра ЕНТ — общие для страницы и API.
+import { ENT_SPEC } from './ent-spec'
 
 export type EntSubject = 'physics' | 'math'
 export type EntDifficulty = 'ent' | 'hard'
@@ -274,27 +275,41 @@ export type EntQuestion = {
   bankId?: number // задание из банка, а не от ИИ
 }
 
-// Пробный ЕНТ: приближённо к профильному предмету — 30 заданий по 1 баллу
-// и 10 сложных по 2 балла (50 баллов), ответы видны только в конце.
-export const MOCK = { count: 40, hardFrom: 30, minutes: 60 } as const
+// Пробный ЕНТ по спецификации НЦТ (с 2026 года): 40 заданий, 4 часа на весь
+// вариант. 25 + 5 заданий с одним ответом — по 1 баллу, 5 «один или несколько
+// ответов» и 5 «на соответствие» — по 2 балла (у нас пока в формате одного
+// ответа). Уровни трудности: A — 50%, B — 30%, C — 20%.
+export const MOCK = { count: 40, hardFrom: 30, minutes: 240, levelB: 20, levelC: 32 } as const
 export const mockPoints = (index: number) => (index >= MOCK.hardFrom ? 2 : 1)
 export const MOCK_MAX = MOCK.hardFrom + (MOCK.count - MOCK.hardFrom) * 2
 
-// Темы пробного ЕНТ: разделы по кругу, внутри раздела — случайная тема,
-// чтобы вариант покрывал весь предмет, а темы по возможности не повторялись.
-export function mockPlan(subject: EntSubject): string[] {
-  const sections = [...ENT_SUBJECTS[subject].sections].sort(() => Math.random() - 0.5)
-  const used = new Set<string>()
-  const plan: string[] = []
-  for (let i = 0; plan.length < MOCK.count; i++) {
-    const topics = sections[i % sections.length].topics
-    const fresh = topics.filter(x => !used.has(x))
-    const pool = fresh.length ? fresh : topics
-    const topic = pool[Math.floor(Math.random() * pool.length)]
-    used.add(topic)
-    plan.push(topic)
+function shuffled<T>(arr: T[]): T[] {
+  const a = [...arr]
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]]
   }
-  return plan
+  return a
+}
+
+// Темы варианта: каждая тема спецификации хотя бы раз, оставшиеся задания —
+// случайным темам спецификации. Внутри темы спецификации берём разные темы тренажёра.
+export function mockPlan(subject: EntSubject): string[] {
+  const spec = ENT_SPEC[subject]
+  const counts = spec.map(() => Math.floor(MOCK.count / spec.length))
+  for (const i of shuffled(spec.map((_, k) => k)).slice(0, MOCK.count - counts.reduce((a, b) => a + b, 0))) counts[i]++
+  const plan: string[] = []
+  spec.forEach((st, i) => {
+    const pool = shuffled(st.ours)
+    for (let k = 0; k < counts[i]; k++) plan.push(pool[k % pool.length])
+  })
+  return shuffled(plan)
+}
+
+// Сложность задания пробного ЕНТ по номеру: A — шаблоны уровня ЕНТ без сложных,
+// B — уровень ЕНТ, C — «выше ЕНТ»
+export function mockLevel(index: number): 'A' | 'B' | 'C' {
+  return index >= MOCK.levelC ? 'C' : index >= MOCK.levelB ? 'B' : 'A'
 }
 
 // Решение по шагам для подсказок: режем по точкам, точкам с запятой и запятым

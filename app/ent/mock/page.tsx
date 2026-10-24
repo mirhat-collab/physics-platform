@@ -2,7 +2,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
-import { ENT_BATCH, ENT_SUBJECTS, MOCK, MOCK_MAX, mockPlan, mockPoints, type EntQuestion, type EntSubject } from '@/lib/ent'
+import { ENT_BATCH, ENT_SUBJECTS, MOCK, MOCK_MAX, mockLevel, mockPlan, mockPoints, type EntQuestion, type EntSubject } from '@/lib/ent'
 import MathText from '@/app/components/MathText'
 import Icon from '@/app/components/Icon'
 import Explain from '../Explain'
@@ -31,7 +31,8 @@ function writeSaved(s: Saved | null) {
 
 function clock(ms: number): string {
   const s = Math.max(0, Math.ceil(ms / 1000))
-  return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`
+  const mm = String(Math.floor(s / 60) % 60).padStart(2, '0'), ss = String(s % 60).padStart(2, '0')
+  return s >= 3600 ? `${Math.floor(s / 3600)}:${mm}:${ss}` : `${mm}:${ss}`
 }
 
 export default function MockEntPage() {
@@ -110,15 +111,21 @@ export default function MockEntPage() {
     setError('')
     try {
       const plan = mockPlan(subject)
-      const batches: string[][] = []
-      for (let i = 0; i < plan.length; i += ENT_BATCH) batches.push(plan.slice(i, i + ENT_BATCH))
-      const parts = await Promise.all(batches.map(async (topics, b) => {
+      // Порции по 5 заданий одного уровня трудности (A, B или C) и одной цены в баллах
+      const batches: { topics: string[]; level: 'A' | 'B' | 'C' }[] = []
+      plan.forEach((topic, i) => {
+        const last = batches[batches.length - 1]
+        const same = last && last.level === mockLevel(i) && last.topics.length < ENT_BATCH && mockPoints(i) === mockPoints(i - 1)
+        if (same) last.topics.push(topic)
+        else batches.push({ topics: [topic], level: mockLevel(i) })
+      })
+      const parts = await Promise.all(batches.map(async ({ topics, level }) => {
         const res = await fetch('/api/ent/generate', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             subject, section: 'all', topics, count: topics.length, templatesOnly: true,
-            difficulty: b * ENT_BATCH >= MOCK.hardFrom ? 'hard' : 'ent',
+            difficulty: level === 'C' ? 'hard' : 'ent', base: level === 'A',
           }),
         })
         const data = await res.json()
@@ -177,7 +184,8 @@ export default function MockEntPage() {
       <div className="page animate-fade-in-up">
         <Link href="/ent" style={{ color: 'var(--muted)', fontSize: 14, textDecoration: 'none' }}>← {t('Подготовка к ЕНТ')}</Link>
         <h1 className="page-title" style={{ marginTop: 8 }}>{t('Пробный ЕНТ')}</h1>
-        <p className="page-sub">{t('Вариант по всему предмету, как на экзамене: {count} заданий, {min} минут, до {max} баллов. Последние {hard} заданий сложнее и стоят по 2 балла. Правильные ответы — только после сдачи.', { count: MOCK.count, min: MOCK.minutes, max: MOCK_MAX, hard: MOCK.count - MOCK.hardFrom })}</p>
+        <p className="page-sub">{t('Вариант по спецификации НЦТ: {count} заданий по всем темам предмета, {hours} часа, до {max} баллов. Трудность как на ЕНТ: 50% базовых, 30% средних, 20% сложных. Последние {hard} заданий стоят по 2 балла. Правильные ответы — только после сдачи.', { count: MOCK.count, hours: MOCK.minutes / 60, max: MOCK_MAX, hard: MOCK.count - MOCK.hardFrom })}
+          <span style={{ display: 'block', marginTop: 6, fontSize: 13 }}>{t('Задания «несколько правильных ответов» и «на соответствие» пока даются в формате с одним ответом.')}</span></p>
 
         {loggedIn === false && (
           <div className="card" style={{ marginBottom: 16, borderColor: 'rgba(245,158,11,0.4)' }}>

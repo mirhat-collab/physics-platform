@@ -1,6 +1,9 @@
 import type { Template } from '../helpers'
 import { lt, calc, theory, num, txt, rnd, pick, fx, frac, poly, nz, piK } from './common'
 
+// Показатель вида kx без «1x» и «-1x»: kx(1) → x, kx(-1) → -x, kx(3) → 3x
+const kx = (k: number) => (k === 1 ? 'x' : k === -1 ? '-x' : `${k}x`)
+
 // ---------- Производная ----------
 const DERIV: Template[] = [
   calc('Производная элементарных функций', n => {
@@ -65,9 +68,9 @@ const DERIV: Template[] = [
   }),
   calc('Производная сложной функции', n => {
     const k = nz(-6, 8)
-    return num(lt`Найдите $f'(0)$, если $f(x) = e^{${k}x}$.`,
+    return num(lt`Найдите $f'(0)$, если $f(x) = e^{${kx(k)}}$.`,
       k, [1, k * k, 0], n, '',
-      lt`$f'(x) = ${k}e^{${k}x}$, $f'(0) = ${k}$.`)
+      lt`$f'(x) = ${k}e^{${kx(k)}}$, $f'(0) = ${k}$.`)
   }),
   calc('Производная сложной функции', n => {
     const k = rnd(2, 5), b = rnd(1, 6), x0 = rnd(0, 3)
@@ -453,7 +456,7 @@ const INTEGRAL: Template[] = [
   calc('Дифференциальные уравнения', n => {
     const k = nz(-6, 7)
     return txt(lt`Найдите общее решение уравнения $y' = ${k}$.`,
-      lt`$y = ${poly([k, 0]).replace(/^0$/, '')} + C$`, [lt`$y = ${k} + C$`, lt`$y = ${frac(k, 2)}x^2 + C$`, lt`$y = Ce^{${k}x}$`, lt`$y = ${poly([k, 0])}$`, lt`$y = ${poly([-k, 0])} + C$`], n,
+      lt`$y = ${poly([k, 0]).replace(/^0$/, '')} + C$`, [lt`$y = ${k} + C$`, lt`$y = ${frac(k, 2)}x^2 + C$`, lt`$y = Ce^{${kx(k)}}$`, lt`$y = ${poly([k, 0])}$`, lt`$y = ${poly([-k, 0])} + C$`], n,
       lt`Интегрируем: $y = \\int ${k}\\,dx = ${poly([k, 0])} + C$.`)
   }),
   calc('Дифференциальные уравнения', n => {
@@ -466,8 +469,8 @@ const INTEGRAL: Template[] = [
     const k = nz(-4, 5), a = rnd(2, 6)
     const e = lt`e^{${k === 1 ? '' : k === -1 ? '-' : k}x}`
     return txt(lt`Найдите решение уравнения $y' = ${k === 1 ? '' : k === -1 ? '-' : k}y$, удовлетворяющее условию $y(0) = ${a}$.`,
-      lt`$y = ${a}${e}$`, [lt`$y = ${a}e^{x}$`, lt`$y = ${k}e^{${a}x}$`, lt`$y = ${e} + ${a}$`, lt`$y = ${a}e^{${-k}x}$`, lt`$y = ${poly([k, a])}$`].filter(v => v !== lt`$y = ${a}${e}$`), n,
-      lt`Общее решение $y = Ce^{${k}x}$, $C = y(0) = ${a}$.`)
+      lt`$y = ${a}${e}$`, [lt`$y = ${a}e^{x}$`, lt`$y = ${k}e^{${kx(a)}}$`, lt`$y = ${e} + ${a}$`, lt`$y = ${a}e^{${kx(-k)}}$`, lt`$y = ${poly([k, a])}$`].filter(v => v !== lt`$y = ${a}${e}$`), n,
+      lt`Общее решение $y = Ce^{${kx(k)}}$, $C = y(0) = ${a}$.`)
   }),
   calc('Дифференциальные уравнения', n => {
     const k = rnd(2, 6)
@@ -478,7 +481,7 @@ const INTEGRAL: Template[] = [
   calc('Дифференциальные уравнения', n => {
     const a = pick([-6, -4, -2, 2, 4, 6])
     return txt(lt`Найдите общее решение уравнения $y'' = ${a}$.`,
-      lt`$y = ${poly([a / 2, 0, 0])} + C_1x + C_2$`, [lt`$y = ${poly([a, 0])} + C$`, lt`$y = ${poly([a, 0, 0])} + C_1x + C_2$`, lt`$y = C_1e^{${a}x} + C_2$`, lt`$y = ${poly([a / 2, 0, 0])} + C$`, lt`$y = \\frac{${a}}{6}x^3 + C_1x + C_2$`], n,
+      lt`$y = ${poly([a / 2, 0, 0])} + C_1x + C_2$`, [lt`$y = ${poly([a, 0])} + C$`, lt`$y = ${poly([a, 0, 0])} + C_1x + C_2$`, lt`$y = C_1e^{${kx(a)}} + C_2$`, lt`$y = ${poly([a / 2, 0, 0])} + C$`, lt`$y = \\frac{${a}}{6}x^3 + C_1x + C_2$`], n,
       lt`Дважды интегрируем: $y' = ${poly([a, 0])} + C_1$, $y = ${poly([a / 2, 0, 0])} + C_1x + C_2$.`)
   }),
   ...theory('Дифференциальные уравнения', [

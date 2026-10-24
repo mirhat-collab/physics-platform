@@ -1,5 +1,6 @@
 'use client'
 import { useEffect, useRef, useState } from 'react'
+import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import { gradeLabel, gradeVariants } from '@/lib/grade-match'
@@ -293,6 +294,10 @@ export default function TeacherPage() {
               background: tab === t.key ? '#10b981' : '#1a1a2e', color: '#fff',
             }}>{t.label}</button>
           ))}
+        </div>
+        <div style={{ display: 'flex', gap: 8, marginBottom: 20, flexWrap: 'wrap' }}>
+          <Link href="/teacher/report" style={{ padding: '8px 16px', borderRadius: 10, border: '1px solid #2a2a3e', background: '#1a1a2e', color: '#fff', fontSize: 13, fontWeight: 600, textDecoration: 'none' }}>{t('📈 Отчёт по классу (ЕНТ)')}</Link>
+          <Link href="/ent/print" style={{ padding: '8px 16px', borderRadius: 10, border: '1px solid #2a2a3e', background: '#1a1a2e', color: '#fff', fontSize: 13, fontWeight: 600, textDecoration: 'none' }}>{t('🖨 Варианты для печати')}</Link>
         </div>
 
         {/* ОБЗОР */}

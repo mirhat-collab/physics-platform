@@ -391,3 +391,18 @@ body:has(.app-tabbar) .app-main { padding-bottom: calc(var(--tabbar-h) + env(saf
     scroll-behavior: auto !important;
   }
 }
+
+/* Печать вариантов: на бумагу попадает только .print-root — без меню, фона и кнопок */
+@media print {
+  body * { visibility: hidden; }
+  .print-root, .print-root * { visibility: visible; }
+  .print-root { position: absolute; left: 0; top: 0; width: 100%; }
+  .print-root .no-print { display: none !important; }
+  html, body { background: #fff !important; }
+  .print-break { break-after: page; }
+  .print-avoid { break-inside: avoid; }
+}
+/* Лист для печати и на экране выглядит как бумага */
+.print-sheet { background: #fff; color: #111; border-radius: 12px; padding: 28px 26px; }
+.print-sheet .katex { color: #111; }
+@media print { .print-sheet { border-radius: 0; padding: 0; } }
