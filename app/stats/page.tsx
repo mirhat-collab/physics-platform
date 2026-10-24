@@ -14,6 +14,8 @@ import {
 import MathText from '@/app/components/MathText'
 import Icon from '@/app/components/Icon'
 import Explain from '@/app/ent/Explain'
+import PracticeTools from '@/app/ent/PracticeTools'
+import MockStats from './MockStats'
 import { useT } from '@/app/components/LanguageProvider'
 
 type Mistake = { id: number; subject: 'physics' | 'math'; section: string | null; topic: string | null; created_at: string; payload: MistakePayload }
@@ -50,10 +52,12 @@ export default function StatsPage() {
   const [openMistake, setOpenMistake] = useState<number | null>(null)
   const [retry, setRetry] = useState<Record<number, number>>({})
   const [dialogs, setDialogs] = useState<Record<number, Turn[]>>({})
+  const [userId, setUserId] = useState('')
 
   useEffect(() => {
     supabase.auth.getUser().then(async ({ data: { user } }) => {
       if (!user) { router.push('/login'); return }
+      setUserId(user.id)
       const since = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString()
       const [log, attempts, wrong] = await Promise.all([
         supabase.from('answer_log').select('source, subject, section, topic, correct, created_at')
@@ -209,6 +213,8 @@ export default function StatsPage() {
         </>
       )}
 
+      {userId && <MockStats userId={userId} />}
+
       {/* Совет от ИИ */}
       <div className="card" style={{ marginBottom: 16, background: 'rgba(139,124,246,0.06)', borderColor: 'rgba(139,124,246,0.3)' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontWeight: 700, color: '#c4bbff', marginBottom: advice ? 12 : 6 }}>
@@ -323,6 +329,9 @@ export default function StatsPage() {
                     </div>
                     {tried !== undefined && tried !== m.payload.correct && (
                       <Explain q={q} chosen={tried} turns={dialogs[m.id] || []} setTurns={t => setDialogs(d => ({ ...d, [m.id]: t }))} />
+                    )}
+                    {tried !== undefined && m.topic && (
+                      <PracticeTools q={{ ...q, topic: m.topic, section: m.section ?? undefined }} subject={m.subject} retry={false} />
                     )}
                   </div>
                 )}

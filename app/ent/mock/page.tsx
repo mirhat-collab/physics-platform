@@ -2,13 +2,15 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
-import { ENT_BATCH, ENT_SUBJECTS, MOCK, MOCK_MAX, mockLevel, mockPlan, mockPoints, type EntQuestion, type EntSubject } from '@/lib/ent'
+import { ENT_SUBJECTS, MOCK, MOCK_MAX, mockBatches, mockPlan, mockPoints, mockRequest, type EntQuestion, type EntSubject } from '@/lib/ent'
 import MathText from '@/app/components/MathText'
 import Icon from '@/app/components/Icon'
 import Explain from '../Explain'
 import QuestionBody, { LETTERS } from '../QuestionBody'
 import { entMistakePayload, logAnswers } from '@/lib/answer-log'
 import { useT } from '@/app/components/LanguageProvider'
+import { mockResult } from '@/lib/mock-result'
+import PracticeTools from '../PracticeTools'
 
 type Turn = { role: 'user' | 'assistant'; content: string }
 type Saved = { subject: EntSubject; questions: EntQuestion[]; answers: (number | null)[]; endAt: number }
@@ -72,8 +74,7 @@ export default function MockEntPage() {
     setSaved(null)
     setPhase('done')
     setReviewOpen(null)
-    const correct = qs.filter((q, i) => ans[i] === q.correct).length
-    const score = qs.reduce((sum, q, i) => sum + (ans[i] === q.correct ? mockPoints(i) : 0), 0)
+    const { correct, score, sections } = mockResult(subj, qs, ans)
     // В статистику и «работу над ошибками» — все задания, на которые ученик ответил
     logAnswers(qs.flatMap((q, i) => ans[i] === null ? [] : [{
       source: 'ent' as const, subject: subj, section: q.section ?? null, topic: q.topic ?? null,
@@ -84,7 +85,9 @@ export default function MockEntPage() {
     if (!user) return
     const row = { user_id: user.id, subject: subj, section: 'mock', difficulty: 'ent', total: qs.length, correct }
     // Колонки score может не быть, если миграция ещё не применена — тогда без неё
-    const withScore = await supabase.from('ent_attempts').insert({ ...row, score, max_score: MOCK_MAX })
+    // Разделы без заданий в этом варианте в статистику не пишем
+    const details = Object.fromEntries(Object.entries(sections).filter(([, v]) => v[1] > 0))
+    const withScore = await supabase.from('ent_attempts').insert({ ...row, score, max_score: MOCK_MAX, details })
     if (withScore.error) await supabase.from('ent_attempts').insert(row)
     setPast(prev => [{ ...row, score, created_at: new Date().toISOString() }, ...prev].slice(0, 5))
     if (correct > 0) {
@@ -110,22 +113,13 @@ export default function MockEntPage() {
     setPhase('loading')
     setError('')
     try {
-      const plan = mockPlan(subject)
-      // Порции по 5 заданий одного уровня трудности (A, B или C) и одной цены в баллах
-      const batches: { topics: string[]; level: 'A' | 'B' | 'C' }[] = []
-      plan.forEach((topic, i) => {
-        const last = batches[batches.length - 1]
-        const same = last && last.level === mockLevel(i) && last.topics.length < ENT_BATCH && mockPoints(i) === mockPoints(i - 1)
-        if (same) last.topics.push(topic)
-        else batches.push({ topics: [topic], level: mockLevel(i) })
-      })
+      const batches = mockBatches(mockPlan(subject))
       const parts = await Promise.all(batches.map(async ({ topics, level }) => {
         const res = await fetch('/api/ent/generate', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            subject, section: 'all', topics, count: topics.length, templatesOnly: true,
-            difficulty: level === 'C' ? 'hard' : 'ent', base: level === 'A',
+            subject, section: 'all', topics, count: topics.length, templatesOnly: true, ...mockRequest(level),
           }),
         })
         const data = await res.json()
@@ -247,20 +241,13 @@ export default function MockEntPage() {
 
   // ---------- Результат ----------
   if (phase === 'done') {
-    const score = questions.reduce((sum, q, i) => sum + (answers[i] === q.correct ? mockPoints(i) : 0), 0)
-    const max = questions.reduce((sum, _, i) => sum + mockPoints(i), 0)
+    const result = mockResult(subject, questions, answers)
+    const { score, max } = result
     const pct = max ? Math.round((score / max) * 100) : 0
-    // Сколько баллов потеряно в каждом разделе
-    const bySection = new Map<string, { got: number; max: number; topics: Set<string> }>()
-    questions.forEach((q, i) => {
-      const key = q.section || '—'
-      const s = bySection.get(key) || { got: 0, max: 0, topics: new Set<string>() }
-      s.max += mockPoints(i)
-      if (answers[i] === q.correct) s.got += mockPoints(i)
-      else if (q.topic) s.topics.add(q.topic)
-      bySection.set(key, s)
-    })
-    const sections = [...bySection.entries()].sort((a, b) => (b[1].max - b[1].got) - (a[1].max - a[1].got))
+    // Сколько баллов потеряно в каждом разделе спецификации — сначала самые большие потери
+    const sections = Object.entries(result.sections).filter(([, [, m]]) => m > 0)
+      .map(([name, [got, m]]) => [name, { got, max: m, topics: result.wrongTopics[name] }] as const)
+      .sort((a, b) => (b[1].max - b[1].got) - (a[1].max - a[1].got))
     const wrongTopics = [...new Set(questions.filter((q, i) => answers[i] !== q.correct && q.topic).map(q => q.topic!))]
     const practice = (topics: string[], repair = false) =>
       `/ent?subject=${subject}${repair ? '&repair=1' : ''}${topics.slice(0, 8).map(x => `&topic=${encodeURIComponent(x)}`).join('')}`
@@ -273,7 +260,7 @@ export default function MockEntPage() {
             {score} / {max}
           </div>
           <div style={{ color: 'var(--muted)', marginTop: 4 }}>
-            {t('баллов')} · {t('верных ответов: {a} из {b}', { a: questions.filter((q, i) => answers[i] === q.correct).length, b: questions.length })}
+            {t('баллов')} · {t('верных ответов: {a} из {b}', { a: result.correct, b: questions.length })}
           </div>
           {xpMsg && <div style={{ marginTop: 8, color: '#c4bbff', fontWeight: 700 }}>{xpMsg}</div>}
           <div style={{ display: 'flex', gap: 10, justifyContent: 'center', marginTop: 20, flexWrap: 'wrap' }}>
@@ -291,7 +278,7 @@ export default function MockEntPage() {
                 <span style={{ flex: 1, fontSize: 14 }}>{t(name)}</span>
                 <span style={{ fontSize: 13, color: 'var(--muted)' }}>{s.got} / {s.max}</span>
                 {lost > 0 ? (
-                  <Link href={practice([...s.topics])} style={{ fontSize: 13, color: 'var(--bad)', fontWeight: 700, textDecoration: 'none', minWidth: 110, textAlign: 'right' }}>
+                  <Link href={practice(s.topics)} style={{ fontSize: 13, color: 'var(--bad)', fontWeight: 700, textDecoration: 'none', minWidth: 110, textAlign: 'right' }}>
                     −{lost} · {t('тренировать')}
                   </Link>
                 ) : <span style={{ fontSize: 13, color: 'var(--good)', fontWeight: 700, minWidth: 110, textAlign: 'right' }}>{t('без потерь')}</span>}
@@ -325,6 +312,7 @@ export default function MockEntPage() {
                     <div style={{ marginTop: 12 }}>
                       <Explain q={q} chosen={a} turns={dialogs[i] || []} setTurns={v => setDialogs(d => ({ ...d, [i]: v }))} />
                     </div>
+                    {!ok && <PracticeTools q={q} subject={subject} />}
                   </div>
                 )}
               </div>

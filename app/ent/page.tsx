@@ -7,6 +7,7 @@ import { sectionStats, type LogRow } from '@/lib/stats'
 import MathText from '@/app/components/MathText'
 import Icon from '@/app/components/Icon'
 import Explain from './Explain'
+import PracticeTools from './PracticeTools'
 import QuestionBody, { LETTERS, SKIPPED } from './QuestionBody'
 import { entMistakePayload, logAnswers } from '@/lib/answer-log'
 import { useT } from '@/app/components/LanguageProvider'
@@ -470,6 +471,7 @@ export default function EntPage() {
                     <div style={{ marginTop: 12 }}>
                       <Explain q={q} chosen={a === SKIPPED ? null : a} turns={dialogs[i] || []} setTurns={t => setDialogs(d => ({ ...d, [i]: t }))} />
                     </div>
+                    {!ok && <PracticeTools q={q} subject={subject} />}
                   </div>
                 )}
               </div>

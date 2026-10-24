@@ -25,7 +25,7 @@ export function hasTemplates(subject: EntSubject, topic: string): boolean {
 // Доля задач в несколько действий: на уровне ЕНТ — треть, выше ЕНТ — большинство.
 // base — только задачи в одно-два действия (уровень A в пробном ЕНТ).
 export type TemplateLevel = EntDifficulty | 'base'
-const HARD_SHARE: Record<TemplateLevel, number> = { base: 0, ent: 0.35, hard: 0.75 }
+export const HARD_SHARE: Record<TemplateLevel, number> = { base: 0, ent: 0.35, hard: 0.75 }
 
 // Задача по шаблону для темы (или null, если шаблонов нет)
 export function generateFromTemplate(subject: EntSubject, topic: string, nOptions: number, locale: Locale = 'ru', difficulty: TemplateLevel = 'ent'): Generated | null {

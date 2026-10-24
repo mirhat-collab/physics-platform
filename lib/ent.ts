@@ -312,6 +312,26 @@ export function mockLevel(index: number): 'A' | 'B' | 'C' {
   return index >= MOCK.levelC ? 'C' : index >= MOCK.levelB ? 'B' : 'A'
 }
 
+// Запросы к генератору для варианта: порции до ENT_BATCH заданий одного уровня
+// трудности и одной цены в баллах, по порядку плана
+export type MockBatch = { topics: string[]; level: 'A' | 'B' | 'C' }
+export function mockBatches(plan: string[]): MockBatch[] {
+  const batches: MockBatch[] = []
+  plan.forEach((topic, i) => {
+    const last = batches[batches.length - 1]
+    const same = last && last.level === mockLevel(i) && last.topics.length < ENT_BATCH && mockPoints(i) === mockPoints(i - 1)
+    if (same) last.topics.push(topic)
+    else batches.push({ topics: [topic], level: mockLevel(i) })
+  })
+  return batches
+}
+
+// Параметры запроса к /api/ent/generate для порции: A — только базовые шаблоны,
+// B — уровень ЕНТ, C — повышенный (5 вариантов ответа)
+export function mockRequest(level: MockBatch['level']): { difficulty: EntDifficulty; base: boolean } {
+  return { difficulty: level === 'C' ? 'hard' : 'ent', base: level === 'A' }
+}
+
 // Решение по шагам для подсказок: режем по точкам, точкам с запятой и запятым
 // вне формул. Последний шаг (с ответом) в подсказках не показываем.
 export function solutionSteps(solution: string): string[] {

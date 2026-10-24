@@ -56,3 +56,13 @@ const MATH: SpecTopic[] = [
 ]
 
 export const ENT_SPEC: Record<EntSubject, SpecTopic[]> = { physics: PHYSICS, math: MATH }
+
+// Раздел спецификации, к которому относится тема тренажёра
+export function specSectionOf(subject: EntSubject, topic: string | undefined | null): string {
+  return ENT_SPEC[subject].find(x => topic && x.ours.includes(topic))?.section ?? '—'
+}
+
+// Разделы спецификации по порядку (без повторов)
+export function specSections(subject: EntSubject): string[] {
+  return [...new Set(ENT_SPEC[subject].map(x => x.section))]
+}
