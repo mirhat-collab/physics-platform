@@ -82,7 +82,8 @@ export function generateFromTemplate(subject: EntSubject, topic: string, nOption
   if (list !== theory && list !== hardCalc) {
     const hard = list.filter(t => t.hard)
     if (hard.length && hard.length < list.length) {
-      list = Math.random() < HARD_SHARE[difficulty] ? hard : list.filter(t => !t.hard)
+      // Если сложных задач у темы одна-две, не даём им вытеснить остальные
+      list = Math.random() < HARD_SHARE[difficulty] * Math.min(1, hard.length / 3) ? hard : list.filter(t => !t.hard)
     }
   }
   const template = list[Math.floor(Math.random() * list.length)]
