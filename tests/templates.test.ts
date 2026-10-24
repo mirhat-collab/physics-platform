@@ -62,3 +62,14 @@ test('новые задания переведены на казахский', (
   }
   assert.deepEqual(untranslated.slice(0, 10), [], `не переведено условий: ${untranslated.length}`)
 })
+
+test('сложные задачи всегда дают 5 разных вариантов (уровень C пробного ЕНТ)', () => {
+  const bad: string[] = []
+  for (const t of [...PHYSICS_MORE, ...MATH_MORE].filter(t => t.hard)) {
+    for (let i = 0; i < 30; i++) {
+      const g = withSeed(100 + i, () => withLocale('ru', () => t.gen(5)))
+      if (g.options.length !== 5 || new Set(g.options).size !== 5) { bad.push(`«${t.topic}»: ${g.question.slice(0, 60)}`); break }
+    }
+  }
+  assert.deepEqual(bad, [])
+})

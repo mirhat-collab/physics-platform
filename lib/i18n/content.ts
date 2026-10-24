@@ -1,6 +1,7 @@
 import { contentKk } from './content-kk'
 import { contentKkMore } from './content-kk-more'
 import { contentKkHard } from './content-kk-hard'
+import { contentKkHard3 } from './content-kk-hard3'
 import { contentEn } from './content-en'
 import type { Locale } from './index'
 
@@ -10,7 +11,7 @@ import type { Locale } from './index'
 // заняты LaTeX (\frac{s}{t}), поэтому {name} как в интерфейсе не подходит.
 const CONTENT: Record<Locale, Record<string, string> | null> = {
   ru: null,
-  kk: { ...contentKkMore, ...contentKkHard, ...contentKk },
+  kk: { ...contentKkMore, ...contentKkHard, ...contentKkHard3, ...contentKk },
   en: contentEn,
 }
 
