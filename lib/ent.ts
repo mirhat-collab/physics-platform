@@ -273,3 +273,69 @@ export type EntQuestion = {
   topic?: string
   bankId?: number // задание из банка, а не от ИИ
 }
+
+// Пробный ЕНТ: приближённо к профильному предмету — 30 заданий по 1 баллу
+// и 10 сложных по 2 балла (50 баллов), ответы видны только в конце.
+export const MOCK = { count: 40, hardFrom: 30, minutes: 60 } as const
+export const mockPoints = (index: number) => (index >= MOCK.hardFrom ? 2 : 1)
+export const MOCK_MAX = MOCK.hardFrom + (MOCK.count - MOCK.hardFrom) * 2
+
+// Темы пробного ЕНТ: разделы по кругу, внутри раздела — случайная тема,
+// чтобы вариант покрывал весь предмет, а темы по возможности не повторялись.
+export function mockPlan(subject: EntSubject): string[] {
+  const sections = [...ENT_SUBJECTS[subject].sections].sort(() => Math.random() - 0.5)
+  const used = new Set<string>()
+  const plan: string[] = []
+  for (let i = 0; plan.length < MOCK.count; i++) {
+    const topics = sections[i % sections.length].topics
+    const fresh = topics.filter(x => !used.has(x))
+    const pool = fresh.length ? fresh : topics
+    const topic = pool[Math.floor(Math.random() * pool.length)]
+    used.add(topic)
+    plan.push(topic)
+  }
+  return plan
+}
+
+// Решение по шагам для подсказок: режем по точкам, точкам с запятой и запятым
+// вне формул. Последний шаг (с ответом) в подсказках не показываем.
+export function solutionSteps(solution: string): string[] {
+  const parts: string[] = []
+  let cur = ''
+  let inMath = false
+  for (let i = 0; i < solution.length; i++) {
+    const ch = solution[i]
+    cur += ch
+    if (ch === '$') inMath = !inMath
+    if (!inMath && (ch === '.' || ch === ';' || ch === ',') && solution[i + 1] === ' ') {
+      if (cur.trim().length > 3) { parts.push(cur.trim()); cur = '' }
+    }
+  }
+  if (cur.trim()) parts.push(cur.trim())
+  return parts
+}
+
+// Последний шаг без итогового числа: «$t = \frac{30 \cdot 60}{90} = 20$ с.» → «$t = \frac{30 \cdot 60}{90} = \ldots$»
+function withoutAnswer(step: string): string | null {
+  const end = step.lastIndexOf('$')
+  const start = step.lastIndexOf('$', end - 1)
+  if (start < 0) return null
+  const math = step.slice(start + 1, end)
+  let depth = 0, eq = -1
+  for (let i = 0; i < math.length; i++) {
+    if (math[i] === '{') depth++
+    else if (math[i] === '}') depth--
+    else if (depth === 0 && (math[i] === '=' || math.startsWith('\\approx', i))) eq = i
+  }
+  // Нужна хотя бы одна выкладка до последнего знака равенства
+  if (eq <= 0 || !/[=\\]/.test(math.slice(0, eq))) return null
+  return `${step.slice(0, start + 1)}${math.slice(0, eq).trimEnd()} = \\ldots$`
+}
+
+// Подсказки по шагам: все шаги, кроме последнего, и последний без ответа
+export function solutionHints(solution: string): string[] {
+  const steps = solutionSteps(solution)
+  if (!steps.length) return []
+  const last = withoutAnswer(steps[steps.length - 1])
+  return [...steps.slice(0, -1), ...(last ? [last] : [])]
+}

@@ -2,18 +2,26 @@
 import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
-import { sectionNames, sectionOfTopic, topicsOf, ENT_BATCH, ENT_COUNTS, ENT_DIFFICULTIES, ENT_SUBJECTS, type EntDifficulty, type EntQuestion, type EntSubject } from '@/lib/ent'
+import { sectionNames, sectionOfTopic, solutionHints, topicsOf, ENT_BATCH, ENT_COUNTS, ENT_DIFFICULTIES, ENT_SUBJECTS, type EntDifficulty, type EntQuestion, type EntSubject } from '@/lib/ent'
+import { sectionStats, type LogRow } from '@/lib/stats'
 import MathText from '@/app/components/MathText'
 import Icon from '@/app/components/Icon'
 import Explain from './Explain'
+import QuestionBody, { LETTERS, SKIPPED } from './QuestionBody'
 import { entMistakePayload, logAnswers } from '@/lib/answer-log'
 import { useT } from '@/app/components/LanguageProvider'
 
 type Turn = { role: 'user' | 'assistant'; content: string }
 type Attempt = { subject: string; total: number; correct: number; created_at: string }
 
-const LETTERS = 'ABCDE'
-const SKIPPED = -1
+// Работа над ошибками: тема считается отработанной после 2 верных ответов подряд
+const REPAIR_STREAK = 2
+const REPAIR_MAX = 40
+
+// Ссылка на справочник по теме задания
+function referenceHref(subject: EntSubject, q: EntQuestion): string {
+  return `/reference?subject=${subject}&topic=${encodeURIComponent(q.topic || q.section || '')}`
+}
 
 export default function EntPage() {
   const { t } = useT()
@@ -40,6 +48,12 @@ export default function EntPage() {
   const [dialogs, setDialogs] = useState<Record<number, Turn[]>>({})
   const [reviewOpen, setReviewOpen] = useState<number | null>(null)
   const [xpMsg, setXpMsg] = useState('')
+  const [repair, setRepair] = useState(false)
+  const [need, setNeed] = useState<Record<string, number>>({}) // сколько ещё верных подряд нужно по теме
+  const needRef = useRef<Record<string, number>>({})
+  const [hints, setHints] = useState<Record<number, number>>({}) // сколько шагов подсказки открыто
+  const [pickNote, setPickNote] = useState('')
+  const [picking, setPicking] = useState(false)
 
   useEffect(() => {
     supabase.auth.getUser().then(async ({ data: { user } }) => {
@@ -49,10 +63,13 @@ export default function EntPage() {
       if (subj && ENT_SUBJECTS[subj]) {
         setSubject(subj)
         const sec = params.get('section')
-        if (sec && sectionNames(subj).includes(sec)) {
-          setSection(sec)
-          const top = params.get('topic')
-          if (top && topicsOf(subj, sec).includes(top)) setTopics([top])
+        if (sec && sectionNames(subj).includes(sec)) setSection(sec)
+        // Одна или несколько тем: /ent?subject=math&topic=…&topic=…
+        const tops = params.getAll('topic').filter(x => sectionOfTopic(subj, x))
+        if (tops.length) {
+          setTopics([...new Set(tops)])
+          if (!sec) setSection(sectionOfTopic(subj, tops[0])!)
+          if (params.get('repair') === '1') setRepair(true)
         }
       }
       setLoggedIn(!!user)
@@ -80,11 +97,18 @@ export default function EntPage() {
       : [...prev, ...list.filter(x => !prev.includes(x))])
   }
 
+  // В работе над ошибками задания берём только по ещё не отработанным темам
+  function batchTopics(): string[] {
+    if (!repair) return topics
+    const open = topics.filter(x => (needRef.current[x] ?? 0) > 0)
+    return open.length ? open : topics
+  }
+
   async function fetchBatch(n: number, exclude: number[]): Promise<EntQuestion[]> {
     const res = await fetch('/api/ent/generate', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ subject, section: testSection, topics, difficulty, count: n, exclude }),
+      body: JSON.stringify({ subject, section: testSection, topics: batchTopics(), difficulty, count: n, exclude }),
     })
     const data = await res.json()
     if (!res.ok) throw new Error(t(data.error || 'Ошибка'))
@@ -108,7 +132,8 @@ export default function EntPage() {
       setAnswers(prev => [...prev, ...batch.map(() => null)])
       setFetching(false)
       // Держим в запасе пару порций вперёд, но не грузим все 100 заданий сразу
-      if (next.length < want && next.length - indexRef.current < ENT_BATCH * 2) loadMore(next, want)
+      // В работе над ошибками не забегаем вперёд: темы отрабатываются по ходу решения
+      if (!repair && next.length < want && next.length - indexRef.current < ENT_BATCH * 2) loadMore(next, want)
     } catch (e) {
       fetchingRef.current = false
       if (testId !== testIdRef.current) return
@@ -117,15 +142,57 @@ export default function EntPage() {
     }
   }
 
+  // Подбор тем по статистике: сначала самые слабые, затем ещё не решённые.
+  // Если ученик почти не ошибается — предлагаем уровень «Выше ЕНТ».
+  async function pickWeak() {
+    setPicking(true)
+    setPickNote('')
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) { setPicking(false); setPickNote(t('Войди в аккаунт, чтобы подобрать темы по статистике.')); return }
+    const since = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString()
+    const { data } = await supabase.from('answer_log').select('source, subject, section, topic, correct, created_at')
+      .eq('user_id', user.id).eq('source', 'ent').eq('subject', subject).gte('created_at', since)
+      .order('created_at', { ascending: false }).limit(1000)
+    const rows = (data || []) as LogRow[]
+    const stats = sectionStats(rows).filter(x => x.topic && sectionOfTopic(subject, x.topic))
+    const weak = stats.filter(x => x.total >= 2 && x.accuracy < 0.7)
+      .sort((a, b) => a.accuracy - b.accuracy || b.wrong - a.wrong).slice(0, 6).map(x => x.topic!)
+    const seen = new Set(stats.map(x => x.topic))
+    const fresh = ENT_SUBJECTS[subject].sections.flatMap(x => x.topics).filter(x => !seen.has(x))
+      .sort(() => Math.random() - 0.5).slice(0, Math.max(0, 5 - weak.length))
+    const picked = [...weak, ...fresh]
+    setTopics(picked)
+    if (picked.length) setSection(sectionOfTopic(subject, picked[0])!)
+    setRepair(false)
+    const recent = rows.slice(0, 30)
+    const acc = recent.length ? recent.filter(r => r.correct).length / recent.length : 0
+    const harder = recent.length >= 20 && acc >= 0.85
+    if (harder) setDifficulty('hard')
+    setPickNote([
+      weak.length ? t('Слабых тем: {n}', { n: weak.length }) : t('Слабых тем пока нет'),
+      fresh.length ? t('новых тем: {n}', { n: fresh.length }) : '',
+      harder ? t('ты отвечаешь верно в {p}% — включил уровень «Выше ЕНТ»', { p: Math.round(acc * 100) }) : '',
+    ].filter(Boolean).join(' · '))
+    setPicking(false)
+  }
+
   async function generate() {
     testIdRef.current++
     indexRef.current = 0
     setMode('loading')
     setError('')
     setFetchError('')
+    const isRepair = repair && topics.length > 0
+    const want = isRepair ? Math.min(REPAIR_MAX, topics.length * REPAIR_STREAK) : count
+    if (isRepair) {
+      const init = Object.fromEntries(topics.map(x => [x, REPAIR_STREAK]))
+      needRef.current = init
+      setNeed(init)
+    }
     try {
-      const first = await fetchBatch(Math.min(ENT_BATCH, count), [])
-      setTotal(count)
+      const first = await fetchBatch(Math.min(ENT_BATCH, want), [])
+      setTotal(want)
+      setHints({})
       setQuestions(first)
       setAnswers(first.map(() => null))
       setDialogs({})
@@ -134,7 +201,7 @@ export default function EntPage() {
       setReviewOpen(null)
       setXpMsg('')
       setMode('play')
-      if (first.length < count) loadMore(first, count)
+      if (!isRepair && first.length < want) loadMore(first, want)
     } catch (e) {
       setError(e instanceof Error ? e.message : t('Ошибка'))
       setMode('setup')
@@ -153,6 +220,14 @@ export default function EntPage() {
       correct: ok,
       payload: ok ? null : { ...entMistakePayload(q, choice === SKIPPED ? null : choice) },
     }])
+    if (repair && q.topic && q.topic in needRef.current) {
+      const upd = { ...needRef.current, [q.topic]: ok ? Math.max(0, needRef.current[q.topic] - 1) : REPAIR_STREAK }
+      needRef.current = upd
+      setNeed(upd)
+      // Сколько заданий ещё нужно: текущее уже решено, плюс недостающие верные ответы
+      const rest = Object.values(upd).reduce((a, b) => a + b, 0)
+      setTotal(Math.min(REPAIR_MAX, index + 1 + rest))
+    }
   }
 
   async function finish() {
@@ -177,11 +252,27 @@ export default function EntPage() {
   }
 
   function next() {
+    if (repair) {
+      // Уже загруженные задания по отработанным темам больше не нужны
+      const keep = questions.filter((qq, i) => i <= index || !qq.topic || (needRef.current[qq.topic] ?? 0) > 0)
+      if (keep.length !== questions.length) {
+        const ans = answers.filter((_, i) => i <= index || !questions[i].topic || (needRef.current[questions[i].topic!] ?? 0) > 0)
+        setQuestions(keep)
+        setAnswers(ans)
+        if (index + 1 < total) {
+          setIndex(index + 1)
+          indexRef.current = index + 1
+          setShowSolution(false)
+          if (keep.length <= index + 1) loadMore(keep, total)
+          return
+        }
+      }
+    }
     if (index + 1 < total) {
       setIndex(index + 1)
       indexRef.current = index + 1
       setShowSolution(false)
-      if (questions.length - (index + 1) <= ENT_BATCH) loadMore(questions, total)
+      if (questions.length - (index + 1) <= (repair ? 0 : ENT_BATCH)) loadMore(questions, total)
     } else {
       finish()
     }
@@ -197,6 +288,26 @@ export default function EntPage() {
         <Link href="/reference" className="card" style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16, padding: '12px 16px', color: 'var(--text)', textDecoration: 'none' }}>
           <Icon name="book" size={18} /> <span style={{ flex: 1 }}>{t('Справочник ЕНТ: формулы и важные материалы')}</span> <Icon name="arrowRight" size={16} />
         </Link>
+        <Link href="/ent/mock" className="card" style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16, padding: '12px 16px', color: 'var(--text)', textDecoration: 'none', borderColor: 'rgba(124,108,255,0.5)' }}>
+          <span style={{ fontSize: 18 }}>⏱</span>
+          <span style={{ flex: 1 }}>
+            <b>{t('Пробный ЕНТ')}</b>
+            <span style={{ display: 'block', color: 'var(--muted)', fontSize: 13 }}>{t('Полный вариант на время с баллами и разбором по разделам')}</span>
+          </span>
+          <Icon name="arrowRight" size={16} />
+        </Link>
+
+        {repair && topics.length > 0 && (
+          <div className="card" style={{ marginBottom: 16, borderColor: 'rgba(245,158,11,0.5)' }}>
+            <div style={{ fontWeight: 700, marginBottom: 4 }}>{t('Работа над ошибками')}</div>
+            <div style={{ color: 'var(--muted)', fontSize: 14, marginBottom: 10 }}>
+              {t('Темы с ошибками: {n}. Каждую нужно решить верно {k} раза подряд — ошибка начинает отсчёт заново.', { n: topics.length, k: REPAIR_STREAK })}
+            </div>
+            <button onClick={() => setRepair(false)} style={{ background: 'none', border: 'none', color: 'var(--muted)', fontSize: 13, cursor: 'pointer', fontFamily: 'inherit', textDecoration: 'underline', padding: 0 }}>
+              {t('Обычная тренировка по этим темам')}
+            </button>
+          </div>
+        )}
 
         {loggedIn === false && (
           <div className="card" style={{ marginBottom: 16, borderColor: 'rgba(245,158,11,0.4)' }}>
@@ -220,10 +331,18 @@ export default function EntPage() {
         )}
 
         <div className="card">
+          {loggedIn && (
+            <div style={{ marginBottom: 18 }}>
+              <button className="btn btn-ghost" onClick={pickWeak} disabled={picking} style={{ width: '100%' }}>
+                <Icon name="sparkles" size={18} /> {picking ? t('Смотрю статистику…') : t('Подобрать задания по моим слабым темам')}
+              </button>
+              {pickNote && <div style={{ color: 'var(--muted)', fontSize: 13, marginTop: 8 }}>{pickNote}</div>}
+            </div>
+          )}
           <div className="label">{t('Предмет')}</div>
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 18 }}>
             {(Object.keys(ENT_SUBJECTS) as EntSubject[]).map(id => (
-              <button key={id} className={`chip${subject === id ? ' on' : ''}`} onClick={() => { setSubject(id); setSection('all'); setTopics([]) }}>
+              <button key={id} className={`chip${subject === id ? ' on' : ''}`} onClick={() => { setSubject(id); setSection('all'); setTopics([]); setRepair(false); setPickNote('') }}>
                 {t(ENT_SUBJECTS[id].label)}
               </button>
             ))}
@@ -257,7 +376,7 @@ export default function EntPage() {
           {topics.length > 0 && (
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', marginTop: -6, marginBottom: 18, fontSize: 13, color: 'var(--muted)' }}>
               <span>{t('Выбрано тем: {n}', { n: topics.length })}{topicSections.length > 1 ? ` · ${t('разделов: {n}', { n: topicSections.length })}` : ''}</span>
-              <button onClick={() => setTopics([])} style={{ background: 'none', border: 'none', color: 'var(--muted)', fontSize: 13, cursor: 'pointer', fontFamily: 'inherit', textDecoration: 'underline', padding: 0 }}>
+              <button onClick={() => { setTopics([]); setRepair(false) }} style={{ background: 'none', border: 'none', color: 'var(--muted)', fontSize: 13, cursor: 'pointer', fontFamily: 'inherit', textDecoration: 'underline', padding: 0 }}>
                 {t('Сбросить выбор')}
               </button>
             </div>
@@ -272,12 +391,16 @@ export default function EntPage() {
             ))}
           </div>
 
-          <div className="label">{t('Количество заданий')}</div>
-          <div style={{ display: 'flex', gap: 8, marginBottom: 22 }}>
-            {ENT_COUNTS.map(n => (
-              <button key={n} className={`chip${count === n ? ' on' : ''}`} onClick={() => setCount(n)}>{n}</button>
-            ))}
-          </div>
+          {!(repair && topics.length) && (
+            <>
+              <div className="label">{t('Количество заданий')}</div>
+              <div style={{ display: 'flex', gap: 8, marginBottom: 22 }}>
+                {ENT_COUNTS.map(n => (
+                  <button key={n} className={`chip${count === n ? ' on' : ''}`} onClick={() => setCount(n)}>{n}</button>
+                ))}
+              </div>
+            </>
+          )}
 
           <button className="btn" onClick={generate} disabled={mode === 'loading'} style={{ width: '100%' }}>
             {mode === 'loading' ? (
@@ -308,6 +431,16 @@ export default function EntPage() {
           </div>
           <div style={{ color: 'var(--muted)', marginTop: 4 }}>{pct}{t('% верных ответов')}</div>
           {xpMsg && <div style={{ marginTop: 8, color: '#c4bbff', fontWeight: 700 }}>{xpMsg}</div>}
+          {repair && topics.length > 0 && (() => {
+            const left = topics.filter(x => (need[x] ?? 0) > 0)
+            return (
+              <div style={{ marginTop: 12, fontSize: 14, color: left.length ? '#f59e0b' : 'var(--good)' }}>
+                {left.length
+                  ? t('Отработано тем: {a} из {b}. Остались: {list}', { a: topics.length - left.length, b: topics.length, list: left.map(x => t(x)).join(', ') })
+                  : t('Все темы с ошибками отработаны!')}
+              </div>
+            )
+          })()}
           <div style={{ display: 'flex', gap: 10, justifyContent: 'center', marginTop: 20, flexWrap: 'wrap' }}>
             <button className="btn" onClick={generate}><Icon name="refresh" size={18} /> {t('Новые задания')}</button>
             <button className="btn btn-ghost" onClick={() => setMode('setup')}>{t('Сменить тему')}</button>
@@ -333,6 +466,7 @@ export default function EntPage() {
                 {open && (
                   <div style={{ padding: '0 16px 16px' }}>
                     <QuestionBody q={q} chosen={a} />
+                    <Link href={referenceHref(subject, q)} style={{ display: 'inline-block', marginTop: 10, fontSize: 13, color: '#c4bbff' }}>📘 {t('Повторить теорию в справочнике')}</Link>
                     <div style={{ marginTop: 12 }}>
                       <Explain q={q} chosen={a === SKIPPED ? null : a} turns={dialogs[i] || []} setTurns={t => setDialogs(d => ({ ...d, [i]: t }))} />
                     </div>
@@ -406,6 +540,10 @@ export default function EntPage() {
   const chosen = answers[index]
   const answered = chosen !== null
   const isRight = chosen === q.correct
+  // Подсказки — шаги решения, но без самого ответа
+  const steps = solutionHints(q.solution || '')
+  const hintMax = steps.length
+  const hintShown = Math.min(hints[index] ?? 0, hintMax)
 
   return (
     <div className="page animate-fade-in">
@@ -430,10 +568,24 @@ export default function EntPage() {
           })}
         </div>
 
+        {!answered && hintShown > 0 && (
+          <div className="animate-fade-in" style={{ marginTop: 14, padding: '12px 14px', borderRadius: 12, background: 'rgba(124,108,255,0.08)', border: '1px solid rgba(124,108,255,0.3)', display: 'grid', gap: 6 }}>
+            <div style={{ fontSize: 12, fontWeight: 700, color: '#c4bbff' }}>{t('ПОДСКАЗКА')}</div>
+            {steps.slice(0, hintShown).map((step, k) => <MathText key={k} text={`${k + 1}. ${step}`} style={{ fontSize: 14 }} />)}
+          </div>
+        )}
+
         {!answered && (
-          <button onClick={() => answer(SKIPPED)} style={{ marginTop: 12, background: 'none', border: 'none', color: 'var(--muted)', fontSize: 14, cursor: 'pointer', fontFamily: 'inherit', textDecoration: 'underline' }}>
-            {t('Не знаю, как решить')}
-          </button>
+          <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', alignItems: 'center', marginTop: 12 }}>
+            {hintShown < hintMax && (
+              <button onClick={() => setHints(h => ({ ...h, [index]: hintShown + 1 }))} style={{ background: 'none', border: 'none', color: '#c4bbff', fontSize: 14, cursor: 'pointer', fontFamily: 'inherit', textDecoration: 'underline', padding: 0 }}>
+                💡 {hintShown ? t('Следующий шаг ({a}/{b})', { a: hintShown + 1, b: hintMax }) : t('Подсказка')}
+              </button>
+            )}
+            <button onClick={() => answer(SKIPPED)} style={{ background: 'none', border: 'none', color: 'var(--muted)', fontSize: 14, cursor: 'pointer', fontFamily: 'inherit', textDecoration: 'underline', padding: 0 }}>
+              {t('Не знаю, как решить')}
+            </button>
+          </div>
         )}
       </div>
 
@@ -452,31 +604,13 @@ export default function EntPage() {
             <Explain q={q} chosen={chosen === SKIPPED ? null : chosen} turns={dialogs[index] || []} setTurns={t => setDialogs(d => ({ ...d, [index]: t }))} />
           )}
 
+          <Link href={referenceHref(subject, q)} target="_blank" style={{ fontSize: 14, color: '#c4bbff' }}>📘 {t('Повторить теорию по теме «{topic}»', { topic: t(q.topic || q.section || '') })}</Link>
+
           <button className="btn" onClick={next}>
             {index + 1 < total ? t('Следующее задание') : t('Завершить')} <Icon name="arrowRight" size={18} />
           </button>
         </div>
       )}
-    </div>
-  )
-}
-
-function QuestionBody({ q, chosen }: { q: EntQuestion; chosen: number | null }) {
-  const { t } = useT()
-  return (
-    <div>
-      <MathText text={q.question} style={{ fontSize: 15, lineHeight: 1.6, marginBottom: 10 }} />
-      <div style={{ display: 'grid', gap: 4, fontSize: 14 }}>
-        {q.options.map((opt, i) => (
-          <div key={i} style={{ display: 'flex', gap: 8, alignItems: 'baseline', color: i === q.correct ? 'var(--good)' : i === chosen ? 'var(--bad)' : 'var(--muted)', fontWeight: i === q.correct || i === chosen ? 700 : 400 }}>
-            <span>{LETTERS[i]})</span>
-            <MathText text={opt} />
-            {i === q.correct && <span style={{ fontSize: 12 }}>{t('— верный')}</span>}
-            {i === chosen && i !== q.correct && <span style={{ fontSize: 12 }}>{t('— твой ответ')}</span>}
-          </div>
-        ))}
-      </div>
-      {chosen === SKIPPED && <div style={{ color: 'var(--muted)', fontSize: 13, marginTop: 6 }}>{t('Ты пропустил это задание')}</div>}
     </div>
   )
 }

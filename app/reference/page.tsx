@@ -17,6 +17,12 @@ type Draft = { id?: number; subject: Subject; title: string; body: string; media
 const SUBJECTS: Record<Subject, string> = { physics: 'Физика', math: 'Математика', general: 'Общее' }
 const EMPTY: Draft = { subject: 'physics', title: '', body: '', media: [] }
 
+// Основы значимых слов темы: «Закон Ома для полной цепи» → «закон», «полно», «цепи»…
+// По ним ищем материалы, когда ученик пришёл из задания.
+function stems(text: string): string[] {
+  return [...new Set(text.toLowerCase().split(/[^a-zа-яёәғқңөұүһі0-9]+/i).filter(w => w.length >= 4).map(w => w.slice(0, 5)))]
+}
+
 export default function ReferencePage() {
   const { t, locale } = useT()
   const [loggedIn, setLoggedIn] = useState<boolean | null>(null)
@@ -26,6 +32,7 @@ export default function ReferencePage() {
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState<Subject | 'all'>('all')
   const [query, setQuery] = useState('')
+  const [topic, setTopic] = useState('') // тема задания, с которого пришёл ученик
   const [open, setOpen] = useState<number | null>(null)
   const [viewer, setViewer] = useState<MediaItem | null>(null)
   const [draft, setDraft] = useState<Draft | null>(null)
@@ -42,6 +49,12 @@ export default function ReferencePage() {
   }
 
   useEffect(() => {
+    // Переход из задания: /reference?subject=physics&topic=…
+    const params = new URLSearchParams(window.location.search)
+    const subj = params.get('subject') as Subject | null
+    if (subj && SUBJECTS[subj]) setFilter(subj)
+    const top = params.get('topic')
+    if (top) setTopic(top)
     supabase.auth.getUser().then(async ({ data: { user } }) => {
       setLoggedIn(!!user)
       if (!user) { setLoading(false); return }
@@ -79,8 +92,15 @@ export default function ReferencePage() {
   }
 
   const q = query.trim().toLowerCase()
-  const shown = items.filter(m => (filter === 'all' || m.subject === filter) &&
-    (!q || `${m.title} ${m.body} ${tr(m.id, 'title', m.title)} ${tr(m.id, 'body', m.body)}`.toLowerCase().includes(q)))
+  const text = (m: Material) => `${m.title} ${m.body} ${tr(m.id, 'title', m.title)} ${tr(m.id, 'body', m.body)}`.toLowerCase()
+  const bySubject = items.filter(m => filter === 'all' || m.subject === filter || m.subject === 'general')
+  let shown = items.filter(m => (filter === 'all' || m.subject === filter) && (!q || text(m).includes(q)))
+  if (topic && !q) {
+    // Материалы по теме задания: сначала те, где совпало больше слов темы
+    const keys = [...stems(topic), ...stems(t(topic))]
+    shown = bySubject.map(m => ({ m, hits: keys.filter(k => text(m).includes(k)).length }))
+      .filter(x => x.hits > 0).sort((a, b) => b.hits - a.hits).map(x => x.m)
+  }
 
   return (
     <div className="page animate-fade-in-up">
@@ -145,7 +165,16 @@ export default function ReferencePage() {
 
       {!draft && error && <div style={{ color: 'var(--bad)', fontSize: 14, marginBottom: 12 }}>{error}</div>}
 
-      {loggedIn && !loading && !shown.length && (
+      {topic && !q && loggedIn && !loading && (
+        <div className="card" style={{ marginBottom: 12, display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+          <span style={{ flex: 1, fontSize: 14 }}>
+            {shown.length ? t('Материалы по теме «{topic}»', { topic: t(topic) }) : t('По теме «{topic}» материалов пока нет.', { topic: t(topic) })}
+          </span>
+          <button className="btn btn-ghost" style={{ padding: '6px 12px' }} onClick={() => setTopic('')}>{t('Показать все')}</button>
+        </div>
+      )}
+
+      {loggedIn && !loading && !shown.length && !(topic && !q) && (
         <div className="card" style={{ textAlign: 'center', color: 'var(--muted)', padding: '28px 20px' }}>
           {items.length ? t('Ничего не найдено') : t('Здесь пока пусто — материалы скоро появятся.')}
         </div>

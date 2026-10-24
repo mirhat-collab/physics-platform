@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
-import { sectionNames, topicsOf } from '@/lib/ent'
+import { sectionNames, sectionOfTopic, topicsOf } from '@/lib/ent'
 import { SECTIONS as FORMULA_SECTIONS } from '@/lib/formulas'
 import { logAnswers, type MistakePayload } from '@/lib/answer-log'
 import {
@@ -260,6 +260,27 @@ export default function StatsPage() {
 
       {/* Работа над ошибками */}
       <div className="label" style={{ marginTop: 22 }}>{t('Работа над ошибками')}</div>
+      {mistakes.length > 0 && (() => {
+        // Новые похожие задания по темам ошибок — по каждому предмету отдельно
+        const links = (['physics', 'math'] as const).map(subj => {
+          const tops = [...new Set(mistakes.filter(m => m.subject === subj && m.topic && sectionOfTopic(subj, m.topic)).map(m => m.topic!))].slice(0, 8)
+          return { subj, tops }
+        }).filter(x => x.tops.length)
+        return links.length > 0 && (
+          <div className="card" style={{ marginBottom: 10 }}>
+            <div style={{ fontSize: 14, color: 'var(--muted)', marginBottom: 10 }}>
+              {t('Реши похожие задания по темам, где были ошибки. Тема засчитывается после 2 верных ответов подряд.')}
+            </div>
+            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+              {links.map(({ subj, tops }) => (
+                <Link key={subj} className="btn" href={`/ent?subject=${subj}&repair=1${tops.map(x => `&topic=${encodeURIComponent(x)}`).join('')}`}>
+                  <Icon name="refresh" size={18} /> {t('Отработать ошибки')} · {t(SUBJECT_LABEL[subj])} ({tops.length})
+                </Link>
+              ))}
+            </div>
+          </div>
+        )
+      })()}
       {mistakes.length === 0 ? (
         <div className="card" style={{ color: 'var(--muted)', fontSize: 14 }}>{t('Ошибок в заданиях ЕНТ пока нет.')}</div>
       ) : (

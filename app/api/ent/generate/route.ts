@@ -132,6 +132,8 @@ export async function POST(req: NextRequest) {
     : topic !== 'all' ? [topic] : []
   const count = Number(body?.count)
   const exclude: number[] = Array.isArray(body?.exclude) ? body.exclude.filter(Number.isInteger).slice(0, 200) : []
+  // Пробный ЕНТ: только задачи по шаблонам — быстро, без лимита ИИ и всегда с верным ответом
+  const templatesOnly = body?.templatesOnly === true
 
   if (!ENT_SUBJECTS[subject] || !ENT_DIFFICULTIES[difficulty] || !(count >= 1 && count <= ENT_BATCH)) {
     return NextResponse.json({ error: 'Неверные параметры' }, { status: 400 })
@@ -148,10 +150,14 @@ export async function POST(req: NextRequest) {
   const share = SHARE[difficulty]
   const slots = planSlots(subject, section, topics, count)
   const bankSections = topics.length ? [...new Set(slots.map(s => s.section))] : section !== 'all' ? [section] : []
-  const bank = await loadBank(subject, bankSections, difficulty, exclude)
+  const bank = templatesOnly ? [] : await loadBank(subject, bankSections, difficulty, exclude)
   const aiSlots: Slot[] = []
 
   for (const slot of slots) {
+    if (templatesOnly) {
+      slot.q = fromTemplate(subject, slot, nOptions, locale, difficulty) ?? undefined
+      continue
+    }
     const r = Math.random()
     if (r < share.template) {
       slot.q = fromTemplate(subject, slot, nOptions, locale, difficulty) ?? undefined
