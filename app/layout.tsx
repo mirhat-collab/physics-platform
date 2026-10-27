@@ -8,6 +8,7 @@ import StreakAlert from "./components/StreakAlert";
 import PwaInstall from "./components/PwaInstall";
 import RecoveryRedirect from "./components/RecoveryRedirect";
 import { LanguageProvider } from "./components/LanguageProvider";
+import { Analytics } from "@vercel/analytics/next";
 import { getLocale } from "@/lib/i18n/server";
 
 const manrope = Manrope({
@@ -112,6 +113,8 @@ export default async function RootLayout({
           <div className="app-main">{children}</div>
           <LandingFooter />
         </LanguageProvider>
+        {/* Посещаемость: смотреть во вкладке Analytics проекта на vercel.com */}
+        <Analytics />
       </body>
     </html>
   );
