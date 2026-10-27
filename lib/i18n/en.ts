@@ -917,4 +917,10 @@ export const en: Record<string, string> = {
   "Последовательности": "Sequences",
   "Математическое моделирование и анализ": "Mathematical modeling and analysis",
   "Векторы и преобразования в пространстве": "Vectors and transformations in space",
+  "Верно:": "Correct:",
+  "твой ответ": "your answer",
+  "Один или несколько правильных ответов": "One or more correct answers",
+  "— верный, ты не выбрал": "— correct, you didn't choose it",
+  "Выберите один или несколько правильных ответов": "Choose one or more correct answers",
+  "Задания {a}–{b} — «один или несколько правильных ответов», {c}–{d} — «на соответствие». За одну ошибку в них ставится 1 балл из 2.": "Tasks {a}–{b} are “one or more correct answers”, {c}–{d} are “matching”. One mistake in them gives 1 point out of 2.",
 }

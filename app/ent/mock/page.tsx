@@ -2,7 +2,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
-import { ENT_SUBJECTS, MOCK, MOCK_MAX, mockPoints, type EntQuestion, type EntSubject } from '@/lib/ent'
+import { ENT_SUBJECTS, MOCK, MOCK_MAX, answerErrors, answerPoints, isAnswered, mockPoints, type EntQuestion, type EntSubject, type MockAnswer } from '@/lib/ent'
 import MathText, { MathLine } from '@/app/components/MathText'
 import Icon from '@/app/components/Icon'
 import Explain from '../Explain'
@@ -13,7 +13,7 @@ import { mockResult } from '@/lib/mock-result'
 import PracticeTools from '../PracticeTools'
 
 type Turn = { role: 'user' | 'assistant'; content: string }
-type Saved = { subject: EntSubject; questions: EntQuestion[]; answers: (number | null)[]; endAt: number }
+type Saved = { subject: EntSubject; questions: EntQuestion[]; answers: MockAnswer[]; endAt: number }
 type Past = { subject: string; total: number; correct: number; score?: number | null; created_at: string }
 
 // Начатый вариант храним в браузере, чтобы он не пропал при обновлении страницы
@@ -44,7 +44,7 @@ export default function MockEntPage() {
   const [phase, setPhase] = useState<'setup' | 'loading' | 'exam' | 'done'>('setup')
   const [error, setError] = useState('')
   const [questions, setQuestions] = useState<EntQuestion[]>([])
-  const [answers, setAnswers] = useState<(number | null)[]>([])
+  const [answers, setAnswers] = useState<MockAnswer[]>([])
   const [index, setIndex] = useState(0)
   const [endAt, setEndAt] = useState(0)
   const [now, setNow] = useState(() => Date.now())
@@ -67,7 +67,7 @@ export default function MockEntPage() {
     })
   }, [])
 
-  const finish = useCallback(async (qs: EntQuestion[], ans: (number | null)[], subj: EntSubject) => {
+  const finish = useCallback(async (qs: EntQuestion[], ans: MockAnswer[], subj: EntSubject) => {
     if (finishing.current) return
     finishing.current = true
     writeSaved(null)
@@ -76,10 +76,12 @@ export default function MockEntPage() {
     setReviewOpen(null)
     const { correct, score, sections } = mockResult(subj, qs, ans)
     // В статистику и «работу над ошибками» — все задания, на которые ученик ответил
-    logAnswers(qs.flatMap((q, i) => ans[i] === null ? [] : [{
+    // Задания «несколько ответов» и «соответствие» в работу над ошибками не попадают:
+    // там повторное решение рассчитано на один ответ
+    logAnswers(qs.flatMap((q, i) => !isAnswered(ans[i]) ? [] : [{
       source: 'ent' as const, subject: subj, section: q.section ?? null, topic: q.topic ?? null,
-      correct: ans[i] === q.correct,
-      payload: ans[i] === q.correct ? null : { ...entMistakePayload(q, ans[i]) },
+      correct: answerErrors(q, ans[i]) === 0,
+      payload: answerErrors(q, ans[i]) === 0 || q.kind ? null : { ...entMistakePayload(q, ans[i] as number) },
     }]))
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return
@@ -154,14 +156,27 @@ export default function MockEntPage() {
     else setPhase('exam')
   }
 
-  function choose(i: number) {
-    const next = answers.map((a, k) => (k === index ? (a === i ? null : i) : a))
+  // Выбор варианта: в обычном задании — один, в «нескольких ответах» —
+  // отметка вкл/выкл, в соответствии — вариант для пункта item
+  function choose(i: number, item = 0) {
+    const q = questions[index], cur = answers[index]
+    let value: MockAnswer
+    if (q.kind === 'multi') {
+      const sel = Array.isArray(cur) ? cur : []
+      value = sel.includes(i) ? sel.filter(x => x !== i) : [...sel, i].sort((a, b) => a - b)
+      if (!value.length) value = null
+    } else if (q.kind === 'match') {
+      const sel = Array.isArray(cur) ? [...cur] : q.left!.map(() => -1)
+      sel[item] = sel[item] === i ? -1 : i
+      value = sel.some(x => x >= 0) ? sel : null
+    } else value = cur === i ? null : i
+    const next = answers.map((a, k) => (k === index ? value : a))
     setAnswers(next)
     writeSaved({ subject, questions, answers: next, endAt })
   }
 
   function submit() {
-    const left = answers.filter(a => a === null).length
+    const left = answers.filter(a => !isAnswered(a)).length
     if (left && !confirm(t('Без ответа осталось заданий: {n}. Завершить тест?', { n: left }))) return
     finish(questions, answers, subject)
   }
@@ -173,7 +188,7 @@ export default function MockEntPage() {
         <Link href="/ent" style={{ color: 'var(--muted)', fontSize: 14, textDecoration: 'none' }}>← {t('Подготовка к ЕНТ')}</Link>
         <h1 className="page-title" style={{ marginTop: 8 }}>{t('Пробный ЕНТ')}</h1>
         <p className="page-sub">{t('Вариант по спецификации НЦТ: {count} заданий по всем темам предмета, {hours} часа, до {max} баллов. Трудность как на ЕНТ: 50% базовых, 30% средних, 20% сложных. Последние {hard} заданий стоят по 2 балла. Правильные ответы — только после сдачи.', { count: MOCK.count, hours: MOCK.minutes / 60, max: MOCK_MAX, hard: MOCK.count - MOCK.hardFrom })}
-          <span style={{ display: 'block', marginTop: 6, fontSize: 13 }}>{t('Задания «несколько правильных ответов» и «на соответствие» пока даются в формате с одним ответом.')}</span></p>
+          <span style={{ display: 'block', marginTop: 6, fontSize: 13 }}>{t('Задания {a}–{b} — «один или несколько правильных ответов», {c}–{d} — «на соответствие». За одну ошибку в них ставится 1 балл из 2.', { a: MOCK.multiFrom + 1, b: MOCK.matchFrom, c: MOCK.matchFrom + 1, d: MOCK.count })}</span></p>
 
         {loggedIn === false && (
           <div className="card" style={{ marginBottom: 16, borderColor: 'rgba(245,158,11,0.4)' }}>
@@ -185,7 +200,7 @@ export default function MockEntPage() {
           <div className="card" style={{ marginBottom: 16, borderColor: 'rgba(124,108,255,0.5)' }}>
             <div style={{ fontWeight: 700, marginBottom: 6 }}>{t('У тебя есть начатый вариант')} · {t(ENT_SUBJECTS[saved.subject].label)}</div>
             <div style={{ color: 'var(--muted)', fontSize: 14, marginBottom: 12 }}>
-              {t('Отвечено: {a} из {b}', { a: saved.answers.filter(a => a !== null).length, b: saved.questions.length })}
+              {t('Отвечено: {a} из {b}', { a: saved.answers.filter(isAnswered).length, b: saved.questions.length })}
               {' · '}{saved.endAt > Date.now() ? t('осталось {time}', { time: clock(saved.endAt - Date.now()) }) : t('время вышло')}
             </div>
             <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
@@ -242,10 +257,10 @@ export default function MockEntPage() {
     const sections = Object.entries(result.sections).filter(([, [, m]]) => m > 0)
       .map(([name, [got, m]]) => [name, { got, max: m, topics: result.wrongTopics[name] }] as const)
       .sort((a, b) => (b[1].max - b[1].got) - (a[1].max - a[1].got))
-    const wrongTopics = [...new Set(questions.filter((q, i) => answers[i] !== q.correct && q.topic).map(q => q.topic!))]
+    const wrongTopics = [...new Set(questions.filter((q, i) => answerErrors(q, answers[i]) > 0 && q.topic).map(q => q.topic!))]
     const practice = (topics: string[], repair = false) =>
       `/ent?subject=${subject}${repair ? '&repair=1' : ''}${topics.slice(0, 8).map(x => `&topic=${encodeURIComponent(x)}`).join('')}`
-    const list = questions.map((q, i) => ({ q, a: answers[i], i })).filter(x => !onlyWrong || x.a !== x.q.correct)
+    const list = questions.map((q, i) => ({ q, a: answers[i], i })).filter(x => !onlyWrong || answerErrors(x.q, x.a) > 0)
     return (
       <div className="page animate-fade-in-up">
         <div className="card" style={{ textAlign: 'center', padding: '28px 20px', marginBottom: 18 }}>
@@ -287,7 +302,8 @@ export default function MockEntPage() {
         </div>
         <div style={{ display: 'grid', gap: 10 }}>
           {list.map(({ q, a, i }) => {
-            const ok = a === q.correct
+            const ok = answerErrors(q, a) === 0
+            const got = answerPoints(q, a, mockPoints(i))
             const open = reviewOpen === i
             return (
               <div key={i} className="card" style={{ padding: 0, overflow: 'hidden' }}>
@@ -296,15 +312,17 @@ export default function MockEntPage() {
                     <Icon name={ok ? 'check' : 'x'} size={16} />
                   </span>
                   <MathLine text={`${i + 1}. ${q.question}`} style={{ flex: 1, minWidth: 0, fontSize: 14 }} />
-                  <span style={{ fontSize: 12, color: 'var(--muted)', flexShrink: 0 }}>{mockPoints(i)} {t('б.')}</span>
+                  <span style={{ fontSize: 12, color: got && !ok ? '#f59e0b' : 'var(--muted)', flexShrink: 0 }}>{got}/{mockPoints(i)} {t('б.')}</span>
                 </button>
                 {open && (
                   <div style={{ padding: '0 16px 16px' }}>
                     <QuestionBody q={q} chosen={a} />
-                    <div style={{ marginTop: 12 }}>
-                      <Explain q={q} chosen={a} turns={dialogs[i] || []} setTurns={v => setDialogs(d => ({ ...d, [i]: v }))} />
-                    </div>
-                    {!ok && <PracticeTools q={q} subject={subject} />}
+                    {!q.kind && (
+                      <div style={{ marginTop: 12 }}>
+                        <Explain q={q} chosen={a as number | null} turns={dialogs[i] || []} setTurns={v => setDialogs(d => ({ ...d, [i]: v }))} />
+                      </div>
+                    )}
+                    {!ok && <PracticeTools q={q} subject={subject} retry={!q.kind} />}
                   </div>
                 )}
               </div>
@@ -319,7 +337,7 @@ export default function MockEntPage() {
   // ---------- Экзамен ----------
   const q = questions[index]
   const left = endAt - now
-  const answered = answers.filter(a => a !== null).length
+  const answered = answers.filter(isAnswered).length
   return (
     <div className="page animate-fade-in">
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 14 }}>
@@ -336,7 +354,7 @@ export default function MockEntPage() {
             style={{
               width: 30, height: 30, borderRadius: 8, fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
               border: i === index ? '2px solid var(--accent)' : '1px solid var(--line)',
-              background: answers[i] !== null ? 'rgba(124,108,255,0.25)' : i >= MOCK.hardFrom ? 'rgba(245,158,11,0.08)' : 'var(--surface-2)',
+              background: isAnswered(answers[i]) ? 'rgba(124,108,255,0.25)' : i >= MOCK.hardFrom ? 'rgba(245,158,11,0.08)' : 'var(--surface-2)',
               color: 'var(--text)',
             }}>
             {i + 1}
@@ -349,19 +367,50 @@ export default function MockEntPage() {
           <span style={{ flex: 1 }}>{t('ЗАДАНИЕ')} {index + 1}</span>
           <span>{mockPoints(index) === 2 ? t('2 балла') : t('1 балл')}</span>
         </div>
-        <MathText text={q.question} style={{ fontSize: 16, lineHeight: 1.6, marginBottom: 18 }} />
-        <div style={{ display: 'grid', gap: 8 }}>
-          {q.options.map((opt, i) => {
-            const on = answers[index] === i
-            return (
-              <button key={i} onClick={() => choose(i)}
-                style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 14px', borderRadius: 12, border: `1.5px solid ${on ? 'var(--accent)' : 'var(--line)'}`, background: on ? 'rgba(124,108,255,0.15)' : 'var(--surface-2)', color: 'var(--text)', cursor: 'pointer', textAlign: 'left', fontFamily: 'inherit', fontSize: 15 }}>
-                <span style={{ width: 28, height: 28, borderRadius: 8, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: on ? 'var(--accent)' : 'var(--bg)', fontWeight: 800, fontSize: 13, color: on ? '#fff' : 'var(--muted)' }}>{LETTERS[i]}</span>
-                <MathText text={opt} style={{ flex: 1 }} />
-              </button>
-            )
-          })}
-        </div>
+        <MathText text={q.question} style={{ fontSize: 16, lineHeight: 1.6, marginBottom: 12 }} />
+        {q.kind === 'multi' && <div style={{ color: '#c4bbff', fontSize: 13, fontWeight: 700, marginBottom: 12 }}>{t('Выберите один или несколько правильных ответов')}</div>}
+        {q.kind === 'match' ? (
+          <div style={{ display: 'grid', gap: 14 }}>
+            {q.left!.map((l, k) => {
+              const sel = Array.isArray(answers[index]) ? (answers[index] as number[])[k] : -1
+              return (
+                <div key={k} style={{ padding: '12px 14px', borderRadius: 12, background: 'var(--surface-2)', border: '1px solid var(--line)' }}>
+                  <MathText text={`${k + 1}) ${l}`} style={{ fontSize: 15, lineHeight: 1.55, marginBottom: 10 }} />
+                  <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                    {q.options.map((_, i) => (
+                      <button key={i} onClick={() => choose(i, k)} aria-label={`${k + 1} — ${LETTERS[i]}`}
+                        style={{ width: 40, height: 36, borderRadius: 8, border: `1.5px solid ${sel === i ? 'var(--accent)' : 'var(--line)'}`, background: sel === i ? 'var(--accent)' : 'var(--bg)', color: sel === i ? '#fff' : 'var(--text)', fontWeight: 800, cursor: 'pointer', fontFamily: 'inherit' }}>
+                        {LETTERS[i]}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )
+            })}
+            <div style={{ display: 'grid', gap: 6 }}>
+              {q.options.map((opt, i) => (
+                <div key={i} style={{ display: 'flex', gap: 10, alignItems: 'baseline', fontSize: 15 }}>
+                  <b style={{ color: 'var(--muted)', width: 22 }}>{LETTERS[i]})</b>
+                  <MathText text={opt} />
+                </div>
+              ))}
+            </div>
+          </div>
+        ) : (
+          <div style={{ display: 'grid', gap: 8 }}>
+            {q.options.map((opt, i) => {
+              const a = answers[index]
+              const on = Array.isArray(a) ? a.includes(i) : a === i
+              return (
+                <button key={i} onClick={() => choose(i)}
+                  style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 14px', borderRadius: 12, border: `1.5px solid ${on ? 'var(--accent)' : 'var(--line)'}`, background: on ? 'rgba(124,108,255,0.15)' : 'var(--surface-2)', color: 'var(--text)', cursor: 'pointer', textAlign: 'left', fontFamily: 'inherit', fontSize: 15 }}>
+                  <span style={{ width: 28, height: 28, borderRadius: q.kind === 'multi' ? 6 : 8, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: on ? 'var(--accent)' : 'var(--bg)', fontWeight: 800, fontSize: 13, color: on ? '#fff' : 'var(--muted)' }}>{q.kind === 'multi' && on ? '✓' : LETTERS[i]}</span>
+                  <MathText text={opt} style={{ flex: 1 }} />
+                </button>
+              )
+            })}
+          </div>
+        )}
       </div>
 
       <div style={{ display: 'flex', gap: 10, marginTop: 14 }}>

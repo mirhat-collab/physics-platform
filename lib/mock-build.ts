@@ -6,11 +6,13 @@
 //   C (33–40) — сложные задачи в несколько действий с пятью вариантами;
 // - теория (определения, явления) на ЕНТ попадается нечасто: не больше
 //   MOCK_THEORY вопросов и только среди простых заданий уровня A;
-// - задания за 2 балла (31–40) — только расчётные, на уровне C — из тем,
-//   где есть сложные задачи.
-import { ENT_DIFFICULTIES, MOCK, mockLevel, sectionOfTopic, type EntQuestion, type EntSubject } from './ent'
+// - задания за 2 балла (31–40) — только расчётные: 31–35 «несколько правильных
+//   ответов» (на уровне C — из сложных задач), 36–40 «на соответствие»
+//   (три задачи уровня ЕНТ и пять ответов).
+import { ENT_DIFFICULTIES, MOCK, mockFormat, mockLevel, sectionOfTopic, type EntQuestion, type EntSubject } from './ent'
 import { ENT_SPEC, type SpecTopic } from './ent-spec'
 import { generateFromTemplate, topicKinds, type TemplateKind } from './templates'
+import { altForms, buildMatch, buildMulti } from './mock-formats'
 import type { Locale } from './i18n'
 
 export const MOCK_THEORY = 3
@@ -27,7 +29,25 @@ function shuffled<T>(arr: T[]): T[] {
 }
 
 function slotKind(index: number): TemplateKind {
-  return mockLevel(index) === 'C' ? 'hard' : 'calc'
+  return mockLevel(index) === 'C' && mockFormat(index) === 'multi' ? 'hard' : 'calc'
+}
+
+// Годится ли тема для «нескольких ответов»: у ответа часто есть вторая запись
+// (другие единицы или другая форма числа). Проверяем пробной генерацией.
+const multiCache = new Map<string, boolean>()
+export function multiCapable(subject: EntSubject, topic: string, kind: TemplateKind): boolean {
+  const key = `${subject}|${topic}|${kind}`
+  let v = multiCache.get(key)
+  if (v === undefined) {
+    let ok = 0
+    for (let i = 0; i < 8; i++) {
+      const g = generateFromTemplate(subject, topic, 5, 'ru', kind === 'hard' ? 'hard' : 'ent', kind)
+      if (g?.num && g.num.values.length >= 4 && altForms(g.num.values[0], g.num.unit, subject).length) ok++
+    }
+    v = ok >= 4
+    multiCache.set(key, v)
+  }
+  return v
 }
 
 // План варианта: тема тренажёра и вид задания для каждого из 40 мест
@@ -59,9 +79,11 @@ export function mockPlan(subject: EntSubject): MockSlot[] {
     kind[i] = 'theory'
     withTheory.add(st)
   }
-  // 2) уровень C — темам, где есть сложные задачи; 3) остальные места
-  for (let i = MOCK.levelC; i < MOCK.count; i++) take(i, st => st.ours.some(t => kinds(t).hard))
-  for (let i = 0; i < MOCK.levelC; i++) if (!assigned[i]) take(i, st => !onlyTheory(st))
+  // 2) «несколько ответов» — темам, где у ответа бывает вторая запись;
+  // 3) остальные места
+  const multiOk = (t: string, i: number) => multiCapable(subject, t, kind[i])
+  for (let i = MOCK.multiFrom; i < MOCK.matchFrom; i++) take(i, st => st.ours.some(t => multiOk(t, i)))
+  for (let i = 0; i < MOCK.count; i++) if (!assigned[i]) take(i, st => !onlyTheory(st))
 
   // Немного теории — на случайные места уровня A, где у темы она есть,
   // и каждый раз из другой темы спецификации
@@ -74,7 +96,8 @@ export function mockPlan(subject: EntSubject): MockSlot[] {
   // Внутри темы спецификации — разные темы тренажёра, подходящие по виду задания
   const used = new Map<SpecTopic, string[]>()
   return assigned.map((st, i) => {
-    const fits = st!.ours.filter(t => kind[i] === 'theory' ? kinds(t).theory : kind[i] === 'hard' ? kinds(t).hard : kinds(t).calc)
+    const fits = st!.ours.filter(t => mockFormat(i) === 'multi' ? multiOk(t, i)
+      : kind[i] === 'theory' ? kinds(t).theory : kind[i] === 'hard' ? kinds(t).hard : kinds(t).calc)
     const pool = fits.length ? fits : st!.ours
     const seen = used.get(st!) ?? []
     const fresh = pool.filter(t => !seen.includes(t))
@@ -99,23 +122,43 @@ export function buildMock(subject: EntSubject, locale: Locale): EntQuestion[] {
   const plan = mockPlan(subject)
   const seen = new Set<string>()
   const out: EntQuestion[] = []
+  const withTopic = (q: EntQuestion, topic: string): EntQuestion => ({ ...q, section: sectionOfTopic(subject, topic) ?? undefined, topic })
   plan.forEach(({ topic, kind }, i) => {
     const level = mockLevel(i)
-    const difficulty = level === 'C' ? 'hard' : 'ent'
-    const n = ENT_DIFFICULTIES[difficulty].options
+    const format = mockFormat(i)
+    const difficulty = level === 'C' && format !== 'match' ? 'hard' : 'ent'
+    const tl = level === 'A' ? 'base' : difficulty
     let q: EntQuestion | null = null
-    // Если вопрос повторяется (теории у темы немного) — берём расчётную задачу
-    for (let attempt = 0; attempt < 12; attempt++) {
-      const g = generateFromTemplate(subject, topic, n, locale, level === 'A' ? 'base' : difficulty, attempt < 6 ? kind : kind === 'theory' ? 'calc' : kind)
-      if (!g) break
-      const cand = { ...g, section: sectionOfTopic(subject, topic) ?? undefined, topic }
-      if (!valid(cand, n)) continue
-      q = cand
-      if (!seen.has(g.question)) break
+    if (format === 'multi') {
+      for (let attempt = 0; attempt < 20 && !q; attempt++) {
+        const g = generateFromTemplate(subject, topic, 5, locale, tl, kind)
+        const m = g && !seen.has(g.question) ? buildMulti(g, subject, locale) : null
+        if (m) q = withTopic(m, topic)
+      }
+    } else if (format === 'match') {
+      for (let attempt = 0; attempt < 20 && !q; attempt++) {
+        const gs = [0, 1, 2].map(() => generateFromTemplate(subject, topic, 4, locale, 'ent', 'calc')).filter(g => !!g)
+        const m = gs.length === 3 && gs.every(g => !seen.has(g.question)) ? buildMatch(gs, locale) : null
+        if (m) q = withTopic(m, topic)
+      }
+    }
+    if (!q) {
+      // Обычное задание (или запасной вариант, если формат не собрался)
+      const n = ENT_DIFFICULTIES[difficulty].options
+      // Если вопрос повторяется (теории у темы немного) — берём расчётную задачу
+      for (let attempt = 0; attempt < 12; attempt++) {
+        const g = generateFromTemplate(subject, topic, n, locale, tl, attempt < 6 ? kind : kind === 'theory' ? 'calc' : kind)
+        if (!g) break
+        const cand = withTopic({ question: g.question, options: g.options, correct: g.correct, solution: g.solution }, topic)
+        if (!valid(cand, n)) continue
+        q = shuffleOptions(cand)
+        if (!seen.has(g.question)) break
+      }
     }
     if (!q) throw new Error(`Нет задания для темы «${topic}»`)
     seen.add(q.question)
-    out.push(shuffleOptions(q))
+    for (const l of q.left ?? []) seen.add(l)
+    out.push(q)
   })
   return out
 }

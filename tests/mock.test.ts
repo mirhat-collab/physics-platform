@@ -1,7 +1,8 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { ENT_SUBJECTS, MOCK, MOCK_MAX, mockLevel, mockPoints, type EntQuestion, type EntSubject } from '@/lib/ent'
+import { ENT_SUBJECTS, MOCK, MOCK_MAX, answerPoints, mockFormat, mockLevel, mockPoints, type EntQuestion, type EntSubject } from '@/lib/ent'
 import { MOCK_THEORY, buildMock, mockPlan } from '@/lib/mock-build'
+import { needsUnit } from '@/lib/mock-formats'
 import { ENT_SPEC, specSections } from '@/lib/ent-spec'
 import { mockResult, mockSummary, type MockAttempt } from '@/lib/mock-result'
 import { generateFromTemplate, topicKinds } from '@/lib/templates'
@@ -26,21 +27,35 @@ test('пробный ЕНТ: собранный вариант — количе�
       assert.equal(plan.length, MOCK.count)
       const qs = buildMock(s, run % 3 === 0 ? 'kk' : 'ru')
       assert.equal(qs.length, MOCK.count)
-      assert.equal(new Set(qs.map(q => q.question)).size, MOCK.count, `${s}: повтор условия`)
+      const key = (q: EntQuestion) => (q.left ? q.left.join('|') : q.question)
+      assert.equal(new Set(qs.map(key)).size, MOCK.count, `${s}: повтор условия`)
+      let formats = 0
       qs.forEach((q, i) => {
-        const n = mockLevel(i) === 'C' ? 5 : 4
+        const fmt = mockFormat(i)
+        if (q.kind) { assert.equal(q.kind, fmt, `${s} №${i + 1}: формат`); formats++ }
+        const n = q.kind === 'multi' ? 6 : q.kind === 'match' ? 5 : 4
         assert.equal(q.options.length, n, `${s} №${i + 1}: вариантов ${q.options.length}`)
         assert.equal(new Set(q.options).size, n)
-        assert.ok(q.correct >= 0 && q.correct < n)
         assert.ok(q.topic && q.section, `${s} №${i + 1}: нет темы`)
+        if (q.kind === 'multi') {
+          assert.ok(q.answers!.length >= 1 && q.answers!.length <= 3 && q.answers!.every(x => x >= 0 && x < 6))
+        } else if (q.kind === 'match') {
+          assert.equal(q.left!.length, 3)
+          assert.equal(new Set(q.pairs).size, 3)
+          assert.ok(q.pairs!.every(x => x >= 0 && x < 5))
+        } else {
+          assert.ok(q.correct >= 0 && q.correct < n)
+          assert.equal(fmt, 'single', `${s} №${i + 1}: формат ${fmt} не собрался`)
+        }
         if (mockPoints(i) === 2) assert.ok(!isTheoryQ(q), `${s} №${i + 1} (2 балла) — теория: ${q.question}`)
       })
+      assert.ok(formats >= 9, `${s}: заданий нового формата ${formats}`)
       // Теория — только на местах A и не больше MOCK_THEORY
       const theoryAt = qs.map((q, i) => (isTheoryQ(q) ? i : -1)).filter(i => i >= 0)
       assert.ok(plan.filter(x => x.kind === 'theory').length <= MOCK_THEORY)
       plan.forEach((x, i) => { if (x.kind === 'theory') assert.equal(mockLevel(i), 'A') })
-      // Уровень C — из тем со сложными задачами
-      plan.forEach((x, i) => { if (mockLevel(i) === 'C') assert.ok(topicKinds(s, x.topic).hard, `${s}: «${x.topic}» на уровне C без сложных задач`) })
+      // «Несколько ответов» уровня C — из тем со сложными задачами
+      plan.forEach((x, i) => { if (mockLevel(i) === 'C' && mockFormat(i) === 'multi') assert.ok(topicKinds(s, x.topic).hard, `${s}: «${x.topic}» на уровне C без сложных задач`) })
       theoryTotal += theoryAt.length
     }
     // Вопросы без чисел в ответах (теория и качественные задачи) — в среднем немного
@@ -109,4 +124,36 @@ test('статистика пробных ЕНТ: последний, лучши
   assert.deepEqual(s.sections.map(x => [x.name, x.pct]), [[sec[0], 0.5], [sec[5], 0.5]])
   assert.equal(mockSummary(list, 'math')!.count, 1)
   assert.equal(mockSummary([], 'physics'), null)
+})
+
+test('баллы за «несколько ответов» и «соответствие»: 2 — без ошибок, 1 — одна ошибка', () => {
+  const multi: EntQuestion = { question: '', options: ['a', 'b', 'c', 'd', 'e', 'f'], correct: 1, solution: '', kind: 'multi', answers: [1, 4] }
+  assert.equal(answerPoints(multi, [1, 4], 2), 2)
+  assert.equal(answerPoints(multi, [1], 2), 1)
+  assert.equal(answerPoints(multi, [1, 4, 5], 2), 1)
+  assert.equal(answerPoints(multi, [1, 5], 2), 0)
+  assert.equal(answerPoints(multi, null, 2), 0)
+  const match: EntQuestion = { question: '', options: ['a', 'b', 'c', 'd', 'e'], correct: 0, solution: '', kind: 'match', left: ['1', '2', '3'], pairs: [2, 0, 4] }
+  assert.equal(answerPoints(match, [2, 0, 4], 2), 2)
+  assert.equal(answerPoints(match, [2, 0, 1], 2), 1)
+  assert.equal(answerPoints(match, [2, -1, -1], 2), 0)
+  const single: EntQuestion = { question: '', options: ['a', 'b', 'c', 'd'], correct: 3, solution: '' }
+  assert.equal(answerPoints(single, 3, 1), 1)
+  assert.equal(answerPoints(single, 2, 1), 0)
+})
+
+test('обычное задание за 2 балла: неверный ответ — 0 баллов', () => {
+  const single: EntQuestion = { question: '', options: ['a', 'b', 'c', 'd'], correct: 3, solution: '' }
+  assert.equal(answerPoints(single, 1, 2), 0)
+  assert.equal(answerPoints(single, 3, 2), 2)
+})
+
+test('«несколько ответов»: не из задач, где условие требует определённые единицы', () => {
+  assert.ok(needsUnit('Найдите расстояние до звезды в метрах.'))
+  assert.ok(needsUnit('Найдите температуру газа в градусах Цельсия.'))
+  assert.ok(needsUnit('Жұлдызға дейінгі қашықтықты метрмен табыңыз.'))
+  assert.ok(!needsUnit('Найдите скорость тела.'))
+  for (const s of SUBJECTS) for (let r = 0; r < 5; r++) {
+    for (const q of buildMock(s, 'ru')) if (q.kind === 'multi') assert.ok(!needsUnit(q.question), q.question)
+  }
 })

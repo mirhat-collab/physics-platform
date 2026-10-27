@@ -1,12 +1,12 @@
 // Итог пробного ЕНТ: баллы, верные ответы и потери по разделам спецификации.
 // Общий для страницы пробного ЕНТ, статистики и тестов.
-import { mockPoints, type EntQuestion, type EntSubject } from './ent'
+import { answerPoints, isAnswered, mockPoints, type EntQuestion, type EntSubject, type MockAnswer } from './ent'
 import { specSectionOf, specSections } from './ent-spec'
 
 export type MockResult = {
   score: number
   max: number
-  correct: number
+  correct: number // заданий без единой ошибки
   answered: number
   // Раздел спецификации → [набрано, максимум], в порядке спецификации
   sections: Record<string, [number, number]>
@@ -14,20 +14,23 @@ export type MockResult = {
   wrongTopics: Record<string, string[]>
 }
 
-export function mockResult(subject: EntSubject, questions: EntQuestion[], answers: (number | null)[]): MockResult {
+export function mockResult(subject: EntSubject, questions: EntQuestion[], answers: MockAnswer[]): MockResult {
   const sections: Record<string, [number, number]> = {}
   const wrongTopics: Record<string, string[]> = {}
   for (const name of specSections(subject)) { sections[name] = [0, 0]; wrongTopics[name] = [] }
   let score = 0, max = 0, correct = 0, answered = 0
   questions.forEach((q, i) => {
     const pts = mockPoints(i)
-    const ok = answers[i] === q.correct
+    const got = answerPoints(q, answers[i], pts)
+    const ok = got === pts
     const sec = specSectionOf(subject, q.topic)
     if (!sections[sec]) { sections[sec] = [0, 0]; wrongTopics[sec] = [] }
     max += pts
     sections[sec][1] += pts
-    if (answers[i] !== null && answers[i] !== undefined) answered++
-    if (ok) { score += pts; correct++; sections[sec][0] += pts }
+    if (isAnswered(answers[i])) answered++
+    score += got
+    sections[sec][0] += got
+    if (ok) correct++
     else if (q.topic && !wrongTopics[sec].includes(q.topic)) wrongTopics[sec].push(q.topic)
   })
   return { score, max, correct, answered, sections, wrongTopics }

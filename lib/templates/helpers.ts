@@ -4,7 +4,15 @@
 import type { Locale } from '@/lib/i18n'
 import { contentFormat, contentLookup } from '@/lib/i18n/content'
 
-export type Generated = { question: string; options: string[]; correct: number; solution: string }
+export type Generated = {
+  question: string
+  options: string[]
+  correct: number
+  solution: string
+  // У числового ответа — значения вариантов (в порядке options) и единица:
+  // по ним собираются задания «несколько ответов» (20 м/с = 72 км/ч)
+  num?: { values: number[]; unit: string }
+}
 
 // Язык, на котором сейчас генерируется задание. Генерация синхронная,
 // поэтому достаточно выставить его на время одного вызова gen().
@@ -80,16 +88,17 @@ export function fmt(x: number): string {
   return s.includes('10^') ? `$${s}$` : s.replace('{,}', ',')
 }
 
-function withUnit(x: number, unit: string): string {
+export function withUnit(x: number, unit: string): string {
   if (!unit) return fmt(x)
   unit = tr(unit)
   return unit === '°' || unit === '%' ? `${fmt(x)}${unit}` : `${fmt(x)} ${unit}`
 }
 
 // Варианты для числового ответа. Правильный всегда первым — порядок перемешивает API.
-export function numOptions(correct: number, wrongs: number[], n: number, unit = ''): { options: string[]; correct: number } {
+export function numOptions(correct: number, wrongs: number[], n: number, unit = ''): { options: string[]; correct: number; values: number[] } {
   const seen = new Set<string>()
   const options: string[] = []
+  const values: number[] = []
   const add = (x: number) => {
     if (!Number.isFinite(x) || options.length >= n) return
     if (correct > 0 && x <= 0) return
@@ -97,6 +106,7 @@ export function numOptions(correct: number, wrongs: number[], n: number, unit = 
     if (seen.has(s)) return
     seen.add(s)
     options.push(s)
+    values.push(x)
   }
   add(correct)
   for (const w of wrongs) add(w)
@@ -104,7 +114,7 @@ export function numOptions(correct: number, wrongs: number[], n: number, unit = 
   // Для нуля и маленьких целых умножение не помогает — берём соседние значения
   const step = Number.isInteger(correct) || correct === 0 ? 1 : Math.abs(correct) / 4
   for (let k = 1; options.length < n && k < 20; k++) { add(correct + k * step); add(correct - k * step) }
-  return { options, correct: 0 }
+  return { options, correct: 0, values }
 }
 
 // Варианты для текстового ответа (формулы, промежутки и т. п.)
@@ -123,7 +133,8 @@ export function textOptions(correct: string, wrongs: string[], n: number): { opt
 // Всё, что видит ученик, проходит через tr(): строки, собранные через tl(),
 // уже переведены и в словаре не найдутся — останутся как есть.
 export function num(question: string, correct: number, wrongs: number[], n: number, unit: string, solution: string): Generated {
-  return { question: tr(question), ...numOptions(correct, wrongs, n, unit), solution: tr(solution) }
+  const { options, values } = numOptions(correct, wrongs, n, unit)
+  return { question: tr(question), options, correct: 0, solution: tr(solution), num: { values, unit } }
 }
 
 export function txt(question: string, correct: string, wrongs: string[], n: number, solution: string): Generated {
