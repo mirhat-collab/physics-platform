@@ -7,7 +7,8 @@ import { useT } from '@/app/components/LanguageProvider'
 import LanguageSwitcher from '@/app/components/LanguageSwitcher'
 
 export default function LobbyPage() {
-  const { t } = useT()
+  const { t, locale } = useT()
+  const pre = locale === 'kk' ? '/kk' : ''
   const router = useRouter()
   const [checking, setChecking] = useState(true)
 
@@ -40,10 +41,10 @@ export default function LobbyPage() {
       />
 
       <h1 className="animate-fade-in-up" style={{ fontSize: '2.6rem', fontWeight: 900, margin: '0 0 12px', textAlign: 'center', background: 'linear-gradient(135deg, #a78bfa, #667eea)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', position: 'relative' }}>
-        {t('Физика с нуля')}
+        {t('Подготовка к ЕНТ')}
       </h1>
       <p className="animate-fade-in-up" style={{ color: '#888', fontSize: 16, textAlign: 'center', maxWidth: 380, marginBottom: 48, lineHeight: 1.6, animationDelay: '0.08s', position: 'relative' }}>
-        {t('Изучай физику через задачи, зарабатывай XP и соревнуйся с одноклассниками')}
+        {t('Физика и математика: задачи ЕНТ с решением, пробный ЕНТ онлайн, рейтинг и XP. Бесплатно.')}
       </p>
 
       <div className="stagger-children" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12, maxWidth: 500, width: '100%', marginBottom: 40, position: 'relative' }}>
@@ -71,6 +72,14 @@ export default function LobbyPage() {
           </button>
         </Link>
       </div>
+
+      {/* Открытые страницы без входа — и для гостей, и для поисковиков */}
+      <nav aria-label={t('Подготовка к ЕНТ')} style={{ marginTop: 32, display: 'flex', gap: 8, flexWrap: 'wrap', justifyContent: 'center', maxWidth: 520, position: 'relative' }}>
+        <Link className="chip" href={`${pre}/podgotovka/fizika`} style={{ textDecoration: 'none' }}>{t('Задачи ЕНТ по физике')}</Link>
+        <Link className="chip" href={`${pre}/podgotovka/matematika`} style={{ textDecoration: 'none' }}>{t('Задачи ЕНТ по математике')}</Link>
+        <Link className="chip" href={`${pre}/podgotovka/fizika/formuly`} style={{ textDecoration: 'none' }}>{t('Формулы по физике')}</Link>
+        <Link className="chip" href={`${pre}/podgotovka/matematika/formuly`} style={{ textDecoration: 'none' }}>{t('Формулы по математике')}</Link>
+      </nav>
 
     </div>
   )

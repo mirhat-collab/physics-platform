@@ -10,6 +10,7 @@ import RecoveryRedirect from "./components/RecoveryRedirect";
 import { LanguageProvider } from "./components/LanguageProvider";
 import { Analytics } from "@vercel/analytics/next";
 import { getLocale } from "@/lib/i18n/server";
+import { SITE_URL } from "@/lib/seo";
 
 const manrope = Manrope({
   subsets: ["latin", "cyrillic"],
@@ -18,61 +19,36 @@ const manrope = Manrope({
 });
 
 export const metadata: Metadata = {
-  title: "Mirha_Edu — Физика онлайн 7-11 класс Казахстан",
-  description: "Бесплатная образовательная платформа по физике для учеников 7-11 классов Казахстана. Теория, формулы, задачи, XP система и рейтинг. Учи физику онлайн!",
+  metadataBase: new URL(SITE_URL),
+  title: "Mirha_Edu — подготовка к ЕНТ по физике и математике онлайн бесплатно",
+  description: "Бесплатная подготовка к ЕНТ по физике и математике: все темы по спецификации НЦТ, задачи с решением, формулы, пробный ЕНТ онлайн и прогноз балла. На русском и казахском.",
   keywords: [
-    "физика онлайн",
-    "физика 7 класс",
-    "физика 8 класс",
-    "физика 9 класс",
-    "физика 10 класс",
-    "физика 11 класс",
-    "физика Казахстан",
-    "учить физику онлайн",
-    "физика задачи",
-    "физика теория",
-    "физика формулы",
-    "онлайн школа физика",
-    "физика ЕНТ",
-    "подготовка к ЕНТ физика",
-    "физика ОГЭ",
-    "законы Ньютона",
-    "механическое движение",
-    "электрический ток",
-    "квантовая физика",
-    "молекулярная физика",
-    "термодинамика",
-    "оптика физика",
-    "physics platform",
-    "физика платформа",
-    "образование Казахстан",
+    "ЕНТ", "подготовка к ЕНТ", "ЕНТ физика", "ЕНТ математика", "пробный ЕНТ онлайн", "задачи ЕНТ с решением",
+    "формулы по физике ЕНТ", "ҰБТ", "ҰБТ физика", "ҰБТ математика", "физика онлайн Казахстан",
   ],
   authors: [{ name: "Mirha_Edu" }],
   creator: "Mirha_Edu",
   publisher: "Mirha_Edu",
-  robots: {
-    index: true,
-    follow: true,
-    googleBot: {
-      index: true,
-      follow: true,
-    },
-  },
+  robots: { index: true, follow: true, googleBot: { index: true, follow: true } },
   openGraph: {
-    title: "Mirha_Edu — Физика онлайн 7-11 класс",
-    description: "Учи физику онлайн! Теория, формулы, задачи для 7-11 классов Казахстана. Зарабатывай XP и соревнуйся с классом.",
-    url: "https://physics-platform-liart.vercel.app",
+    title: "Mirha_Edu — подготовка к ЕНТ по физике и математике",
+    description: "Задачи ЕНТ с решением, формулы, пробный ЕНТ онлайн и прогноз балла. Бесплатно, на русском и казахском.",
+    url: "/",
     siteName: "Mirha_Edu",
     locale: "ru_RU",
     type: "website",
+    images: ["/og.png"],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Mirha_Edu — Физика онлайн 7-11 класс",
-    description: "Учи физику онлайн! Теория, формулы, задачи для 7-11 классов Казахстана.",
+    title: "Mirha_Edu — подготовка к ЕНТ по физике и математике",
+    description: "Задачи ЕНТ с решением, формулы, пробный ЕНТ онлайн. Бесплатно.",
+    images: ["/og.png"],
   },
-  alternates: {
-    canonical: "https://physics-platform-liart.vercel.app",
+  // Коды подтверждения Google Search Console и Яндекс Вебмастера — из переменных окружения Vercel
+  verification: {
+    google: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION || undefined,
+    yandex: process.env.NEXT_PUBLIC_YANDEX_VERIFICATION || undefined,
   },
 };
 
@@ -88,12 +64,10 @@ export default async function RootLayout({
       <head>
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <meta name="theme-color" content="#667eea" />
-        <meta name="google-site-verification" content="" />
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
         <meta name="apple-mobile-web-app-title" content="Mirha_Edu" />
-        <link rel="canonical" href="https://physics-platform-liart.vercel.app" />
         <link rel="manifest" href="/manifest.json" />
         <link rel="icon" href="/icon-192.png" type="image/png" />
         <link rel="apple-touch-icon" href="/icon-192.png" />
