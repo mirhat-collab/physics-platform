@@ -50,6 +50,24 @@ export function multiCapable(subject: EntSubject, topic: string, kind: TemplateK
   return v
 }
 
+// Подходит ли тема для «соответствия»: три разных задачи с разными ответами
+// должны собираться почти всегда (у некоторых тем ответов мало — они совпадают)
+const matchCache = new Map<string, boolean>()
+export function matchCapable(subject: EntSubject, topic: string): boolean {
+  const key = `${subject}|${topic}`
+  let v = matchCache.get(key)
+  if (v === undefined) {
+    let ok = 0
+    for (let i = 0; i < 10; i++) {
+      const gs = [0, 1, 2].map(() => generateFromTemplate(subject, topic, 4, 'ru', 'ent', 'calc')).filter(g => !!g)
+      if (buildMatch(gs, 'ru')) ok++
+    }
+    v = ok >= 8
+    matchCache.set(key, v)
+  }
+  return v
+}
+
 // План варианта: тема тренажёра и вид задания для каждого из 40 мест
 export function mockPlan(subject: EntSubject): MockSlot[] {
   const spec = ENT_SPEC[subject]
@@ -83,6 +101,7 @@ export function mockPlan(subject: EntSubject): MockSlot[] {
   // 3) остальные места
   const multiOk = (t: string, i: number) => multiCapable(subject, t, kind[i])
   for (let i = MOCK.multiFrom; i < MOCK.matchFrom; i++) take(i, st => st.ours.some(t => multiOk(t, i)))
+  for (let i = MOCK.matchFrom; i < MOCK.count; i++) take(i, st => st.ours.some(t => matchCapable(subject, t)))
   for (let i = 0; i < MOCK.count; i++) if (!assigned[i]) take(i, st => !onlyTheory(st))
 
   // Немного теории — на случайные места уровня A, где у темы она есть,
@@ -96,7 +115,7 @@ export function mockPlan(subject: EntSubject): MockSlot[] {
   // Внутри темы спецификации — разные темы тренажёра, подходящие по виду задания
   const used = new Map<SpecTopic, string[]>()
   return assigned.map((st, i) => {
-    const fits = st!.ours.filter(t => mockFormat(i) === 'multi' ? multiOk(t, i)
+    const fits = st!.ours.filter(t => mockFormat(i) === 'multi' ? multiOk(t, i) : mockFormat(i) === 'match' ? matchCapable(subject, t)
       : kind[i] === 'theory' ? kinds(t).theory : kind[i] === 'hard' ? kinds(t).hard : kinds(t).calc)
     const pool = fits.length ? fits : st!.ours
     const seen = used.get(st!) ?? []
