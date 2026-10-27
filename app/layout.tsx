@@ -6,6 +6,7 @@ import LandingFooter from "./components/LandingFooter";
 import StreakTracker from "./components/StreakTracker";
 import StreakAlert from "./components/StreakAlert";
 import PwaInstall from "./components/PwaInstall";
+import RecoveryRedirect from "./components/RecoveryRedirect";
 import { LanguageProvider } from "./components/LanguageProvider";
 import { getLocale } from "@/lib/i18n/server";
 
@@ -106,6 +107,7 @@ export default async function RootLayout({
           <StreakTracker />
           <StreakAlert />
           <PwaInstall />
+          <RecoveryRedirect />
           <AppNav />
           <div className="app-main">{children}</div>
           <LandingFooter />
