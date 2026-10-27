@@ -5,6 +5,7 @@ import { supabase } from '@/lib/supabase'
 import { ENT_SUBJECTS, type EntSubject } from '@/lib/ent'
 import { HW_COUNTS, hwHref, hwProgress, type EntHomework, type HwAnswer } from '@/lib/ent-homework'
 import { gradeMatchesClass } from '@/lib/grade-match'
+import { groupIdOf } from '@/lib/groups'
 import { useT } from '@/app/components/LanguageProvider'
 
 const bar = (pct: number, color: string) => (
@@ -100,9 +101,15 @@ export function EntHomeworkClass({ hw, since, className }: { hw: EntHomework; si
   useEffect(() => {
     let cancelled = false
     ;(async () => {
-      const { data: cls } = await supabase.from('classes').select('id, name, is_locked').eq('name', className).maybeSingle()
+      const groupId = groupIdOf(className)
+      const { data: cls } = groupId === null ? await supabase.from('classes').select('id, name, is_locked').eq('name', className).maybeSingle() : { data: null }
       let list: Student[] = []
-      if (cls?.is_locked) {
+      if (groupId !== null) {
+        // ДЗ группе учителя — её участники
+        const { data: members } = await supabase.from('study_group_members').select('student_id').eq('group_id', groupId)
+        const ids = ((members || []) as { student_id: string }[]).map(m => m.student_id)
+        if (ids.length) list = ((await supabase.from('profiles').select('id, full_name, email').in('id', ids)).data || []) as Student[]
+      } else if (cls?.is_locked) {
         const { data: members } = await supabase.rpc('class_access_members')
         const ids = ((members || []) as { class_id: number; student_id: string }[]).filter(m => m.class_id === cls.id).map(m => m.student_id)
         if (ids.length) list = ((await supabase.from('profiles').select('id, full_name, email').in('id', ids)).data || []) as Student[]

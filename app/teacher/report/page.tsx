@@ -30,6 +30,8 @@ export default function ClassReportPage() {
   const [days, setDays] = useState<number>(30)
   const [rows, setRows] = useState<Row[]>([])
   const [mocks, setMocks] = useState<Mock[]>([])
+  // Группы учителя с составом: в отчёте можно смотреть только свою группу
+  const [groups, setGroups] = useState<{ id: number; name: string; members: string[] }[]>([])
 
   useEffect(() => {
     supabase.auth.getUser().then(async ({ data: { user } }) => {
@@ -38,12 +40,20 @@ export default function ClassReportPage() {
       if (p?.role !== 'teacher' && p?.role !== 'admin') { router.push('/dashboard'); return }
       const { data } = await supabase.from('profiles').select('id, full_name, grade').eq('role', 'student').order('full_name')
       setStudents((data || []) as Student[])
+      const { data: gs } = await supabase.from('study_groups').select('id, name, study_group_members(student_id)').eq('teacher_id', user.id).order('created_at')
+      const list = ((gs || []) as unknown as { id: number; name: string; study_group_members: { student_id: string }[] }[])
+        .map(g => ({ id: g.id, name: g.name, members: g.study_group_members.map(m => m.student_id) }))
+      setGroups(list)
+      if (list.length) setGrade(`group:${list[0].id}`)
       setReady(true)
     })
   }, [router])
 
   const grades = useMemo(() => [...new Set(students.map(s => s.grade).filter((g): g is string => !!g))].sort((a, b) => a.localeCompare(b, 'ru', { numeric: true })), [students])
-  const group = useMemo(() => students.filter(s => grade === 'all' || s.grade === grade), [students, grade])
+  const group = useMemo(() => {
+    const g = grade.startsWith('group:') ? groups.find(x => `group:${x.id}` === grade) : null
+    return students.filter(s => grade === 'all' || (g ? g.members.includes(s.id) : s.grade === grade))
+  }, [students, grade, groups])
 
   useEffect(() => {
     if (!ready) return
@@ -137,6 +147,7 @@ export default function ClassReportPage() {
         <div className="label">{t('Класс')}</div>
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 14 }}>
           <button className={`chip${grade === 'all' ? ' on' : ''}`} onClick={() => setGrade('all')}>{t('Все ученики')}</button>
+          {groups.map(g => <button key={g.id} className={`chip${grade === `group:${g.id}` ? ' on' : ''}`} onClick={() => setGrade(`group:${g.id}`)}>👥 {g.name}</button>)}
           {grades.map(g => <button key={g} className={`chip${grade === g ? ' on' : ''}`} onClick={() => setGrade(g)}>{g}</button>)}
         </div>
         <div style={{ display: 'flex', gap: 24, flexWrap: 'wrap' }}>

@@ -6,10 +6,20 @@ import { kzDate, nextStreak } from '@/lib/streak'
 import { useRouter } from 'next/navigation'
 import { useT } from '@/app/components/LanguageProvider'
 import LanguageSwitcher from '@/app/components/LanguageSwitcher'
+import { PENDING_JOIN, joinPath } from '@/lib/groups'
 
 const GRADES = ['7', '8', '9', '10', '11']
 
 const PENDING_TEACHER_CODE = 'pendingTeacherCode'
+
+// Пришёл по приглашению в группу (/join/<код>) — после входа возвращаем туда
+function afterLogin(path: string): string {
+  try {
+    const code = localStorage.getItem(PENDING_JOIN)
+    if (code) return joinPath(code)
+  } catch { /* нет доступа к storage */ }
+  return path
+}
 
 export default function LoginPage() {
   const { t } = useT()
@@ -110,7 +120,7 @@ export default function LoginPage() {
         setLoading(false)
         return
       }
-      router.push(role === 'teacher' ? '/teacher' : role === 'parent' ? '/parent' : '/dashboard')
+      router.push(afterLogin(role === 'teacher' ? '/teacher' : role === 'parent' ? '/parent' : '/dashboard'))
 
     } else {
       const { error } = await supabase.auth.signInWithPassword({ email, password })
@@ -133,14 +143,14 @@ export default function LoginPage() {
             ...(profile.role === 'student' ? { grade: getActualGrade(profile.grade || '', profile.last_visit) } : {}),
           }).eq('id', user.id)
 
-          router.push(
+          router.push(afterLogin(
             profile.role === 'admin' ? '/admin'
             : profile.role === 'teacher' ? '/teacher'
             : profile.role === 'parent' ? '/parent'
             : '/dashboard'
-          )
+          ))
         } else {
-          router.push('/dashboard')
+          router.push(afterLogin('/dashboard'))
         }
       }
     }
