@@ -23,6 +23,8 @@ export default function LoginPage() {
   const [teacherCode, setTeacherCode] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const [forgot, setForgot] = useState(false) // «Забыли пароль?»: отправляем ссылку на почту
+  const [sent, setSent] = useState(false)
 
   // Код учителя, сохранённый при регистрации с подтверждением почты
   async function applyPendingTeacherCode() {
@@ -38,6 +40,16 @@ export default function LoginPage() {
     if (res && (res.ok || res.status === 403)) {
       try { localStorage.removeItem(PENDING_TEACHER_CODE) } catch { /* нет доступа к storage */ }
     }
+  }
+
+  async function sendReset() {
+    setError('')
+    if (!email.trim()) { setError(t('Введи почту, на которую зарегистрирован аккаунт')); return }
+    setLoading(true)
+    const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), { redirectTo: `${window.location.origin}/reset-password` })
+    setLoading(false)
+    if (error) { setError(error.message); return }
+    setSent(true)
   }
 
   async function handleSubmit() {
@@ -240,8 +252,36 @@ export default function LoginPage() {
           </>
         )}
 
+        {forgot ? (
+          <div>
+            <p style={{ color: '#bbb', fontSize: 14, marginBottom: 12, lineHeight: 1.5 }}>
+              {sent
+                ? t('✅ Письмо отправлено на {email}. Открой ссылку из письма в этом же браузере и придумай новый пароль. Если письма нет — проверь «Спам».', { email })
+                : t('Введи почту аккаунта — пришлём ссылку, по которой можно задать новый пароль.')}
+            </p>
+            {!sent && <input style={input} type="email" placeholder="Email" value={email} onChange={e => setEmail(e.target.value)} onKeyDown={e => e.key === 'Enter' && sendReset()} />}
+            {error && (
+              <div className="animate-scale-in" style={{ background: '#2d1a1a', border: '1px solid #f5576c', borderRadius: 8, padding: '10px 14px', color: '#f5576c', fontSize: 14, marginBottom: 12 }}>
+                ❌ {error}
+              </div>
+            )}
+            {!sent && (
+              <button onClick={sendReset} disabled={loading} style={{ width: '100%', padding: 14, borderRadius: 10, border: 'none', background: 'linear-gradient(135deg, #667eea, #764ba2)', color: '#fff', fontSize: 16, fontWeight: 700, cursor: 'pointer', marginBottom: 16, opacity: loading ? 0.75 : 1 }}>
+                {loading ? t('Загрузка...') : t('Отправить ссылку')}
+              </button>
+            )}
+            <p style={{ textAlign: 'center', fontSize: 14 }}>
+              <span onClick={() => { setForgot(false); setSent(false); setError('') }} style={{ color: '#a78bfa', cursor: 'pointer', fontWeight: 600 }}>{t('← Назад ко входу')}</span>
+            </p>
+          </div>
+        ) : (<>
         <input style={input} type="email" placeholder="Email" value={email} onChange={e => setEmail(e.target.value)} />
         <input style={input} type="password" placeholder={t('Пароль (минимум 6 символов)')} value={password} onChange={e => setPassword(e.target.value)} />
+        {!isSignUp && (
+          <div style={{ textAlign: 'right', marginTop: -4, marginBottom: 12 }}>
+            <span onClick={() => { setForgot(true); setError('') }} style={{ color: '#a78bfa', cursor: 'pointer', fontSize: 13 }}>{t('Забыли пароль?')}</span>
+          </div>
+        )}
 
         {error && (
           <div className="animate-scale-in" style={{ background: '#2d1a1a', border: '1px solid #f5576c', borderRadius: 8, padding: '10px 14px', color: '#f5576c', fontSize: 14, marginBottom: 12 }}>
@@ -271,6 +311,7 @@ export default function LoginPage() {
             {isSignUp ? t('Войти') : t('Зарегистрироваться')}
           </span>
         </p>
+        </>)}
 
       </div>
     </div>
