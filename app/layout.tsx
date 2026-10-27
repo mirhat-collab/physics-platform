@@ -45,9 +45,10 @@ export const metadata: Metadata = {
     description: "Задачи ЕНТ с решением, формулы, пробный ЕНТ онлайн. Бесплатно.",
     images: ["/og.png"],
   },
-  // Коды подтверждения Google Search Console и Яндекс Вебмастера — из переменных окружения Vercel
+  // Коды подтверждения Google Search Console и Яндекс Вебмастера (не секретные —
+  // они и так видны в коде страницы); переменные окружения Vercel их заменяют
   verification: {
-    google: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION || undefined,
+    google: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION || "SStvXcqEdVFdR5m4QOuTMUmQg9na2p9-zAopbgAKsgQ",
     yandex: process.env.NEXT_PUBLIC_YANDEX_VERIFICATION || undefined,
   },
 };
