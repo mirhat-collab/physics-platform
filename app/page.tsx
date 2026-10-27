@@ -79,6 +79,7 @@ export default function LobbyPage() {
         <Link className="chip" href={`${pre}/podgotovka/matematika`} style={{ textDecoration: 'none' }}>{t('Задачи ЕНТ по математике')}</Link>
         <Link className="chip" href={`${pre}/podgotovka/fizika/formuly`} style={{ textDecoration: 'none' }}>{t('Формулы по физике')}</Link>
         <Link className="chip" href={`${pre}/podgotovka/matematika/formuly`} style={{ textDecoration: 'none' }}>{t('Формулы по математике')}</Link>
+        <Link className="chip" href={`${pre}/podgotovka/stati`} style={{ textDecoration: 'none' }}>{t('Всё про ЕНТ: статьи и советы')}</Link>
       </nav>
 
     </div>

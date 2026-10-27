@@ -73,3 +73,11 @@ export function topicExamples(subject: EntSubject, topic: string, locale: Locale
   }
   return out
 }
+
+// Заголовок для поиска — до 70 символов (длиннее поисковик обрежет):
+// сначала полный, затем без «с решением», затем первая часть названия темы
+export function fitTitle(name: string, tails: string[], max = 70): string {
+  const short = name.split(/\.\s/)[0]
+  for (const n of [name, short]) for (const tail of tails) if ((n + tail).length <= max) return n + tail
+  return short.length <= max ? short : short.slice(0, max - 1).trimEnd() + '…'
+}
