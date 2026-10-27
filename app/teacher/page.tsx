@@ -4,11 +4,14 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import { gradeLabel, gradeVariants } from '@/lib/grade-match'
+import { ENT_SUBJECTS } from '@/lib/ent'
+import { EntHomeworkClass, EntHomeworkPicker } from '@/app/components/EntHomework'
+import type { EntHomework } from '@/lib/ent-homework'
 import { useT } from '@/app/components/LanguageProvider'
 
 type Profile = { id: string; full_name: string; email?: string; grade: string; total_xp: number; streak: number; role: string }
 type ClassStat = { name: string; students: Profile[]; avg_xp: number; completed_topics: number; total_topics: number }
-type Homework = { id: number; title: string; description: string; class_name: string; due_date: string; created_at: string; media_urls?: string[] }
+type Homework = { id: number; title: string; description: string; class_name: string; due_date: string; created_at: string; media_urls?: string[]; ent?: EntHomework | null }
 type Submission = { id: number; homework_id: number; student_name: string; answer: string; submitted_at: string; grade: string; media_url?: string }
 type Tournament = { id: number; title: string; description?: string; type?: string; class_name: string; status: string; ends_at: string; created_at: string; media_url?: string; prize?: string }
 type TournamentSub = { id: number; tournament_id: number; student_name: string; text_answer: string; media_url?: string; place?: number; teacher_comment?: string; submitted_at: string }
@@ -30,6 +33,8 @@ export default function TeacherPage() {
   const [hwDesc, setHwDesc] = useState('')
   const [hwClass, setHwClass] = useState('')
   const [hwDue, setHwDue] = useState('')
+  // ДЗ из тренажёра ЕНТ: темы и число заданий, выполнение считается автоматически
+  const [hwEnt, setHwEnt] = useState<EntHomework | null>(null)
   const [hwMediaFiles, setHwMediaFiles] = useState<File[]>([])
   const [hwMediaPreviews, setHwMediaPreviews] = useState<string[]>([])
   const [hwUploading, setHwUploading] = useState(false)
@@ -139,7 +144,8 @@ export default function TeacherPage() {
   }
 
   async function createHomework() {
-    if (!hwTitle.trim() || !hwClass || !teacher) return
+    if (!hwClass || !teacher || (!hwTitle.trim() && !hwEnt) || (hwEnt && !hwEnt.topics.length)) return
+    const title = hwTitle.trim() || t('ЕНТ: {s} · {n} заданий', { s: t(ENT_SUBJECTS[hwEnt!.subject].label), n: hwEnt!.count })
     setSavingHw(true)
 
     // Загружаем медиа файлы
@@ -161,9 +167,10 @@ export default function TeacherPage() {
     }
 
     const { data, error } = await supabase.from('homework').insert({
-      title: hwTitle, description: hwDesc, class_name: hwClass,
+      title, description: hwDesc, class_name: hwClass,
       due_date: hwDue || null, created_by: teacher.id,
-      media_urls: mediaUrls.length > 0 ? mediaUrls : null
+      media_urls: mediaUrls.length > 0 ? mediaUrls : null,
+      ...(hwEnt ? { ent: hwEnt } : {}),
     }).select().single()
     if (error || !data) {
       setSavingHw(false)
@@ -171,7 +178,7 @@ export default function TeacherPage() {
       return
     }
     setHomeworks([data, ...homeworks])
-    setHwTitle(''); setHwDesc(''); setHwClass(''); setHwDue('')
+    setHwTitle(''); setHwDesc(''); setHwClass(''); setHwDue(''); setHwEnt(null)
     setHwMediaFiles([]); setHwMediaPreviews([])
     setSavingHw(false)
   }
@@ -395,7 +402,17 @@ export default function TeacherPage() {
             {/* Форма создания */}
             <div style={{ background: '#1a1a2e', borderRadius: 16, padding: '20px', border: '1px solid #2a2a3e', marginBottom: 24 }}>
               <h3 style={{ margin: '0 0 16px', fontWeight: 700 }}>{t('➕ Новое задание')}</h3>
-              <input style={inputStyle} placeholder={t('Название задания')} value={hwTitle} onChange={e => setHwTitle(e.target.value)} />
+              <div style={{ display: 'flex', gap: 8, marginBottom: 10, flexWrap: 'wrap' }}>
+                <button type="button" className={`chip${!hwEnt ? ' on' : ''}`} onClick={() => setHwEnt(null)}>{t('📄 Обычное задание')}</button>
+                <button type="button" className={`chip${hwEnt ? ' on' : ''}`} onClick={() => setHwEnt(hwEnt || { subject: 'physics', topics: [], count: 20 })}>{t('🎯 Задания из тренажёра ЕНТ')}</button>
+              </div>
+              {hwEnt && (
+                <>
+                  <div style={{ color: '#888', fontSize: 13, marginBottom: 8 }}>{t('Ученик решает новые задания по выбранным темам, выполнение и точность видны здесь автоматически.')}</div>
+                  <EntHomeworkPicker value={hwEnt} onChange={setHwEnt} />
+                </>
+              )}
+              <input style={inputStyle} placeholder={hwEnt ? t('Название (необязательно)') : t('Название задания')} value={hwTitle} onChange={e => setHwTitle(e.target.value)} />
               <textarea style={{ ...inputStyle, resize: 'vertical' }} rows={3} placeholder={t('Описание / условие задачи')} value={hwDesc} onChange={e => setHwDesc(e.target.value)} />
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 10 }}>
                 <select style={{ ...inputStyle, marginBottom: 0 }} value={hwClass} onChange={e => setHwClass(e.target.value)}>
@@ -428,8 +445,8 @@ export default function TeacherPage() {
                 </div>
               )}
 
-              <button onClick={createHomework} disabled={savingHw || hwUploading || !hwTitle.trim() || !hwClass}
-                style={{ padding: '10px 24px', borderRadius: 10, border: 'none', background: hwTitle && hwClass ? 'linear-gradient(135deg,#10b981,#059669)' : '#2a2a3e', color: '#fff', fontWeight: 700, cursor: 'pointer', fontSize: 14 }}>
+              <button onClick={createHomework} disabled={savingHw || hwUploading || !hwClass || (hwEnt ? !hwEnt.topics.length : !hwTitle.trim())}
+                style={{ padding: '10px 24px', borderRadius: 10, border: 'none', background: hwClass && (hwEnt ? hwEnt.topics.length : hwTitle) ? 'linear-gradient(135deg,#10b981,#059669)' : '#2a2a3e', color: '#fff', fontWeight: 700, cursor: 'pointer', fontSize: 14 }}>
                 {hwUploading ? t('⏳ Загружаю файлы...') : savingHw ? t('Создаём...') : t('✅ Создать задание')}
               </button>
             </div>
@@ -453,7 +470,8 @@ export default function TeacherPage() {
                     {isOpen && (
                       <div style={{ borderTop: '1px solid #2a2a3e', padding: '16px 20px' }}>
                         {hw.description && <p style={{ color: '#aaa', fontSize: 14, marginBottom: 16 }}>{hw.description}</p>}
-                        {hwSubs.length === 0 && <div style={{ color: '#555', fontSize: 14 }}>{t('Ответов пока нет')}</div>}
+                        {hw.ent && <div style={{ marginBottom: 16 }}><EntHomeworkClass hw={hw.ent} since={hw.created_at} className={hw.class_name} /></div>}
+                        {hwSubs.length === 0 && !hw.ent && <div style={{ color: '#555', fontSize: 14 }}>{t('Ответов пока нет')}</div>}
                         {hwSubs.map(sub => (
                           <div key={sub.id} style={{ background: '#0f0f1a', borderRadius: 10, padding: '12px 16px', marginBottom: 10, border: '1px solid #2a2a3e' }}>
                             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>

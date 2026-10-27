@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import { ENT_SUBJECTS, MOCK_MAX, sectionOfTopic, type EntSubject } from '@/lib/ent'
+import { specSectionOf, specSections } from '@/lib/ent-spec'
 import { useT } from '@/app/components/LanguageProvider'
 
 type Student = { id: string; full_name: string | null; grade: string | null }
@@ -16,6 +17,8 @@ const WEAK = 0.6
 
 function pct(x: number) { return `${Math.round(x * 100)}%` }
 function color(x: number) { return x >= 0.8 ? 'var(--good)' : x >= WEAK ? '#f59e0b' : 'var(--bad)' }
+// Цвет клетки тепловой карты: красный → жёлтый → зелёный
+function heatColor(x: number) { return x >= 0.8 ? '#059669' : x >= 0.5 ? '#d97706' : '#dc2626' }
 
 export default function ClassReportPage() {
   const { t } = useT()
@@ -101,6 +104,23 @@ export default function ClassReportPage() {
     return { s, total: mine.length, acc: mine.length ? correct / mine.length : 0, weakest, mock }
   }).sort((a, b) => (b.total ? 1 : 0) - (a.total ? 1 : 0) || a.acc - b.acc)
 
+  // Тепловая карта: точность каждого ученика по разделам спецификации ЕНТ
+  const heatSections = specSections(subject)
+  const heat = {
+    sections: heatSections,
+    students: group.map(s => {
+      const cells = heatSections.map(() => ({ n: 0, c: 0 }))
+      for (const r of rows) {
+        if (r.user_id !== s.id) continue
+        const k = heatSections.indexOf(specSectionOf(subject, r.topic))
+        if (k < 0) continue
+        cells[k].n++
+        if (r.correct) cells[k].c++
+      }
+      return { s, cells }
+    }).filter(x => x.cells.some(c => c.n)),
+  }
+
   const active = byStudent.filter(x => x.total > 0).length
   const total = rows.length
   const acc = total ? rows.filter(r => r.correct).length / total : 0
@@ -165,6 +185,48 @@ export default function ClassReportPage() {
             <b style={{ color: color(x.acc), minWidth: 44, textAlign: 'right' }}>{pct(x.acc)}</b>
           </div>
         ))}
+      </div>
+
+      {/* Тепловая карта: ученик × раздел спецификации */}
+      <div className="label">{t('Тепловая карта: ученики × разделы ЕНТ')}</div>
+      <div className="card" style={{ padding: 12, marginBottom: 18, overflowX: 'auto' }}>
+        {heat.students.length === 0 ? <div style={{ color: 'var(--muted)', fontSize: 14 }}>{t('Пока нет ответов за этот период.')}</div> : (
+          <table style={{ borderCollapse: 'separate', borderSpacing: 3, fontSize: 12 }}>
+            <thead>
+              <tr>
+                <th />
+                {heat.sections.map(sec => (
+                  <th key={sec} title={t(sec)} style={{ fontWeight: 600, color: 'var(--muted)', verticalAlign: 'bottom', height: 120, padding: 0 }}>
+                    <div style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)', whiteSpace: 'nowrap', maxHeight: 118, overflow: 'hidden', textOverflow: 'ellipsis', margin: '0 auto' }}>{t(sec)}</div>
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {heat.students.map(({ s, cells }) => (
+                <tr key={s.id}>
+                  <td style={{ paddingRight: 8, whiteSpace: 'nowrap', maxWidth: 160, overflow: 'hidden', textOverflow: 'ellipsis' }}>{s.full_name || t('Без имени')}</td>
+                  {cells.map((c, i) => (
+                    <td key={i} title={c.n ? `${t(heat.sections[i])}: ${c.c}/${c.n}` : t(heat.sections[i])}
+                      style={{ width: 34, height: 26, textAlign: 'center', borderRadius: 6, fontWeight: 700, fontSize: 11,
+                        background: c.n ? heatColor(c.c / c.n) : 'var(--surface-2)', color: c.n ? '#fff' : 'var(--muted)' }}>
+                      {c.n ? Math.round((c.c / c.n) * 100) : ''}
+                    </td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+        <div style={{ display: 'flex', gap: 12, marginTop: 10, fontSize: 12, color: 'var(--muted)', flexWrap: 'wrap' }}>
+          <span>{t('% верных ответов:')}</span>
+          {[[0.3, '< 50%'], [0.65, '50–79%'], [0.9, '≥ 80%']].map(([v, l]) => (
+            <span key={l as string} style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+              <span style={{ width: 14, height: 14, borderRadius: 4, background: heatColor(v as number) }} />{l}
+            </span>
+          ))}
+          <span>{t('пусто — нет ответов')}</span>
+        </div>
       </div>
 
       <div className="label">{t('Ученики')}</div>

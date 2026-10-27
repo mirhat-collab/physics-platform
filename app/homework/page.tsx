@@ -3,10 +3,12 @@ import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import { gradeLabel, gradeVariants, studentClassNames } from '@/lib/grade-match'
+import { EntHomeworkStudent } from '@/app/components/EntHomework'
+import type { EntHomework } from '@/lib/ent-homework'
 import { useT } from '@/app/components/LanguageProvider'
 import { useTranslatedItems } from '@/app/components/useTranslatedItems'
 
-type Homework = { id: number; title: string; description: string; class_name: string; due_date: string; created_at: string; media_urls?: string[] }
+type Homework = { id: number; title: string; description: string; class_name: string; due_date: string; created_at: string; media_urls?: string[]; ent?: EntHomework | null }
 type Submission = { id: number; homework_id: number; answer: string; grade: string; media_url?: string }
 
 export default function HomeworkPage() {
@@ -191,7 +193,9 @@ export default function HomeworkPage() {
                   </div>
                 )}
 
-                {preview ? (
+                {hw.ent ? (
+                  <EntHomeworkStudent hw={hw.ent} since={hw.created_at} userId={preview ? undefined : userId} />
+                ) : preview ? (
                   <div style={{ color: '#888', fontSize: 13, background: '#0f0f1a', borderRadius: 10, padding: '10px 14px', border: '1px dashed #2a2a3e' }}>
                     {t('Здесь ученик пишет ответ и прикрепляет фото или видео.')}
                   </div>
