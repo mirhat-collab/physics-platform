@@ -1,6 +1,7 @@
 import type { MetadataRoute } from 'next'
 import type { EntSubject } from '@/lib/ent'
 import { SITE_URL, SUBJECT_SLUG, pagePath, seoTopics } from '@/lib/seo'
+import { articles } from '@/lib/articles'
 
 // Карта сайта для поисковиков: открытые страницы на русском и казахском
 export default function sitemap(): MetadataRoute.Sitemap {
@@ -16,6 +17,8 @@ export default function sitemap(): MetadataRoute.Sitemap {
     pages.push(entry([slug], 0.9), entry([slug, 'formuly'], 0.8))
     for (const t of seoTopics(s)) pages.push(entry([slug, t.slug], 0.7))
   }
+  pages.push(entry(['stati'], 0.8), entry(['voprosy'], 0.8))
+  for (const a of articles('ru')) pages.push(entry(['stati', a.slug], 0.8))
   // Казахские версии — отдельными адресами (у каждой те же альтернативы языков)
   return [...pages, ...pages.filter(p => p.alternates).map(p => ({ ...p, url: p.alternates!.languages!.kk as string }))]
 }

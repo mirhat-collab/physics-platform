@@ -11,7 +11,9 @@ import { ENT_SUBJECTS, type EntSubject } from '@/lib/ent'
 import { FORMULAS, SECTIONS, parseFormula } from '@/lib/formulas'
 import { formulasKk } from '@/lib/i18n/formulas-kk'
 import { makeT, type Locale } from '@/lib/i18n'
-import { SITE_URL, SUBJECT_SLUG, pagePath, seoTopics, subjectBySlug, topicBySlug, topicExamples } from '@/lib/seo'
+import { SITE_URL, SUBJECT_SLUG, fitTitle, pagePath, seoTopics, slugify, subjectBySlug, topicBySlug, topicExamples } from '@/lib/seo'
+import { ENT_SPEC, specSections } from '@/lib/ent-spec'
+import { articleBySlug, articles, faq, type Block } from '@/lib/articles'
 
 const SUBJECTS = Object.keys(SUBJECT_SLUG) as EntSubject[]
 const LETTERS = 'ABCDE'
@@ -29,6 +31,7 @@ function meta(locale: Locale, parts: string[], title: string, description: strin
 }
 
 const subjName = (locale: Locale, s: EntSubject) => makeT(locale)(ENT_SUBJECTS[s].label)
+
 
 export function hubMetadata(locale: Locale): Metadata {
   return locale === 'kk'
@@ -63,13 +66,13 @@ export async function topicMetadata(locale: Locale, params: Promise<{ subject: s
   const t = makeT(locale)
   const name = t(tp.topic)
   return locale === 'kk'
-    ? meta(locale, [subject, topic], `${name} — ҰБТ есептері шешімімен`, `«${name}» тақырыбы бойынша ҰБТ ${subjName(locale, s).toLowerCase()} есептері: жауаптары мен толық шешімдері. Тегін тренажёр және сынақ ҰБТ.`)
-    : meta(locale, [subject, topic], `${name} — задачи ЕНТ с решением`, `Задачи ЕНТ по ${s === 'physics' ? 'физике' : 'математике'} на тему «${name}» с ответами и подробным решением. Решай ещё в бесплатном тренажёре и пройди пробный ЕНТ.`)
+    ? meta(locale, [subject, topic], fitTitle(name, [' — ҰБТ есептері шешімімен', ' — ҰБТ есептері']), `«${name}» тақырыбы бойынша ҰБТ ${subjName(locale, s).toLowerCase()} есептері: жауаптары мен толық шешімдері. Тегін тренажёр және сынақ ҰБТ.`)
+    : meta(locale, [subject, topic], fitTitle(name, [' — задачи ЕНТ с решением', ' — задачи ЕНТ']), `Задачи ЕНТ по ${s === 'physics' ? 'физике' : 'математике'} на тему «${name}» с ответами и подробным решением. Решай ещё в бесплатном тренажёре и пройди пробный ЕНТ.`)
 }
 
 // ---------- общие части ----------
 
-function Shell({ locale, alt, crumbs, children }: { locale: Locale; alt: string; crumbs: { href: string; label: string }[]; children: React.ReactNode }) {
+function Shell({ locale, alt, crumbs, children, jsonLd }: { locale: Locale; alt: string; crumbs: { href: string; label: string }[]; children: React.ReactNode; jsonLd?: object }) {
   const t = makeT(locale)
   const ld = {
     '@context': 'https://schema.org',
@@ -101,6 +104,7 @@ function Shell({ locale, alt, crumbs, children }: { locale: Locale; alt: string;
         <Cta locale={locale} />
       </main>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(ld) }} />
+      {jsonLd && <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />}
     </div>
   )
 }
@@ -139,6 +143,15 @@ export function HubPage({ locale }: { locale: Locale }) {
           </div>
         </section>
       ))}
+      <section className="card" style={{ marginBottom: 14 }}>
+        <h2 style={{ margin: '0 0 8px', fontSize: 20 }}>
+          <Link href={pagePath(locale, 'stati')} style={{ color: 'var(--text)' }}>{t('Всё про ЕНТ: статьи и советы')}</Link>
+        </h2>
+        <ul style={{ margin: 0, paddingLeft: 20, lineHeight: 1.9 }}>
+          {articles(locale).map(a => <li key={a.slug}><Link href={pagePath(locale, 'stati', a.slug)} style={{ color: 'var(--text)' }}>{a.title}</Link></li>)}
+          <li><Link href={pagePath(locale, 'voprosy')} style={{ color: 'var(--text)' }}>{t('Частые вопросы о ЕНТ')}</Link></li>
+        </ul>
+      </section>
     </Shell>
   )
 }
@@ -257,6 +270,136 @@ export async function TopicPage({ locale, params }: { locale: Locale; params: Pr
           </ul>
         </section>
       )}
+    </Shell>
+  )
+}
+
+// ---------- статьи и вопросы ----------
+
+export function articlesMetadata(locale: Locale): Metadata {
+  return locale === 'kk'
+    ? meta(locale, ['stati'], 'ҰБТ туралы бәрі: құрылымы, балдар, дайындық', 'ҰБТ қалай құрылған, грантқа неше балл керек, физика мен математикаға қалай дайындалу керек және жиі қателер.')
+    : meta(locale, ['stati'], 'Всё про ЕНТ: структура, баллы, подготовка', 'Как устроен ЕНТ, сколько баллов нужно на грант, как готовиться к физике и математике и какие ошибки встречаются чаще всего.')
+}
+
+export async function articleMetadata(locale: Locale, params: Promise<{ slug: string }>): Promise<Metadata> {
+  const a = articleBySlug(locale, (await params).slug)
+  if (!a) return {}
+  return meta(locale, ['stati', a.slug], a.title, a.description)
+}
+
+export function faqMetadata(locale: Locale): Metadata {
+  return locale === 'kk'
+    ? meta(locale, ['voprosy'], 'ҰБТ туралы жиі қойылатын сұрақтар', 'ҰБТ балдары, тапсырмалар саны, 2 балдық тапсырмалардың бағалануы, уақыт және грант туралы қысқа жауаптар.')
+    : meta(locale, ['voprosy'], 'Частые вопросы о ЕНТ — коротко и по делу', 'Сколько баллов на ЕНТ, сколько заданий, как оцениваются задания на 2 балла, сколько длится тест и какой балл нужен на грант.')
+}
+
+function SpecList({ locale, subject }: { locale: Locale; subject: EntSubject }) {
+  const t = makeT(locale)
+  const pages = new Set(seoTopics(subject).map(x => x.topic))
+  return (
+    <div style={{ display: 'grid', gap: 10, marginBottom: 12 }}>
+      {specSections(subject).map(sec => (
+        <div key={sec}>
+          <div style={{ fontWeight: 700, marginBottom: 4 }}>{t(sec)}</div>
+          <div style={{ color: 'var(--muted)', fontSize: 14, lineHeight: 1.8 }}>
+            {ENT_SPEC[subject].filter(st => st.section === sec).flatMap(st => st.ours).filter(x => pages.has(x)).map((x, i) => (
+              <span key={x}>{i > 0 && ' · '}<Link href={pagePath(locale, SUBJECT_SLUG[subject], slugify(x))} style={{ color: 'var(--muted)' }}>{t(x)}</Link></span>
+            ))}
+          </div>
+        </div>
+      ))}
+    </div>
+  )
+}
+
+function Blocks({ locale, blocks }: { locale: Locale; blocks: Block[] }) {
+  return (
+    <div style={{ lineHeight: 1.7, fontSize: 16 }}>
+      {blocks.map((b, i) => {
+        if ('h' in b) return <h2 key={i} style={{ fontSize: 19, fontWeight: 800, margin: '22px 0 8px' }}>{b.h}</h2>
+        if ('p' in b) return <MathText key={i} text={b.p} style={{ marginBottom: 10 }} />
+        if ('ul' in b) return <ul key={i} style={{ margin: '0 0 12px', paddingLeft: 22, listStyle: 'disc' }}>{b.ul.map((x, j) => <li key={j}><MathText text={x} /></li>)}</ul>
+        if ('check' in b) return <div key={i} className="card" style={{ borderColor: '#f59e0b', margin: '14px 0', fontSize: 14 }}>⚠️ {b.check}</div>
+        if ('spec' in b) return <SpecList key={i} locale={locale} subject={b.spec} />
+        return (
+          <div key={i} style={{ display: 'flex', gap: 8, flexWrap: 'wrap', margin: '16px 0' }}>
+            {b.links.map(l => <Link key={l.href} href={l.href} className="chip" style={{ textDecoration: 'none' }}>{l.label} →</Link>)}
+          </div>
+        )
+      })}
+    </div>
+  )
+}
+
+export function ArticlesPage({ locale }: { locale: Locale }) {
+  const t = makeT(locale)
+  return (
+    <Shell locale={locale} alt={pagePath(locale === 'kk' ? 'ru' : 'kk', 'stati')}
+      crumbs={[crumbHome(locale), { href: pagePath(locale, 'stati'), label: t('Статьи') }]}>
+      <h1 className="page-title">{t('Всё про ЕНТ: статьи и советы')}</h1>
+      <p className="page-sub">{t('Как устроен тест, сколько баллов нужно на грант и как готовиться к физике и математике.')}</p>
+      <div style={{ display: 'grid', gap: 10 }}>
+        {articles(locale).map(a => (
+          <Link key={a.slug} href={pagePath(locale, 'stati', a.slug)} className="card" style={{ textDecoration: 'none', color: 'var(--text)' }}>
+            <h2 style={{ fontSize: 17, margin: '0 0 4px' }}>{a.title}</h2>
+            <div style={{ color: 'var(--muted)', fontSize: 14 }}>{a.description}</div>
+          </Link>
+        ))}
+        <Link href={pagePath(locale, 'voprosy')} className="card" style={{ textDecoration: 'none', color: 'var(--text)' }}>
+          <h2 style={{ fontSize: 17, margin: 0 }}>{t('Частые вопросы о ЕНТ')}</h2>
+        </Link>
+      </div>
+    </Shell>
+  )
+}
+
+export async function ArticlePage({ locale, params }: { locale: Locale; params: Promise<{ slug: string }> }) {
+  const slug = (await params).slug
+  const a = articleBySlug(locale, slug)
+  if (!a) notFound()
+  const t = makeT(locale)
+  const others = articles(locale).filter(x => x.slug !== slug)
+  const ld = { '@context': 'https://schema.org', '@type': 'Article', headline: a.title, description: a.description, inLanguage: locale, publisher: { '@type': 'Organization', name: 'Mirha_Edu' }, mainEntityOfPage: SITE_URL + pagePath(locale, 'stati', slug) }
+  return (
+    <Shell locale={locale} alt={pagePath(locale === 'kk' ? 'ru' : 'kk', 'stati', slug)} jsonLd={ld}
+      crumbs={[crumbHome(locale), { href: pagePath(locale, 'stati'), label: t('Статьи') }, { href: pagePath(locale, 'stati', slug), label: a.title }]}>
+      <article>
+        <h1 className="page-title">{a.title}</h1>
+        <p className="page-sub">{a.description}</p>
+        <Blocks locale={locale} blocks={a.blocks} />
+      </article>
+      <section style={{ marginTop: 20 }}>
+        <h2 style={{ fontSize: 17, margin: '0 0 8px' }}>{t('Ещё статьи')}</h2>
+        <ul style={{ margin: 0, paddingLeft: 20, lineHeight: 1.9 }}>
+          {others.map(x => <li key={x.slug}><Link href={pagePath(locale, 'stati', x.slug)} style={{ color: 'var(--text)' }}>{x.title}</Link></li>)}
+          <li><Link href={pagePath(locale, 'voprosy')} style={{ color: 'var(--text)' }}>{t('Частые вопросы о ЕНТ')}</Link></li>
+        </ul>
+      </section>
+    </Shell>
+  )
+}
+
+export function FaqPage({ locale }: { locale: Locale }) {
+  const t = makeT(locale)
+  const items = faq(locale)
+  const ld = { '@context': 'https://schema.org', '@type': 'FAQPage', mainEntity: items.map(x => ({ '@type': 'Question', name: x.q, acceptedAnswer: { '@type': 'Answer', text: x.a } })) }
+  return (
+    <Shell locale={locale} alt={pagePath(locale === 'kk' ? 'ru' : 'kk', 'voprosy')} jsonLd={ld}
+      crumbs={[crumbHome(locale), { href: pagePath(locale, 'voprosy'), label: t('Частые вопросы о ЕНТ') }]}>
+      <h1 className="page-title">{t('Частые вопросы о ЕНТ')}</h1>
+      <p className="page-sub">{t('Коротко о баллах, заданиях, времени и гранте.')}</p>
+      <div style={{ display: 'grid', gap: 10 }}>
+        {items.map(x => (
+          <section key={x.q} className="card">
+            <h2 style={{ fontSize: 17, fontWeight: 700, margin: '0 0 6px' }}>{x.q}</h2>
+            <div style={{ lineHeight: 1.6 }}>{x.a}</div>
+          </section>
+        ))}
+      </div>
+      <div style={{ marginTop: 16 }}>
+        <Link href={pagePath(locale, 'stati')} style={{ color: '#c4bbff' }}>{t('Все статьи про ЕНТ')} →</Link>
+      </div>
     </Shell>
   )
 }
