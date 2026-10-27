@@ -272,4 +272,98 @@ export type EntQuestion = {
   section?: string // раздел и тема — для статистики
   topic?: string
   bankId?: number // задание из банка, а не от ИИ
+  figure?: string // рисунок к заданию (SVG, генерируется шаблоном)
+  // Формат ЕНТ: обычное задание — один ответ (correct). multi — «один или
+  // несколько правильных ответов» (answers), match — соответствие: для каждого
+  // пункта left[k] верный вариант options[pairs[k]]. correct у них служебный.
+  kind?: 'multi' | 'match'
+  answers?: number[]
+  left?: string[]
+  pairs?: number[]
+}
+
+// Ответ в пробном ЕНТ: номер варианта; у multi — выбранные варианты,
+// у match — номер варианта для каждого пункта (−1 — не выбран)
+export type MockAnswer = number | number[] | null
+
+export function isAnswered(a: MockAnswer | undefined): boolean {
+  return a !== null && a !== undefined && (!Array.isArray(a) || a.some(x => x >= 0))
+}
+
+// Сколько ошибок в ответе: у multi — лишние и пропущенные варианты,
+// у match — неверные пары, у обычного задания — 0 или 1
+export function answerErrors(q: EntQuestion, a: MockAnswer | undefined): number {
+  if (!isAnswered(a)) return q.kind === 'match' ? q.pairs!.length : q.kind === 'multi' ? q.answers!.length : 1
+  if (q.kind === 'multi') {
+    const sel = a as number[], ok = q.answers!
+    return sel.filter(x => !ok.includes(x)).length + ok.filter(x => !sel.includes(x)).length
+  }
+  if (q.kind === 'match') return q.pairs!.filter((p, k) => (a as number[])[k] !== p).length
+  return a === q.correct ? 0 : 1
+}
+
+// Баллы за задание как на ЕНТ: за задания по 2 балла одна ошибка стоит 1 балл
+export function answerPoints(q: EntQuestion, a: MockAnswer | undefined, max: number): number {
+  const e = answerErrors(q, a)
+  return e === 0 ? max : e === 1 && max === 2 && q.kind ? 1 : 0
+}
+
+// Пробный ЕНТ по спецификации НЦТ (с 2026 года): 40 заданий, 4 часа на весь
+// вариант. 25 + 5 заданий с одним ответом — по 1 баллу, 5 «один или несколько
+// ответов» и 5 «на соответствие» — по 2 балла (одна ошибка — 1 балл).
+// Уровни трудности: A — 50%, B — 30%, C — 20%.
+export const MOCK = { count: 40, hardFrom: 30, multiFrom: 30, matchFrom: 35, minutes: 240, levelB: 20, levelC: 32 } as const
+// Формат задания по номеру: 31–35 — несколько ответов, 36–40 — соответствие
+export const mockFormat = (index: number): 'single' | 'multi' | 'match' =>
+  index >= MOCK.matchFrom ? 'match' : index >= MOCK.multiFrom ? 'multi' : 'single'
+export const mockPoints = (index: number) => (index >= MOCK.hardFrom ? 2 : 1)
+export const MOCK_MAX = MOCK.hardFrom + (MOCK.count - MOCK.hardFrom) * 2
+
+// Сложность задания пробного ЕНТ по номеру: A — шаблоны уровня ЕНТ без сложных,
+// B — уровень ЕНТ, C — «выше ЕНТ»
+export function mockLevel(index: number): 'A' | 'B' | 'C' {
+  return index >= MOCK.levelC ? 'C' : index >= MOCK.levelB ? 'B' : 'A'
+}
+
+// Решение по шагам для подсказок: режем по точкам, точкам с запятой и запятым
+// вне формул. Последний шаг (с ответом) в подсказках не показываем.
+export function solutionSteps(solution: string): string[] {
+  const parts: string[] = []
+  let cur = ''
+  let inMath = false
+  for (let i = 0; i < solution.length; i++) {
+    const ch = solution[i]
+    cur += ch
+    if (ch === '$') inMath = !inMath
+    if (!inMath && (ch === '.' || ch === ';' || ch === ',') && solution[i + 1] === ' ') {
+      if (cur.trim().length > 3) { parts.push(cur.trim()); cur = '' }
+    }
+  }
+  if (cur.trim()) parts.push(cur.trim())
+  return parts
+}
+
+// Последний шаг без итогового числа: «$t = \frac{30 \cdot 60}{90} = 20$ с.» → «$t = \frac{30 \cdot 60}{90} = \ldots$»
+function withoutAnswer(step: string): string | null {
+  const end = step.lastIndexOf('$')
+  const start = step.lastIndexOf('$', end - 1)
+  if (start < 0) return null
+  const math = step.slice(start + 1, end)
+  let depth = 0, eq = -1
+  for (let i = 0; i < math.length; i++) {
+    if (math[i] === '{') depth++
+    else if (math[i] === '}') depth--
+    else if (depth === 0 && (math[i] === '=' || math.startsWith('\\approx', i))) eq = i
+  }
+  // Нужна хотя бы одна выкладка до последнего знака равенства
+  if (eq <= 0 || !/[=\\]/.test(math.slice(0, eq))) return null
+  return `${step.slice(0, start + 1)}${math.slice(0, eq).trimEnd()} = \\ldots$`
+}
+
+// Подсказки по шагам: все шаги, кроме последнего, и последний без ответа
+export function solutionHints(solution: string): string[] {
+  const steps = solutionSteps(solution)
+  if (!steps.length) return []
+  const last = withoutAnswer(steps[steps.length - 1])
+  return [...steps.slice(0, -1), ...(last ? [last] : [])]
 }

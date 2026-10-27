@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
-import { sectionNames, topicsOf } from '@/lib/ent'
+import { sectionNames, sectionOfTopic, topicsOf } from '@/lib/ent'
 import { SECTIONS as FORMULA_SECTIONS } from '@/lib/formulas'
 import { logAnswers, type MistakePayload } from '@/lib/answer-log'
 import {
@@ -11,9 +11,12 @@ import {
   dailyAccuracy, sectionStats, strongSections, weakSections,
   type LogRow, type SectionStat,
 } from '@/lib/stats'
-import MathText from '@/app/components/MathText'
+import Figure from '@/app/components/Figure'
+import MathText, { MathLine } from '@/app/components/MathText'
 import Icon from '@/app/components/Icon'
 import Explain from '@/app/ent/Explain'
+import PracticeTools from '@/app/ent/PracticeTools'
+import MockStats from './MockStats'
 import { useT } from '@/app/components/LanguageProvider'
 
 type Mistake = { id: number; subject: 'physics' | 'math'; section: string | null; topic: string | null; created_at: string; payload: MistakePayload }
@@ -50,10 +53,12 @@ export default function StatsPage() {
   const [openMistake, setOpenMistake] = useState<number | null>(null)
   const [retry, setRetry] = useState<Record<number, number>>({})
   const [dialogs, setDialogs] = useState<Record<number, Turn[]>>({})
+  const [userId, setUserId] = useState('')
 
   useEffect(() => {
     supabase.auth.getUser().then(async ({ data: { user } }) => {
       if (!user) { router.push('/login'); return }
+      setUserId(user.id)
       const since = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString()
       const [log, attempts, wrong] = await Promise.all([
         supabase.from('answer_log').select('source, subject, section, topic, correct, created_at')
@@ -209,6 +214,8 @@ export default function StatsPage() {
         </>
       )}
 
+      {userId && <MockStats userId={userId} />}
+
       {/* Совет от ИИ */}
       <div className="card" style={{ marginBottom: 16, background: 'rgba(139,124,246,0.06)', borderColor: 'rgba(139,124,246,0.3)' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontWeight: 700, color: '#c4bbff', marginBottom: advice ? 12 : 6 }}>
@@ -260,6 +267,27 @@ export default function StatsPage() {
 
       {/* Работа над ошибками */}
       <div className="label" style={{ marginTop: 22 }}>{t('Работа над ошибками')}</div>
+      {mistakes.length > 0 && (() => {
+        // Новые похожие задания по темам ошибок — по каждому предмету отдельно
+        const links = (['physics', 'math'] as const).map(subj => {
+          const tops = [...new Set(mistakes.filter(m => m.subject === subj && m.topic && sectionOfTopic(subj, m.topic)).map(m => m.topic!))].slice(0, 8)
+          return { subj, tops }
+        }).filter(x => x.tops.length)
+        return links.length > 0 && (
+          <div className="card" style={{ marginBottom: 10 }}>
+            <div style={{ fontSize: 14, color: 'var(--muted)', marginBottom: 10 }}>
+              {t('Реши похожие задания по темам, где были ошибки. Тема засчитывается после 2 верных ответов подряд.')}
+            </div>
+            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+              {links.map(({ subj, tops }) => (
+                <Link key={subj} className="btn" href={`/ent?subject=${subj}&repair=1${tops.map(x => `&topic=${encodeURIComponent(x)}`).join('')}`}>
+                  <Icon name="refresh" size={18} /> {t('Отработать ошибки')} · {t(SUBJECT_LABEL[subj])} ({tops.length})
+                </Link>
+              ))}
+            </div>
+          </div>
+        )
+      })()}
       {mistakes.length === 0 ? (
         <div className="card" style={{ color: 'var(--muted)', fontSize: 14 }}>{t('Ошибок в заданиях ЕНТ пока нет.')}</div>
       ) : (
@@ -267,7 +295,7 @@ export default function StatsPage() {
           {mistakes.map(m => {
             const open = openMistake === m.id
             const tried = retry[m.id]
-            const q = { question: m.payload.question, options: m.payload.options, correct: m.payload.correct, solution: m.payload.solution }
+            const q = { question: m.payload.question, options: m.payload.options, correct: m.payload.correct, solution: m.payload.solution, figure: m.payload.figure }
             return (
               <div key={m.id} className="card" style={{ padding: 0, overflow: 'hidden' }}>
                 <button onClick={() => setOpenMistake(open ? null : m.id)} style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 12, padding: '14px 16px', background: 'transparent', border: 'none', color: 'var(--text)', cursor: 'pointer', textAlign: 'left', fontFamily: 'inherit' }}>
@@ -275,7 +303,7 @@ export default function StatsPage() {
                     <Icon name={tried === m.payload.correct ? 'check' : 'x'} size={16} />
                   </span>
                   <span style={{ flex: 1, minWidth: 0 }}>
-                    <span style={{ display: 'block', fontSize: 14, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{m.payload.question.replace(/\$/g, '')}</span>
+                    <MathLine text={m.payload.question} style={{ fontSize: 14 }} />
                     <span style={{ fontSize: 12, color: 'var(--muted)' }}>{t(SUBJECT_LABEL[m.subject])}{m.section ? ` · ${t(m.section)}` : ''} · {new Date(m.created_at).toLocaleDateString(dateLocale)}</span>
                   </span>
                   <Icon name="arrowRight" size={16} style={{ transform: open ? 'rotate(90deg)' : 'none', transition: 'transform 0.2s', color: 'var(--muted)' }} />
@@ -283,6 +311,7 @@ export default function StatsPage() {
                 {open && (
                   <div style={{ padding: '0 16px 16px' }}>
                     <MathText text={m.payload.question} style={{ fontSize: 15, marginBottom: 12 }} />
+                    <Figure svg={m.payload.figure} />
                     <div style={{ color: 'var(--muted)', fontSize: 13, marginBottom: 8 }}>
                       {tried === undefined ? t('Попробуй решить ещё раз:') : tried === m.payload.correct ? t('Теперь верно!') : t('Снова неверно — посмотри разбор ниже.')}
                     </div>
@@ -302,6 +331,9 @@ export default function StatsPage() {
                     </div>
                     {tried !== undefined && tried !== m.payload.correct && (
                       <Explain q={q} chosen={tried} turns={dialogs[m.id] || []} setTurns={t => setDialogs(d => ({ ...d, [m.id]: t }))} />
+                    )}
+                    {tried !== undefined && m.topic && (
+                      <PracticeTools q={{ ...q, topic: m.topic, section: m.section ?? undefined }} subject={m.subject} retry={false} />
                     )}
                   </div>
                 )}

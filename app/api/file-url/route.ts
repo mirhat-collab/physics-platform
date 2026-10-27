@@ -43,8 +43,12 @@ export async function POST(req: NextRequest) {
 
     // 3) Файл должен принадлежать теме, которую пользователю видно по RLS —
     //    иначе любой вошедший получил бы файлы закрытого класса (ЕНТ)
-    const { data: topics } = await supabase.from('topics').select('media')
-    const allowed = (topics || []).some(t =>
+    //    Файлы справочника ЕНТ открыты всем вошедшим.
+    const [{ data: topics }, { data: materials }] = await Promise.all([
+      supabase.from('topics').select('media'),
+      supabase.from('ent_materials').select('media'),
+    ])
+    const allowed = [...(topics || []), ...(materials || [])].some(t =>
       ((t.media || []) as { url: string }[]).some(m => extractStoragePath(m.url, BUCKET) === path)
     )
     if (!allowed) {

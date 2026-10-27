@@ -1,11 +1,12 @@
 import { type Template, txt } from './helpers'
 
 // Теоретические вопросы: условие, правильный ответ, неправильные варианты, пояснение.
-type Q = [question: string, correct: string, wrongs: string[], why: string]
+export type Q = [question: string, correct: string, wrongs: string[], why: string]
 
-function theory(topic: string, items: Q[]): Template[] {
+export function theory(topic: string, items: Q[]): Template[] {
   return items.map(([q, a, w, why]) => ({
     topic,
+    theory: true,
     gen: n => txt(q, a, [...w].sort(() => Math.random() - 0.5), n, why),
   }))
 }

@@ -5,7 +5,7 @@ import {
   ENT_BATCH, ENT_DIFFICULTIES, ENT_SUBJECTS, sectionNames, sectionOfTopic, topicsOf,
   type EntDifficulty, type EntQuestion, type EntSubject,
 } from '@/lib/ent'
-import { generateFromTemplate } from '@/lib/templates'
+import { generateFromTemplate, type TemplateLevel } from '@/lib/templates'
 import { AI_LANGUAGE, type Locale } from '@/lib/i18n'
 import { getLocale } from '@/lib/i18n/server'
 import { translateFields } from '@/lib/translate'
@@ -59,12 +59,17 @@ function isValid(q: EntQuestion): boolean {
     new Set(q.options).size === q.options.length
 }
 
-// Какие темы будут в этой порции
-function planSlots(subject: EntSubject, section: string, topic: string, count: number): Slot[] {
+// Какие темы будут в этой порции. Если ученик выбрал несколько тем,
+// раскладываем их по кругу в случайном порядке, чтобы ни одна не потерялась.
+function planSlots(subject: EntSubject, section: string, topics: string[], count: number): Slot[] {
   const slots: Slot[] = []
+  let deck: string[] = []
   for (let i = 0; i < count; i++) {
-    if (topic !== 'all') slots.push({ section, topic })
-    else {
+    if (topics.length) {
+      if (!deck.length) deck = shuffle(topics)
+      const topic = deck.pop()!
+      slots.push({ section: sectionOfTopic(subject, topic)!, topic })
+    } else {
       const sec = section !== 'all' ? section : shuffle(sectionNames(subject))[0]
       slots.push({ section: sec, topic: shuffle(topicsOf(subject, sec))[0] })
     }
@@ -72,16 +77,16 @@ function planSlots(subject: EntSubject, section: string, topic: string, count: n
   return slots
 }
 
-function fromTemplate(subject: EntSubject, slot: Slot, nOptions: number, locale: Locale): EntQuestion | null {
-  const g = generateFromTemplate(subject, slot.topic, nOptions, locale)
+function fromTemplate(subject: EntSubject, slot: Slot, nOptions: number, locale: Locale, difficulty: TemplateLevel): EntQuestion | null {
+  const g = generateFromTemplate(subject, slot.topic, nOptions, locale, difficulty)
   return g ? { ...g, section: slot.section, topic: slot.topic } : null
 }
 
-async function loadBank(subject: EntSubject, section: string, difficulty: EntDifficulty, exclude: number[]): Promise<BankRow[]> {
+async function loadBank(subject: EntSubject, sections: string[], difficulty: EntDifficulty, exclude: number[]): Promise<BankRow[]> {
   const supabase = await createSupabaseServer()
   let query = supabase.from('ent_bank').select('id, section, topic, question, options, correct, solution')
     .eq('subject', subject).eq('difficulty', difficulty).limit(500)
-  if (section !== 'all') query = query.eq('section', section)
+  if (sections.length) query = query.in('section', sections)
   const { data } = await query
   return shuffle(((data || []) as BankRow[]).filter(r => !exclude.includes(r.id)))
 }
@@ -121,8 +126,14 @@ export async function POST(req: NextRequest) {
   const difficulty = body?.difficulty as EntDifficulty
   const section = String(body?.section ?? 'all')
   const topic = String(body?.topic ?? 'all')
+  // Несколько тем сразу (можно из разных разделов); старый параметр topic — одна тема
+  const topics: string[] = Array.isArray(body?.topics)
+    ? [...new Set(body.topics.map(String) as string[])].slice(0, 200)
+    : topic !== 'all' ? [topic] : []
   const count = Number(body?.count)
   const exclude: number[] = Array.isArray(body?.exclude) ? body.exclude.filter(Number.isInteger).slice(0, 200) : []
+  // Похожая задача при разборе ошибок: только по шаблонам — быстро и без лимита ИИ
+  const templatesOnly = body?.templatesOnly === true
 
   if (!ENT_SUBJECTS[subject] || !ENT_DIFFICULTIES[difficulty] || !(count >= 1 && count <= ENT_BATCH)) {
     return NextResponse.json({ error: 'Неверные параметры' }, { status: 400 })
@@ -130,21 +141,26 @@ export async function POST(req: NextRequest) {
   if (section !== 'all' && !sectionNames(subject).includes(section)) {
     return NextResponse.json({ error: 'Неизвестный раздел' }, { status: 400 })
   }
-  if (topic !== 'all' && sectionOfTopic(subject, topic) !== section) {
+  if (topics.some(t => !sectionOfTopic(subject, t))) {
     return NextResponse.json({ error: 'Неизвестная тема' }, { status: 400 })
   }
 
   const locale = await getLocale()
   const nOptions = ENT_DIFFICULTIES[difficulty].options
   const share = SHARE[difficulty]
-  const slots = planSlots(subject, section, topic, count)
-  const bank = await loadBank(subject, section, difficulty, exclude)
+  const slots = planSlots(subject, section, topics, count)
+  const bankSections = topics.length ? [...new Set(slots.map(s => s.section))] : section !== 'all' ? [section] : []
+  const bank = templatesOnly ? [] : await loadBank(subject, bankSections, difficulty, exclude)
   const aiSlots: Slot[] = []
 
   for (const slot of slots) {
+    if (templatesOnly) {
+      slot.q = fromTemplate(subject, slot, nOptions, locale, difficulty) ?? undefined
+      continue
+    }
     const r = Math.random()
     if (r < share.template) {
-      slot.q = fromTemplate(subject, slot, nOptions, locale) ?? undefined
+      slot.q = fromTemplate(subject, slot, nOptions, locale, difficulty) ?? undefined
     } else if (r < share.template + share.bank) {
       // Подходящая задача из банка: та же тема, а если тема не указана — тот же раздел
       const idx = bank.findIndex(b => b.topic ? b.topic === slot.topic : b.section === slot.section)
@@ -167,7 +183,7 @@ export async function POST(req: NextRequest) {
         console.error('ENT AI fallback to templates:', err)
       }
     }
-    for (const slot of aiSlots) if (!slot.q) slot.q = fromTemplate(subject, slot, nOptions, locale) ?? undefined
+    for (const slot of aiSlots) if (!slot.q) slot.q = fromTemplate(subject, slot, nOptions, locale, difficulty) ?? undefined
   }
 
   if (locale !== 'ru') await localizeBank(slots, locale)

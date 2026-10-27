@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
 import Icon from '@/app/components/Icon'
 import { sortTopicsByNumber } from '@/lib/topic-order'
+import EntCoach from '@/app/components/EntCoach'
 import { useT } from '@/app/components/LanguageProvider'
 import { useTranslatedNames } from '@/app/components/useTranslatedNames'
 
@@ -94,6 +95,8 @@ export default function DashboardPage() {
             <div style={{ color: '#888', fontSize: 12, marginTop: 4 }}>{t('Прогресс')}</div>
           </div>
         </div>
+
+        <EntCoach />
 
         <div style={{ background: '#1a1a2e', borderRadius: 20, padding: '20px 24px', marginBottom: 20, border: '1px solid #2a2a3e' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 12 }}>
