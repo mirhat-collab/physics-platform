@@ -1,18 +1,27 @@
 'use client'
 import { useEffect, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { extractStoragePath, isPdf, isOfficeDoc, fileExt } from '@/lib/file-protect'
 import { useT } from '@/app/components/LanguageProvider'
 
 type Props = {
   fileUrl: string   // старое значение media[].url (используем только чтобы достать путь)
   fileName: string
-  watermarkLabel: string // например "Иванов Иван · 28.08.2026 20:48"
+  watermarkLabel?: string // например "Иванов Иван · 28.08.2026 20:48"; без него — без водяного знака
+  material?: boolean // файл справочника ЕНТ: без водяного знака, с кнопкой «Скачать»
   onClose: () => void
 }
 
 const BUCKET = 'topic-media'
 
-export default function ProtectedFileViewer({ fileUrl, fileName, watermarkLabel, onClose }: Props) {
+const VIEWABLE = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'mp4', 'webm', 'mov', 'mp3', 'wav', 'ogg', 'm4a']
+
+// Можно ли показать файл на сайте (архивы и прочее — только скачать)
+export function canView(name: string): boolean {
+  return isPdf(name) || isOfficeDoc(name) || VIEWABLE.includes(fileExt(name))
+}
+
+export default function ProtectedFileViewer({ fileUrl, fileName, watermarkLabel = '', material = false, onClose }: Props) {
   const { t } = useT()
   const [signedUrl, setSignedUrl] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -33,7 +42,7 @@ export default function ProtectedFileViewer({ fileUrl, fileName, watermarkLabel,
         const res = await fetch('/api/file-url', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ path }),
+          body: JSON.stringify(material ? { path, material: true } : { path }),
         })
         const data = await res.json().catch(() => null)
         if (!res.ok || !data) throw new Error(t(data?.error || 'Ошибка загрузки файла'))
@@ -50,7 +59,20 @@ export default function ProtectedFileViewer({ fileUrl, fileName, watermarkLabel,
 
   const ext = fileExt(fileName)
 
-  return (
+  async function download() {
+    const res = await fetch('/api/file-url', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ path: extractStoragePath(fileUrl, BUCKET), download: fileName }),
+    })
+    const data = await res.json().catch(() => null)
+    if (res.ok && data?.url) window.location.href = data.url
+    else setError(t(data?.error || 'Ошибка загрузки файла'))
+  }
+
+  // Через портал в body: иначе окно оказывается под боковым меню, если
+  // страница-родитель создаёт свой слой (анимация с transform)
+  return createPortal(
     <div
       onContextMenu={(e) => e.preventDefault()}
       style={{
@@ -65,6 +87,17 @@ export default function ProtectedFileViewer({ fileUrl, fileName, watermarkLabel,
         <div style={{ fontSize: 14, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
           {fileName}
         </div>
+        <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
+        {material && (
+          <button
+            onClick={download}
+            style={{
+              background: '#667eea', border: 'none', color: '#fff', borderRadius: 10, padding: '8px 16px', cursor: 'pointer', fontSize: 14,
+            }}
+          >
+            ⬇ {t('Скачать')}
+          </button>
+        )}
         <button
           onClick={onClose}
           style={{
@@ -74,6 +107,7 @@ export default function ProtectedFileViewer({ fileUrl, fileName, watermarkLabel,
         >
           {t('✕ Закрыть')}
         </button>
+        </div>
       </div>
 
       <div style={{
@@ -101,12 +135,20 @@ export default function ProtectedFileViewer({ fileUrl, fileName, watermarkLabel,
         {!loading && !error && signedUrl && ['mp4', 'webm', 'mov'].includes(ext) && (
           <video src={signedUrl} controls controlsList="nodownload" style={{ width: '100%', display: 'block' }} />
         )}
+        {!loading && !error && signedUrl && ['mp3', 'wav', 'ogg', 'm4a'].includes(ext) && (
+          <audio src={signedUrl} controls controlsList="nodownload" style={{ width: '100%', display: 'block', padding: 20 }} />
+        )}
+        {!loading && !error && signedUrl && !canView(fileName) && (
+          <div style={{ color: '#888', textAlign: 'center', padding: '80px 20px' }}>{material ? t('Этот файл нельзя посмотреть на сайте — нажми «Скачать».') : t('Этот файл нельзя посмотреть на сайте.')}</div>
+        )}
       </div>
-    </div>
+    </div>,
+    document.body
   )
 }
 
 function Watermark({ label }: { label: string }) {
+  if (!label) return null
   // Раньше это была плотная сетка 10x4 (40 плашек) с непрозрачностью 0.9 —
   // держало от копирования, но забивало текст под собой и мешало читать.
   // Реже и бледнее — метку по-прежнему видно на скриншоте, но она не спорит

@@ -6,6 +6,7 @@ import { gradeVariants } from '@/lib/grade-match'
 import { sortTopicsByNumber } from '@/lib/topic-order'
 import { useT } from '@/app/components/LanguageProvider'
 import MediaUploader, { fileIcon, type MediaItem } from '@/app/components/MediaUploader'
+import MaterialsAdmin from '@/app/components/MaterialsAdmin'
 
 
 
@@ -28,7 +29,8 @@ export default function AdminPage() {
   const [isAdmin, setIsAdmin] = useState(false)
   const [classes, setClasses] = useState<Class[]>([])
   const [topics, setTopics] = useState<Topic[]>([])
-  const [tab, setTab] = useState<'classes' | 'topics'>('classes')
+  const [tab, setTab] = useState<'classes' | 'topics' | 'materials'>('classes')
+  const [materialCount, setMaterialCount] = useState<number | null>(null)
   const [newClass, setNewClass] = useState({ name: '', program: '' })
   const [accessClass, setAccessClass] = useState<Class | null>(null)
   const [accessGrants, setAccessGrants] = useState<AccessGrant[]>([])
@@ -242,12 +244,15 @@ export default function AdminPage() {
           <h1 style={{ fontSize: '2rem', fontWeight: 800, margin: 0 }}>{t('⚙️ Панель админа')}</h1>
           <button onClick={handleLogout} style={{ ...btn('#2a2a3e'), border: '1px solid #3a3a5e', fontSize: 13 }}>{t('🚪 Выйти')}</button>
         </div>
-        <p style={{ color: '#888', marginBottom: 32 }}>{t('Управление классами и темами')}</p>
+        <p style={{ color: '#888', marginBottom: 32 }}>{t('Управление классами, темами и справочником ЕНТ')}</p>
 
-        <div style={{ display: 'flex', gap: 12, marginBottom: 32 }}>
+        <div style={{ display: 'flex', gap: 12, marginBottom: 32, flexWrap: 'wrap' }}>
           <button onClick={() => setTab('classes')} style={{ ...btn(tab === 'classes' ? '#667eea' : '#1a1a2e'), border: '1px solid #2a2a3e' }}>{t('📚 Классы (')}{classes.length})</button>
           <button onClick={() => setTab('topics')} style={{ ...btn(tab === 'topics' ? '#667eea' : '#1a1a2e'), border: '1px solid #2a2a3e' }}>{t('📖 Темы (')}{topics.length})</button>
+          <button onClick={() => setTab('materials')} style={{ ...btn(tab === 'materials' ? '#667eea' : '#1a1a2e'), border: '1px solid #2a2a3e' }}>📘 {t('Справочник ЕНТ')}{materialCount !== null ? ` (${materialCount})` : ''}</button>
         </div>
+
+        {tab === 'materials' && <MaterialsAdmin onCount={setMaterialCount} />}
 
         {tab === 'classes' && (
           <div>

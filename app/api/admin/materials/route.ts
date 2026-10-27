@@ -6,17 +6,22 @@ import { extractStoragePath } from '@/lib/file-protect'
 const BUCKET = 'topic-media'
 const SUBJECTS = ['physics', 'math', 'general']
 
-type MediaItem = { url: string; type: string; name: string }
+type MediaItem = { url: string; type: string; name: string; size?: number }
 
 // Поля материала из запроса: лишнее отбрасываем, чтобы через API нельзя
 // было записать в таблицу что-то кроме самого материала
 function pickFields(body: Record<string, unknown>) {
-  const media = Array.isArray(body.media) ? (body.media as MediaItem[]).filter(m => m && typeof m.url === 'string') : []
+  const media = Array.isArray(body.media) ? (body.media as MediaItem[]).filter(m => m && typeof m.url === 'string' && /^https?:\/\//i.test(m.url)) : []
   return {
     subject: SUBJECTS.includes(String(body.subject)) ? String(body.subject) : 'general',
     title: String(body.title ?? '').trim().slice(0, 300),
     body: String(body.body ?? '').slice(0, 50000),
-    media: media.map(m => ({ url: m.url, type: m.type, name: String(m.name ?? '') })),
+    media: media.map(m => ({
+      url: m.url,
+      type: ['image', 'video', 'file', 'link'].includes(m.type) ? m.type : 'file',
+      name: String(m.name ?? '').slice(0, 300),
+      ...(typeof m.size === 'number' ? { size: m.size } : {}),
+    })),
   }
 }
 
