@@ -149,7 +149,7 @@ export function buildMock(subject: EntSubject, locale: Locale): EntQuestion[] {
       for (let attempt = 0; attempt < 12; attempt++) {
         const g = generateFromTemplate(subject, topic, n, locale, tl, attempt < 6 ? kind : kind === 'theory' ? 'calc' : kind)
         if (!g) break
-        const cand = withTopic({ question: g.question, options: g.options, correct: g.correct, solution: g.solution }, topic)
+        const cand = withTopic({ question: g.question, options: g.options, correct: g.correct, solution: g.solution, ...(g.figure ? { figure: g.figure } : {}) }, topic)
         if (!valid(cand, n)) continue
         q = shuffleOptions(cand)
         if (!seen.has(g.question)) break

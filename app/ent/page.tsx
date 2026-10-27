@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
 import { sectionNames, sectionOfTopic, solutionHints, topicsOf, ENT_BATCH, ENT_COUNTS, ENT_DIFFICULTIES, ENT_SUBJECTS, type EntDifficulty, type EntQuestion, type EntSubject } from '@/lib/ent'
 import { sectionStats, type LogRow } from '@/lib/stats'
+import Figure from '@/app/components/Figure'
 import MathText, { MathLine } from '@/app/components/MathText'
 import Icon from '@/app/components/Icon'
 import Explain from './Explain'
@@ -552,6 +553,7 @@ export default function EntPage() {
       <div className="card" style={{ padding: '20px 18px' }}>
         <div style={{ color: 'var(--muted)', fontSize: 12, fontWeight: 700, marginBottom: 8 }}>{t('ЗАДАНИЕ')} {index + 1}</div>
         <MathText text={q.question} style={{ fontSize: 16, lineHeight: 1.6, marginBottom: 18 }} />
+        <Figure svg={q.figure} />
 
         <div style={{ display: 'grid', gap: 8 }}>
           {q.options.map((opt, i) => {

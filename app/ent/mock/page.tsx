@@ -3,6 +3,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
 import { ENT_SUBJECTS, MOCK, MOCK_MAX, answerErrors, answerPoints, isAnswered, mockPoints, type EntQuestion, type EntSubject, type MockAnswer } from '@/lib/ent'
+import Figure from '@/app/components/Figure'
 import MathText, { MathLine } from '@/app/components/MathText'
 import Icon from '@/app/components/Icon'
 import Explain from '../Explain'
@@ -368,6 +369,7 @@ export default function MockEntPage() {
           <span>{mockPoints(index) === 2 ? t('2 балла') : t('1 балл')}</span>
         </div>
         <MathText text={q.question} style={{ fontSize: 16, lineHeight: 1.6, marginBottom: 12 }} />
+        <Figure svg={q.figure} />
         {q.kind === 'multi' && <div style={{ color: '#c4bbff', fontSize: 13, fontWeight: 700, marginBottom: 12 }}>{t('Выберите один или несколько правильных ответов')}</div>}
         {q.kind === 'match' ? (
           <div style={{ display: 'grid', gap: 14 }}>

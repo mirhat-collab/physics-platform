@@ -158,6 +158,7 @@ export function buildMulti(g: Generated, subject: EntSubject, locale: Locale): E
     const note = tr('Верные варианты — одно и то же значение, записанное по-разному.')
     return {
       question: g.question, options, correct: answers[0], kind: 'multi' as const, answers,
+      ...(g.figure ? { figure: g.figure } : {}),
       solution: k > 1 ? `${g.solution} ${note}` : g.solution,
     }
   })
@@ -165,7 +166,8 @@ export function buildMulti(g: Generated, subject: EntSubject, locale: Locale): E
 
 // «Соответствие» из трёх задач: к каждой — её ответ, плюс два лишних варианта
 export function buildMatch(gs: Generated[], locale: Locale): EntQuestion | null {
-  if (gs.length !== 3 || new Set(gs.map(g => g.question)).size !== 3) return null
+  // В соответствии у пунктов нет места для рисунка — задачи по рисунку не берём
+  if (gs.length !== 3 || gs.some(g => g.figure) || new Set(gs.map(g => g.question)).size !== 3) return null
   const right = gs.map(g => g.options[g.correct])
   if (new Set(right).size !== 3) return null
   const extra: string[] = []

@@ -272,6 +272,7 @@ export type EntQuestion = {
   section?: string // раздел и тема — для статистики
   topic?: string
   bankId?: number // задание из банка, а не от ИИ
+  figure?: string // рисунок к заданию (SVG, генерируется шаблоном)
   // Формат ЕНТ: обычное задание — один ответ (correct). multi — «один или
   // несколько правильных ответов» (answers), match — соответствие: для каждого
   // пункта left[k] верный вариант options[pairs[k]]. correct у них служебный.

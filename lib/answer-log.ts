@@ -17,10 +17,11 @@ export type MistakePayload = {
   correct: number
   chosen: number | null // null — «не знаю»
   solution: string
+  figure?: string
 }
 
 export function entMistakePayload(q: EntQuestion, chosen: number | null): MistakePayload {
-  return { question: q.question, options: q.options, correct: q.correct, chosen, solution: q.solution }
+  return { question: q.question, options: q.options, correct: q.correct, chosen, solution: q.solution, ...(q.figure ? { figure: q.figure } : {}) }
 }
 
 // Записывает ответ в статистику. Ошибки сети не мешают решать дальше.

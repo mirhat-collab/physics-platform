@@ -1,5 +1,6 @@
 'use client'
 import type { EntQuestion, MockAnswer } from '@/lib/ent'
+import Figure from '@/app/components/Figure'
 import MathText from '@/app/components/MathText'
 import { useT } from '@/app/components/LanguageProvider'
 
@@ -52,6 +53,7 @@ export default function QuestionBody({ q, chosen }: { q: EntQuestion; chosen: Mo
   return (
     <div>
       <MathText text={q.question} style={{ fontSize: 15, lineHeight: 1.6, marginBottom: 10 }} />
+      <Figure svg={q.figure} />
       {multi && <div style={{ color: 'var(--muted)', fontSize: 13, marginBottom: 6 }}>{t('Один или несколько правильных ответов')}</div>}
       <div style={{ display: 'grid', gap: 4, fontSize: 14 }}>
         {q.options.map((opt, i) => (

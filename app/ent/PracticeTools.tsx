@@ -2,6 +2,7 @@
 import { useState } from 'react'
 import { solutionHints, type EntQuestion, type EntSubject } from '@/lib/ent'
 import { entMistakePayload, logAnswers } from '@/lib/answer-log'
+import Figure from '@/app/components/Figure'
 import MathText from '@/app/components/MathText'
 import { LETTERS } from './QuestionBody'
 import { useT } from '@/app/components/LanguageProvider'
@@ -26,6 +27,7 @@ export function RetryCard({ q, subject, onDone }: { q: EntQuestion; subject: Ent
   return (
     <div style={{ border: '1px solid var(--line)', borderRadius: 12, padding: 14, display: 'grid', gap: 8 }}>
       <MathText text={q.question} style={{ fontSize: 15, lineHeight: 1.6 }} />
+      <Figure svg={q.figure} />
       {q.options.map((opt, i) => {
         let border = 'var(--line)', bg = 'var(--surface-2)'
         if (answered && i === q.correct) { border = 'var(--good)'; bg = 'rgba(52,211,153,0.1)' }

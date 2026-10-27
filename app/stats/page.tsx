@@ -11,6 +11,7 @@ import {
   dailyAccuracy, sectionStats, strongSections, weakSections,
   type LogRow, type SectionStat,
 } from '@/lib/stats'
+import Figure from '@/app/components/Figure'
 import MathText, { MathLine } from '@/app/components/MathText'
 import Icon from '@/app/components/Icon'
 import Explain from '@/app/ent/Explain'
@@ -294,7 +295,7 @@ export default function StatsPage() {
           {mistakes.map(m => {
             const open = openMistake === m.id
             const tried = retry[m.id]
-            const q = { question: m.payload.question, options: m.payload.options, correct: m.payload.correct, solution: m.payload.solution }
+            const q = { question: m.payload.question, options: m.payload.options, correct: m.payload.correct, solution: m.payload.solution, figure: m.payload.figure }
             return (
               <div key={m.id} className="card" style={{ padding: 0, overflow: 'hidden' }}>
                 <button onClick={() => setOpenMistake(open ? null : m.id)} style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 12, padding: '14px 16px', background: 'transparent', border: 'none', color: 'var(--text)', cursor: 'pointer', textAlign: 'left', fontFamily: 'inherit' }}>
@@ -310,6 +311,7 @@ export default function StatsPage() {
                 {open && (
                   <div style={{ padding: '0 16px 16px' }}>
                     <MathText text={m.payload.question} style={{ fontSize: 15, marginBottom: 12 }} />
+                    <Figure svg={m.payload.figure} />
                     <div style={{ color: 'var(--muted)', fontSize: 13, marginBottom: 8 }}>
                       {tried === undefined ? t('Попробуй решить ещё раз:') : tried === m.payload.correct ? t('Теперь верно!') : t('Снова неверно — посмотри разбор ниже.')}
                     </div>

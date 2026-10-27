@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
 import { ENT_BATCH, ENT_DIFFICULTIES, ENT_SUBJECTS, sectionNames, topicsOf, type EntDifficulty, type EntQuestion, type EntSubject } from '@/lib/ent'
+import Figure from '@/app/components/Figure'
 import MathText from '@/app/components/MathText'
 import Icon from '@/app/components/Icon'
 import { LETTERS } from '../QuestionBody'
@@ -172,6 +173,7 @@ export default function PrintPage() {
                   <div style={{ display: 'flex', gap: 6 }}>
                     <b>{i + 1}.</b>
                     <MathText text={q.question} />
+                    <Figure svg={q.figure} style={{ color: '#000', maxWidth: 300 }} />
                   </div>
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px 22px', paddingLeft: 20, marginTop: 4 }}>
                     {q.options.map((o, k) => (
