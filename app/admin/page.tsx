@@ -7,6 +7,7 @@ import { sortTopicsByNumber } from '@/lib/topic-order'
 import { useT } from '@/app/components/LanguageProvider'
 import MediaUploader, { fileIcon, type MediaItem } from '@/app/components/MediaUploader'
 import MaterialsAdmin from '@/app/components/MaterialsAdmin'
+import AdminStats from '@/app/components/AdminStats'
 
 
 
@@ -29,7 +30,7 @@ export default function AdminPage() {
   const [isAdmin, setIsAdmin] = useState(false)
   const [classes, setClasses] = useState<Class[]>([])
   const [topics, setTopics] = useState<Topic[]>([])
-  const [tab, setTab] = useState<'classes' | 'topics' | 'materials'>('classes')
+  const [tab, setTab] = useState<'classes' | 'topics' | 'materials' | 'stats'>('classes')
   const [materialCount, setMaterialCount] = useState<number | null>(null)
   const [newClass, setNewClass] = useState({ name: '', program: '' })
   const [accessClass, setAccessClass] = useState<Class | null>(null)
@@ -250,9 +251,11 @@ export default function AdminPage() {
           <button onClick={() => setTab('classes')} style={{ ...btn(tab === 'classes' ? '#667eea' : '#1a1a2e'), border: '1px solid #2a2a3e' }}>{t('📚 Классы (')}{classes.length})</button>
           <button onClick={() => setTab('topics')} style={{ ...btn(tab === 'topics' ? '#667eea' : '#1a1a2e'), border: '1px solid #2a2a3e' }}>{t('📖 Темы (')}{topics.length})</button>
           <button onClick={() => setTab('materials')} style={{ ...btn(tab === 'materials' ? '#667eea' : '#1a1a2e'), border: '1px solid #2a2a3e' }}>📘 {t('Справочник ЕНТ')}{materialCount !== null ? ` (${materialCount})` : ''}</button>
+          <button onClick={() => setTab('stats')} style={{ ...btn(tab === 'stats' ? '#667eea' : '#1a1a2e'), border: '1px solid #2a2a3e' }}>📊 {t('Статистика')}</button>
         </div>
 
         {tab === 'materials' && <MaterialsAdmin onCount={setMaterialCount} />}
+        {tab === 'stats' && <AdminStats />}
 
         {tab === 'classes' && (
           <div>
