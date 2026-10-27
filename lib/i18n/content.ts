@@ -2,8 +2,7 @@ import { contentKk } from './content-kk'
 import { contentKkMore } from './content-kk-more'
 import { contentKkHard } from './content-kk-hard'
 import { contentKkHard3 } from './content-kk-hard3'
-import { contentEn } from './content-en'
-import { contentEnExtra, contentKkExtra } from './content-extra'
+import { contentKkExtra } from './content-extra'
 import type { Locale } from './index'
 
 // Переводы учебного контента, который генерирует код на сервере: условия,
@@ -13,7 +12,6 @@ import type { Locale } from './index'
 const CONTENT: Record<Locale, Record<string, string> | null> = {
   ru: null,
   kk: { ...contentKkMore, ...contentKkHard, ...contentKkHard3, ...contentKkExtra, ...contentKk },
-  en: { ...contentEnExtra, ...contentEn },
 }
 
 export function contentLookup(locale: Locale, text: string): string {

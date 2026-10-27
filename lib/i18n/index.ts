@@ -1,10 +1,9 @@
 import { kk } from './kk'
-import { en } from './en'
 
 // Язык интерфейса хранится в cookie (а не в адресе страницы), поэтому ссылки
 // остаются прежними. Исходные тексты в коде — русские: t('Текст') ищет
 // перевод по самой русской строке и, если его нет, показывает оригинал.
-export const LOCALES = ['ru', 'kk', 'en'] as const
+export const LOCALES = ['ru', 'kk'] as const
 export type Locale = (typeof LOCALES)[number]
 export const DEFAULT_LOCALE: Locale = 'ru'
 export const LOCALE_COOKIE = 'lang'
@@ -12,18 +11,17 @@ export const LOCALE_COOKIE = 'lang'
 export const LOCALE_LABELS: Record<Locale, { short: string; name: string }> = {
   ru: { short: 'РУС', name: 'Русский' },
   kk: { short: 'ҚАЗ', name: 'Қазақша' },
-  en: { short: 'ENG', name: 'English' },
 }
 
 // Для toLocaleDateString и т.п.
-export const DATE_LOCALE: Record<Locale, string> = { ru: 'ru-RU', kk: 'kk-KZ', en: 'en-US' }
+export const DATE_LOCALE: Record<Locale, string> = { ru: 'ru-RU', kk: 'kk-KZ' }
 
 // Классы в базе называются "7th Grade" и т.п. — по-русски показываем "7 класс"
 const ru: Record<string, string> = {
   '7th Grade': '7 класс', '8th Grade': '8 класс', '9th Grade': '9 класс', '10th Grade': '10 класс', '11th Grade': '11 класс',
 }
 
-const DICTS: Record<Locale, Record<string, string>> = { ru, kk, en }
+const DICTS: Record<Locale, Record<string, string>> = { ru, kk }
 
 export type TVars = Record<string, string | number | null | undefined>
 export type TFunction = (text: string, vars?: TVars) => string
@@ -43,4 +41,4 @@ export function makeT(locale: Locale): TFunction {
 }
 
 // Для ответов ИИ: на каком языке просить объяснение
-export const AI_LANGUAGE: Record<Locale, string> = { ru: 'русском', kk: 'казахском', en: 'английском' }
+export const AI_LANGUAGE: Record<Locale, string> = { ru: 'русском', kk: 'казахском' }

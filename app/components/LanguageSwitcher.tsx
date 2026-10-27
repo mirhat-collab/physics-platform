@@ -2,7 +2,7 @@
 import { LOCALES, LOCALE_LABELS } from '@/lib/i18n'
 import { useT } from './LanguageProvider'
 
-// Переключатель языка: РУС / ҚАЗ / ENG
+// Переключатель языка: РУС / ҚАЗ
 export default function LanguageSwitcher({ compact = false }: { compact?: boolean }) {
   const { locale, setLocale, t } = useT()
   return (
