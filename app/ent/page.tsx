@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
 import { sectionNames, sectionOfTopic, solutionHints, topicsOf, ENT_BATCH, ENT_COUNTS, ENT_DIFFICULTIES, ENT_SUBJECTS, type EntDifficulty, type EntQuestion, type EntSubject } from '@/lib/ent'
 import { sectionStats, type LogRow } from '@/lib/stats'
-import MathText from '@/app/components/MathText'
+import MathText, { MathLine } from '@/app/components/MathText'
 import Icon from '@/app/components/Icon'
 import Explain from './Explain'
 import PracticeTools from './PracticeTools'
@@ -459,9 +459,7 @@ export default function EntPage() {
                   <span style={{ width: 28, height: 28, borderRadius: 8, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: ok ? 'rgba(52,211,153,0.15)' : 'rgba(248,113,113,0.15)', color: ok ? 'var(--good)' : 'var(--bad)' }}>
                     <Icon name={ok ? 'check' : 'x'} size={16} />
                   </span>
-                  <span style={{ flex: 1, fontSize: 14, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                    {i + 1}. {q.question.replace(/\$/g, '')}
-                  </span>
+                  <MathLine text={`${i + 1}. ${q.question}`} style={{ flex: 1, minWidth: 0, fontSize: 14 }} />
                   <Icon name="arrowRight" size={16} style={{ transform: open ? 'rotate(90deg)' : 'none', transition: 'transform 0.2s', color: 'var(--muted)' }} />
                 </button>
                 {open && (

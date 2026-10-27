@@ -1,5 +1,6 @@
 'use client'
 import { useEffect, useState } from 'react'
+import MathText from '@/app/components/MathText'
 import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
@@ -425,7 +426,7 @@ export default function TopicPage() {
             )}
             {!quizLoading && quiz && quiz.map((q, qi) => (
               <div key={qi} style={{ marginBottom: 24, padding: '20px', background: '#0f0f1a', borderRadius: 14, border: '1px solid #2a2a3e' }}>
-                <div style={{ fontWeight: 700, marginBottom: 14, fontSize: 15 }}>{qi + 1}. {q.question}</div>
+                <MathText text={`${qi + 1}. ${q.question}`} style={{ fontWeight: 700, marginBottom: 14, fontSize: 15 }} />
                 <div style={{ display: 'grid', gap: 8 }}>
                   {q.options.map((opt, ai) => {
                     const isSelected = quizAnswers[qi] === ai
@@ -445,7 +446,7 @@ export default function TopicPage() {
                         textAlign: 'left', cursor: quizDone ? 'default' : 'pointer', fontSize: 14,
                         fontWeight: isSelected || (quizDone && isCorrect) ? 600 : 400, transition: 'all 0.2s'
                       }}>
-                        {quizDone && isCorrect && '✅ '}{quizDone && isSelected && !isCorrect && '❌ '}{opt}
+                        <MathText text={`${quizDone && isCorrect ? '✅ ' : ''}${quizDone && isSelected && !isCorrect ? '❌ ' : ''}${opt}`} />
                       </button>
                     )
                   })}

@@ -3,7 +3,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
 import { ENT_SUBJECTS, MOCK, MOCK_MAX, mockPoints, type EntQuestion, type EntSubject } from '@/lib/ent'
-import MathText from '@/app/components/MathText'
+import MathText, { MathLine } from '@/app/components/MathText'
 import Icon from '@/app/components/Icon'
 import Explain from '../Explain'
 import QuestionBody, { LETTERS } from '../QuestionBody'
@@ -295,9 +295,7 @@ export default function MockEntPage() {
                   <span style={{ width: 28, height: 28, borderRadius: 8, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: ok ? 'rgba(52,211,153,0.15)' : 'rgba(248,113,113,0.15)', color: ok ? 'var(--good)' : 'var(--bad)' }}>
                     <Icon name={ok ? 'check' : 'x'} size={16} />
                   </span>
-                  <span style={{ flex: 1, fontSize: 14, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                    {i + 1}. {q.question.replace(/\$/g, '')}
-                  </span>
+                  <MathLine text={`${i + 1}. ${q.question}`} style={{ flex: 1, minWidth: 0, fontSize: 14 }} />
                   <span style={{ fontSize: 12, color: 'var(--muted)', flexShrink: 0 }}>{mockPoints(i)} {t('б.')}</span>
                 </button>
                 {open && (

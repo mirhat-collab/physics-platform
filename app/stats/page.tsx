@@ -11,7 +11,7 @@ import {
   dailyAccuracy, sectionStats, strongSections, weakSections,
   type LogRow, type SectionStat,
 } from '@/lib/stats'
-import MathText from '@/app/components/MathText'
+import MathText, { MathLine } from '@/app/components/MathText'
 import Icon from '@/app/components/Icon'
 import Explain from '@/app/ent/Explain'
 import PracticeTools from '@/app/ent/PracticeTools'
@@ -302,7 +302,7 @@ export default function StatsPage() {
                     <Icon name={tried === m.payload.correct ? 'check' : 'x'} size={16} />
                   </span>
                   <span style={{ flex: 1, minWidth: 0 }}>
-                    <span style={{ display: 'block', fontSize: 14, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{m.payload.question.replace(/\$/g, '')}</span>
+                    <MathLine text={m.payload.question} style={{ fontSize: 14 }} />
                     <span style={{ fontSize: 12, color: 'var(--muted)' }}>{t(SUBJECT_LABEL[m.subject])}{m.section ? ` · ${t(m.section)}` : ''} · {new Date(m.created_at).toLocaleDateString(dateLocale)}</span>
                   </span>
                   <Icon name="arrowRight" size={16} style={{ transform: open ? 'rotate(90deg)' : 'none', transition: 'transform 0.2s', color: 'var(--muted)' }} />

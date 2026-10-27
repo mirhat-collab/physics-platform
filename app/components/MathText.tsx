@@ -28,6 +28,16 @@ function renderInline(raw: string): string {
   return html + plain(text.slice(last))
 }
 
+// Одна строка с формулами (заголовок свёрнутого задания): формулы
+// рисуются в строку, длинный текст обрезается многоточием
+export function MathLine({ text, style }: { text: string; style?: React.CSSProperties }) {
+  const line = normalizeAiText(text).replace(/\$\$/g, '$').replace(/\s*\n\s*/g, ' ')
+  return (
+    <span className="math-text" style={{ display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', ...style }}
+      dangerouslySetInnerHTML={{ __html: renderInline(line) }} />
+  )
+}
+
 export default function MathText({ text, style }: { text: string; style?: React.CSSProperties }) {
   const paragraphs = normalizeAiText(text).split(/\n\s*\n/).filter(p => p.trim())
   return (
