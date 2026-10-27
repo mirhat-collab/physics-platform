@@ -9,7 +9,7 @@ import 'katex/dist/katex.min.css'
 import ProtectedFileViewer from '@/app/components/ProtectedFileViewer'
 import { useT } from '@/app/components/LanguageProvider'
 
-type MediaItem = { url: string; type: 'image' | 'video' | 'file'; name: string }
+type MediaItem = { url: string; type: 'image' | 'video' | 'file' | 'link'; name: string }
 
 function fileIcon(name: string): string {
   const ext = name.split('.').pop()?.toLowerCase() || ''
@@ -326,14 +326,14 @@ export default function TopicPage() {
               {topic.media.map((item, i) => (
                 <button
                   key={i}
-                  onClick={() => setViewerItem(item)}
+                  onClick={() => item.type === 'link' ? window.open(item.url, '_blank', 'noopener,noreferrer') : setViewerItem(item)}
                   style={{
                     borderRadius: 12, overflow: 'hidden', border: '1px solid #2a2a3e', background: '#0a0a14',
                     display: 'flex', alignItems: 'center', gap: 10, padding: '14px 16px',
                     color: '#e5e5f0', fontSize: 13, cursor: 'pointer', textAlign: 'left', width: '100%',
                   }}
                 >
-                  <span style={{ fontSize: 22 }}>{item.type === 'image' ? '🖼' : item.type === 'video' ? '🎬' : fileIcon(item.name)}</span>
+                  <span style={{ fontSize: 22 }}>{item.type === 'image' ? '🖼' : item.type === 'video' ? '🎬' : item.type === 'link' ? '🔗' : fileIcon(item.name)}</span>
                   <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.name}</span>
                   <span style={{ marginLeft: 'auto', color: '#888', fontSize: 12 }}>{t('Открыть ↗')}</span>
                 </button>

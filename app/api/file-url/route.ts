@@ -11,7 +11,8 @@ const BUCKET = 'topic-media'
 // процесса, и вьюер показывал свою ошибку "не удалось открыть документ". Даём больше запаса.
 const SIGNED_URL_TTL_SECONDS = 900
 
-// Простой rate limit: не больше 60 запросов ссылок в час с одного IP
+// Простой rate limit: не больше 300 запросов ссылок в час с одного IP
+// (с одного IP сидит весь класс за школьным Wi-Fi, и каждый скачивает файлы справочника)
 const requests = new Map<string, { count: number; resetAt: number }>()
 
 export async function POST(req: NextRequest) {
@@ -19,7 +20,7 @@ export async function POST(req: NextRequest) {
   const now = Date.now()
   const bucket = requests.get(ip)
   if (bucket && now < bucket.resetAt) {
-    if (bucket.count >= 60) {
+    if (bucket.count >= 300) {
       return NextResponse.json({ error: 'Слишком много запросов. Попробуй позже.' }, { status: 429 })
     }
     bucket.count++
@@ -36,7 +37,10 @@ export async function POST(req: NextRequest) {
     }
 
     // 2) Получаем путь файла в бакете
-    const { path } = await req.json().catch(() => ({ path: null }))
+    // material — файл справочника ЕНТ: его можно открыть напрямую или скачать
+    // (download — имя, под которым браузер сохранит файл)
+    const { path, material, download } = await req.json().catch(() => ({ path: null }))
+    const asMaterial = material === true || typeof download === 'string'
     if (!path || typeof path !== 'string') {
       return NextResponse.json({ error: 'Не указан путь к файлу' }, { status: 400 })
     }
@@ -48,9 +52,11 @@ export async function POST(req: NextRequest) {
       supabase.from('topics').select('media'),
       supabase.from('ent_materials').select('media'),
     ])
-    const allowed = [...(topics || []), ...(materials || [])].some(t =>
+    const has = (rows: { media: unknown }[] | null) => (rows || []).some(t =>
       ((t.media || []) as { url: string }[]).some(m => extractStoragePath(m.url, BUCKET) === path)
     )
+    // Скачивать можно только файлы справочника — файлы тем открываются в защищённом просмотрщике
+    const allowed = asMaterial ? has(materials) : has(topics) || has(materials)
     if (!allowed) {
       return NextResponse.json({ error: 'Нет доступа к файлу' }, { status: 403 })
     }
@@ -60,7 +66,7 @@ export async function POST(req: NextRequest) {
     const admin = createSupabaseAdmin()
     const { data, error } = await admin.storage
       .from(BUCKET)
-      .createSignedUrl(path, SIGNED_URL_TTL_SECONDS)
+      .createSignedUrl(path, SIGNED_URL_TTL_SECONDS, typeof download === 'string' ? { download: download.slice(0, 200) || true } : undefined)
 
     if (error || !data?.signedUrl) {
       console.error('Signed URL error:', error) // Логируем на сервере, не отдаём клиенту

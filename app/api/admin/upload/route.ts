@@ -18,8 +18,10 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Не указано имя файла' }, { status: 400 })
     }
 
-    const ext = name.split('.').pop()
-    const path = `topics/${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`
+    // Расширение — только латиница и цифры: ключ в Storage не принимает кириллицу и пробелы,
+    // а у файла без точки в имени расширения нет вовсе
+    const ext = name.includes('.') ? name.split('.').pop()!.toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 10) : ''
+    const path = `topics/${Date.now()}_${Math.random().toString(36).slice(2)}${ext ? `.${ext}` : ''}`
 
     const admin = createSupabaseAdmin()
     const { data, error } = await admin.storage.from(BUCKET).createSignedUploadUrl(path)
