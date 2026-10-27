@@ -8,7 +8,6 @@ import { logAnswers } from '@/lib/answer-log'
 import { equivalentFill } from '@/lib/formula-check'
 import { useT } from '@/app/components/LanguageProvider'
 import { formulasKk } from '@/lib/i18n/formulas-kk'
-import { formulasEn } from '@/lib/i18n/formulas-en'
 
 type Level = 'easy' | 'medium' | 'hard'
 const LEVELS: { id: Level; label: string; hint: string }[] = [
@@ -84,7 +83,7 @@ function makeQuestion(formula: Formula, level: Level): Question {
 export default function FormulasPage() {
   const { t, locale } = useT()
   // Названия формул и расшифровки букв — из отдельного словаря тренажёра
-  const tf = (text: string) => (locale === 'kk' ? formulasKk : locale === 'en' ? formulasEn : null)?.[text] ?? t(text)
+  const tf = (text: string) => (locale === 'kk' ? formulasKk : null)?.[text] ?? t(text)
   const [subject, setSubject] = useState<Subject>('physics')
   const [section, setSection] = useState<string>('all')
   const [level, setLevel] = useState<Level>('easy')

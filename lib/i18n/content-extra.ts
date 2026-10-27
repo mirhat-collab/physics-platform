@@ -40,8 +40,3 @@ export const contentKkExtra: Record<string, string> = {
   "На клетчатой бумаге (клетка $1 \\times 1$) изображены векторы $\\vec{a}$ и $\\vec{b}$. Найдите длину вектора $\\vec{a} + \\vec{b}$.": "Дәптер парағында (торкөз $1 \\times 1$) $\\vec{a}$ және $\\vec{b}$ векторлары бейнеленген. $\\vec{a} + \\vec{b}$ векторының ұзындығын табыңыз.",
   "По клеткам: $\\vec{a}(⟪0⟫;\\ ⟪1⟫)$, $\\vec{b}(⟪2⟫;\\ ⟪3⟫)$. $\\vec{a} + \\vec{b} = (⟪4⟫;\\ ⟪5⟫)$, длина $\\sqrt{⟪6⟫ + ⟪7⟫} = ⟪8⟫$.": "Торкөздер бойынша: $\\vec{a}(⟪0⟫;\\ ⟪1⟫)$, $\\vec{b}(⟪2⟫;\\ ⟪3⟫)$. $\\vec{a} + \\vec{b} = (⟪4⟫;\\ ⟪5⟫)$, ұзындығы $\\sqrt{⟪6⟫ + ⟪7⟫} = ⟪8⟫$.",
 }
-
-export const contentEnExtra: Record<string, string> = {
-  'Установите соответствие между задачами и ответами.': 'Match each problem with its answer.',
-  'Верные варианты — одно и то же значение, записанное по-разному.': 'The correct options are the same value written in different ways.',
-}

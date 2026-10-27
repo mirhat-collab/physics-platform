@@ -150,7 +150,7 @@ ${content}
 
 type QuizQuestion = { question: string; options: string[]; correct: number }
 
-// Квиз в базе хранится по-русски; для казахского и английского переводим
+// Квиз в базе хранится по-русски; для казахского переводим
 // его через ИИ (один раз, перевод кэшируется). При сбое ИИ — русский вариант.
 async function localizeQuiz(topicId: number, questions: QuizQuestion[]): Promise<QuizQuestion[]> {
   const locale = await getLocale()

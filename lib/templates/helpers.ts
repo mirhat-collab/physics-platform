@@ -38,11 +38,9 @@ export function lt(strings: TemplateStringsArray, ...values: unknown[]): string 
   return contentFormat(locale, key, values)
 }
 
-// Готовая строка без подстановок (варианты ответа, единицы, теория).
-// В английском дробная часть через точку — правим и числа, вписанные в шаблон как есть.
+// Готовая строка без подстановок (варианты ответа, единицы, теория)
 export function tr(text: string): string {
-  const out = contentLookup(locale, text)
-  return locale === 'en' ? out.replace(/\{,\}/g, '.') : out
+  return contentLookup(locale, text)
 }
 
 export type Template = {
@@ -78,9 +76,9 @@ export function fx(x: number): string {
   return String(Number(x.toPrecision(3))).replace('.', decimalMark())
 }
 
-// В русском и казахском дробная часть пишется через запятую, в английском — через точку
+// Дробная часть — через запятую (в русском и казахском)
 function decimalMark(): string {
-  return locale === 'en' ? '.' : '{,}'
+  return '{,}'
 }
 
 // Число для обычного текста: 2,5 или $2{,}5 \cdot 10^{5}$ для очень больших и маленьких

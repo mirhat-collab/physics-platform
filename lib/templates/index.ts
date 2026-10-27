@@ -11,9 +11,6 @@ const ALL: Record<EntSubject, Template[]> = {
   math: [...MATH_TEMPLATES, ...MATH_THEORY, ...MATH_MORE],
 }
 
-// Дополнительные задания переведены на казахский, английского перевода пока нет
-const NO_EN = new Set<Template>([...PHYSICS_MORE, ...MATH_MORE])
-
 export function templatesFor(subject: EntSubject, topic: string): Template[] {
   return ALL[subject].filter(t => t.topic === topic)
 }
@@ -68,11 +65,6 @@ export type TemplateKind = 'theory' | 'calc' | 'hard'
 export function generateFromTemplate(subject: EntSubject, topic: string, nOptions: number, locale: Locale = 'ru', difficulty: TemplateLevel = 'ent', kind?: TemplateKind): Generated | null {
   let list = templatesFor(subject, topic)
   if (!list.length) return null
-  // На английском берём переведённые задания, если они есть у темы
-  if (locale === 'en') {
-    const translated = list.filter(t => !NO_EN.has(t))
-    if (translated.length) list = translated
-  }
   const theory = list.filter(isTheory), calc = list.filter(t => !isTheory(t))
   const hardCalc = calc.filter(t => t.hard)
   if (kind === 'theory' && theory.length) list = theory
