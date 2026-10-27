@@ -12,7 +12,7 @@
 import { ENT_DIFFICULTIES, MOCK, mockFormat, mockLevel, sectionOfTopic, type EntQuestion, type EntSubject } from './ent'
 import { ENT_SPEC, type SpecTopic } from './ent-spec'
 import { generateFromTemplate, topicKinds, type TemplateKind } from './templates'
-import { altForms, buildMatch, buildMulti } from './mock-formats'
+import { buildMatch, buildMulti } from './mock-formats'
 import type { Locale } from './i18n'
 
 export const MOCK_THEORY = 3
@@ -33,36 +33,38 @@ function slotKind(index: number): TemplateKind {
 }
 
 // Годится ли тема для «нескольких ответов»: у ответа часто есть вторая запись
-// (другие единицы или другая форма числа). Проверяем пробной генерацией.
+// (другие единицы или другая форма числа). Проверяем пробной сборкой: тема
+// подходит, если задание собирается хотя бы в половине попыток.
+const CAPABLE_TRIES = 16
 const multiCache = new Map<string, boolean>()
 export function multiCapable(subject: EntSubject, topic: string, kind: TemplateKind): boolean {
   const key = `${subject}|${topic}|${kind}`
   let v = multiCache.get(key)
   if (v === undefined) {
     let ok = 0
-    for (let i = 0; i < 8; i++) {
+    for (let i = 0; i < CAPABLE_TRIES; i++) {
       const g = generateFromTemplate(subject, topic, 5, 'ru', kind === 'hard' ? 'hard' : 'ent', kind)
-      if (g?.num && g.num.values.length >= 4 && altForms(g.num.values[0], g.num.unit, subject).length) ok++
+      if (g && buildMulti(g, subject, 'ru')) ok++
     }
-    v = ok >= 4
+    v = ok >= CAPABLE_TRIES / 2
     multiCache.set(key, v)
   }
   return v
 }
 
 // Подходит ли тема для «соответствия»: три разных задачи с разными ответами
-// должны собираться почти всегда (у некоторых тем ответов мало — они совпадают)
+// (у некоторых тем ответов мало — они совпадают). Так же — пробной сборкой.
 const matchCache = new Map<string, boolean>()
 export function matchCapable(subject: EntSubject, topic: string): boolean {
   const key = `${subject}|${topic}`
   let v = matchCache.get(key)
   if (v === undefined) {
     let ok = 0
-    for (let i = 0; i < 10; i++) {
+    for (let i = 0; i < CAPABLE_TRIES; i++) {
       const gs = [0, 1, 2].map(() => generateFromTemplate(subject, topic, 4, 'ru', 'ent', 'calc')).filter(g => !!g)
       if (buildMatch(gs, 'ru')) ok++
     }
-    v = ok >= 8
+    v = ok >= CAPABLE_TRIES / 2
     matchCache.set(key, v)
   }
   return v
@@ -149,13 +151,13 @@ export function buildMock(subject: EntSubject, locale: Locale): EntQuestion[] {
     const tl = level === 'A' ? 'base' : difficulty
     let q: EntQuestion | null = null
     if (format === 'multi') {
-      for (let attempt = 0; attempt < 20 && !q; attempt++) {
+      for (let attempt = 0; attempt < 40 && !q; attempt++) {
         const g = generateFromTemplate(subject, topic, 5, locale, tl, kind)
         const m = g && !seen.has(g.question) ? buildMulti(g, subject, locale) : null
         if (m) q = withTopic(m, topic)
       }
     } else if (format === 'match') {
-      for (let attempt = 0; attempt < 20 && !q; attempt++) {
+      for (let attempt = 0; attempt < 40 && !q; attempt++) {
         const gs = [0, 1, 2].map(() => generateFromTemplate(subject, topic, 4, locale, 'ent', 'calc')).filter(g => !!g)
         const m = gs.length === 3 && gs.every(g => !seen.has(g.question)) ? buildMatch(gs, locale) : null
         if (m) q = withTopic(m, topic)
