@@ -75,7 +75,7 @@ ${solution ? `\nКраткое решение составителя (прове
   }
 
   try {
-    const text = await chat(messages, { maxTokens: 4000, effort: 'low' })
+    const text = await chat(messages, { maxTokens: 4000, effort: 'low', budgetMs: 90_000 })
     await quota.record()
     return NextResponse.json({ text })
   } catch (err) {
