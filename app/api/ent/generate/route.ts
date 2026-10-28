@@ -106,7 +106,7 @@ ${slots.map((s, i) => `${i + 1}. ${s.topic}`).join('\n')}
 Сложность: ${level}.
 В каждом задании ровно ${optionsCount} вариантов ответа.`,
     },
-  ], { json: true, maxTokens: 6000 })
+  ], { json: true, maxTokens: 6000, budgetMs: 110_000 })
 
   const parsed = parseJsonObject<{ questions: (EntQuestion & { topic?: string })[] }>(text)
   const list = (parsed.questions || [])

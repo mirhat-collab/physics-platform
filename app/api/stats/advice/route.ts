@@ -53,7 +53,7 @@ export async function POST() {
       // План — на языке интерфейса ученика (рус/қаз/англ)
       { role: 'system', content: `${SYSTEM}\n- Пиши только на ${AI_LANGUAGE[await getLocale()]} языке. Названия разделов платформы переводи на этот язык.` },
       { role: 'user', content: `Статистика ученика за последние 60 дней:\n${lines}` },
-    ], { maxTokens: 4000, effort: 'low' })
+    ], { maxTokens: 4000, effort: 'low', budgetMs: 90_000 })
     await quota.record()
     return NextResponse.json({ text })
   } catch (err) {

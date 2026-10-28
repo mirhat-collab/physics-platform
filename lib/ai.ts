@@ -3,15 +3,20 @@ import { createSupabaseServer } from '@/lib/supabase-server'
 import { DAILY_LIMITS } from '@/lib/ent'
 
 // Бесплатные ИИ-провайдеры. Пробуем по очереди: если первый упёрся в лимит
-// бесплатного тарифа или не ответил — переходим к следующему.
-// Оба поддерживают OpenAI-совместимый формат запроса.
+// бесплатного тарифа или не ответил — переходим к следующему. Лимиты у
+// каждого свои, так что каждый новый провайдер добавляет запросов на всех.
+// Все поддерживают OpenAI-совместимый формат запроса; провайдер без ключа
+// в переменных окружения просто пропускается.
 type Provider = { name: string; url: string; key: string | undefined; model: string; reasoning?: boolean }
 
 function providers(): Provider[] {
   const groq = 'https://api.groq.com/openai/v1/chat/completions'
   const gemini = 'https://generativelanguage.googleapis.com/v1beta/openai/chat/completions'
+  const cerebras = 'https://api.cerebras.ai/v1/chat/completions'
   return [
     { name: 'groq-120b', url: groq, key: process.env.GROQ_API_KEY, model: 'openai/gpt-oss-120b', reasoning: true },
+    // Та же модель, что у Groq, — ответы того же качества
+    { name: 'cerebras-120b', url: cerebras, key: process.env.CEREBRAS_API_KEY, model: process.env.CEREBRAS_MODEL || 'gpt-oss-120b', reasoning: true },
     { name: 'gemini', url: gemini, key: process.env.GEMINI_API_KEY, model: process.env.GEMINI_MODEL || 'gemini-2.5-flash' },
     { name: 'groq-20b', url: groq, key: process.env.GROQ_API_KEY, model: 'openai/gpt-oss-20b', reasoning: true },
   ].filter(p => p.key)
@@ -23,11 +28,16 @@ export type ChatMessage = { role: 'system' | 'user' | 'assistant'; content: stri
 
 export class AiUnavailableError extends Error {}
 
-export async function chat(messages: ChatMessage[], opts: { json?: boolean; maxTokens: number; effort?: 'low' | 'medium' }): Promise<string> {
+// budgetMs — сколько всего можно ждать: провайдеров несколько, и вместе они
+// должны уложиться в maxDuration роута (иначе Vercel оборвёт запрос)
+export async function chat(messages: ChatMessage[], opts: { json?: boolean; maxTokens: number; effort?: 'low' | 'medium'; budgetMs?: number }): Promise<string> {
   const list = providers()
-  if (!list.length) throw new AiUnavailableError('Не задан GROQ_API_KEY или GEMINI_API_KEY')
+  if (!list.length) throw new AiUnavailableError('Не задан ни один ключ ИИ (GROQ_API_KEY, CEREBRAS_API_KEY, GEMINI_API_KEY)')
 
+  const deadline = Date.now() + (opts.budgetMs ?? 55_000)
   for (const p of list) {
+    const left = deadline - Date.now()
+    if (left < 5_000) break
     try {
       const res = await fetch(p.url, {
         method: 'POST',
@@ -40,8 +50,7 @@ export async function chat(messages: ChatMessage[], opts: { json?: boolean; maxT
           ...(opts.json ? { response_format: { type: 'json_object' } } : {}),
           ...(p.reasoning ? { reasoning_effort: opts.effort ?? 'medium' } : {}),
         }),
-        // Три провайдера по 30 с укладываются в лимит времени функции (100–120 с)
-        signal: AbortSignal.timeout(30_000),
+        signal: AbortSignal.timeout(Math.min(30_000, left)),
       })
       if (!res.ok) {
         console.error(`AI ${p.name}: HTTP ${res.status}`, (await res.text()).slice(0, 300))
