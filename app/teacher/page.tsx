@@ -8,6 +8,8 @@ import { ENT_SUBJECTS } from '@/lib/ent'
 import { EntHomeworkClass, EntHomeworkPicker } from '@/app/components/EntHomework'
 import type { EntHomework } from '@/lib/ent-homework'
 import { useT } from '@/app/components/LanguageProvider'
+import TeacherGroups from '@/app/components/TeacherGroups'
+import { groupClass, groupIdOf, type StudyGroup } from '@/lib/groups'
 
 type Profile = { id: string; full_name: string; email?: string; grade: string; total_xp: number; streak: number; role: string }
 type ClassStat = { name: string; students: Profile[]; avg_xp: number; completed_topics: number; total_topics: number }
@@ -23,7 +25,8 @@ export default function TeacherPage() {
   const [students, setStudents] = useState<Profile[]>([])
   const [classStats, setClassStats] = useState<ClassStat[]>([])
   const [loading, setLoading] = useState(true)
-  const [tab, setTab] = useState<'overview' | 'students' | 'classes' | 'homework' | 'tournament'>('overview')
+  const [tab, setTab] = useState<'overview' | 'students' | 'classes' | 'groups' | 'homework' | 'tournament'>('overview')
+  const [groups, setGroups] = useState<StudyGroup[]>([])
   const [selectedClass, setSelectedClass] = useState<string | null>(null)
 
   // Домашние задания
@@ -88,6 +91,9 @@ export default function TeacherPage() {
     const { data: profile } = await supabase.from('profiles').select('*').eq('id', user.id).single()
     if (!profile || profile.role !== 'teacher') { router.push('/dashboard'); return }
     setTeacher(profile)
+    // Группы учителя — для выбора, кому выдать ДЗ
+    supabase.from('study_groups').select('*').eq('teacher_id', profile.id).order('created_at')
+      .then(({ data }) => setGroups((data || []) as StudyGroup[]))
 
     const { data: allStudents } = await supabase.from('profiles').select('id, full_name, grade, total_xp, streak, role').eq('role', 'student').order('total_xp', { ascending: false })
     if (allStudents) setStudents(allStudents)
@@ -246,6 +252,11 @@ export default function TeacherPage() {
   const selectedClassStudents = classStats.find(c => c.name === selectedClass)?.students ?? []
   const selectedHwSubs = submissions.filter(s => s.homework_id === selectedHw)
   const classNames = classStats.map(c => c.name)
+  // Название класса или группы учителя (ДЗ группе: class_name = 'group:<id>')
+  const classLabel = (name: string) => {
+    const id = groupIdOf(name)
+    return id === null ? name : `👥 ${groups.find(g => g.id === id)?.name ?? t('Группа')}`
+  }
 
   const inputStyle: React.CSSProperties = {
     width: '100%', padding: '10px 14px', borderRadius: 10, border: '1px solid #2a2a3e',
@@ -291,6 +302,7 @@ export default function TeacherPage() {
           {[
             { key: 'overview', label: t('📊 Обзор') },
             { key: 'classes', label: t('📚 Классы') },
+            { key: 'groups', label: t('👥 Мои группы') },
             { key: 'students', label: t('👤 Ученики') },
             { key: 'homework', label: t('📝 Домашние задания') },
             { key: 'tournament', label: t('🏆 Турниры') },
@@ -416,8 +428,15 @@ export default function TeacherPage() {
               <textarea style={{ ...inputStyle, resize: 'vertical' }} rows={3} placeholder={t('Описание / условие задачи')} value={hwDesc} onChange={e => setHwDesc(e.target.value)} />
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 10 }}>
                 <select style={{ ...inputStyle, marginBottom: 0 }} value={hwClass} onChange={e => setHwClass(e.target.value)}>
-                  <option value="">{t('Выбери класс')}</option>
-                  {classNames.map(c => <option key={c} value={c}>{c}</option>)}
+                  <option value="">{t('Выбери класс или группу')}</option>
+                  {groups.length > 0 && (
+                    <optgroup label={t('Мои группы')}>
+                      {groups.map(g => <option key={g.id} value={groupClass(g.id)}>👥 {g.name}</option>)}
+                    </optgroup>
+                  )}
+                  <optgroup label={t('Классы (все ученики параллели)')}>
+                    {classNames.map(c => <option key={c} value={c}>{c}</option>)}
+                  </optgroup>
                 </select>
                 <input style={{ ...inputStyle, marginBottom: 0 }} type="date" value={hwDue} onChange={e => setHwDue(e.target.value)} />
               </div>
@@ -463,7 +482,7 @@ export default function TeacherPage() {
                       onClick={() => setSelectedHw(isOpen ? null : hw.id)}>
                       <div>
                         <div style={{ fontWeight: 700 }}>{hw.title}</div>
-                        <div style={{ color: '#888', fontSize: 12, marginTop: 4 }}>{hw.class_name} · {hwSubs.length} {t('ответов')}{hw.due_date ? t(' · до {date}', { date: new Date(hw.due_date).toLocaleDateString(dateLocale) }) : ''}</div>
+                        <div style={{ color: '#888', fontSize: 12, marginTop: 4 }}>{classLabel(hw.class_name)} · {hwSubs.length} {t('ответов')}{hw.due_date ? t(' · до {date}', { date: new Date(hw.due_date).toLocaleDateString(dateLocale) }) : ''}</div>
                       </div>
                       <span style={{ color: '#555' }}>{isOpen ? '▲' : '▼'}</span>
                     </div>
@@ -511,6 +530,8 @@ export default function TeacherPage() {
         )}
 
         {/* ТУРНИРЫ */}
+        {tab === 'groups' && teacher && <TeacherGroups teacherId={teacher.id} onGroups={setGroups} />}
+
         {tab === 'tournament' && (
           <div>
             {/* Форма создания */}

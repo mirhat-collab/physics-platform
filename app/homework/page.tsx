@@ -7,6 +7,7 @@ import { EntHomeworkStudent } from '@/app/components/EntHomework'
 import type { EntHomework } from '@/lib/ent-homework'
 import { useT } from '@/app/components/LanguageProvider'
 import { useTranslatedItems } from '@/app/components/useTranslatedItems'
+import { groupClass, groupIdOf } from '@/lib/groups'
 
 type Homework = { id: number; title: string; description: string; class_name: string; due_date: string; created_at: string; media_urls?: string[]; ent?: EntHomework | null }
 type Submission = { id: number; homework_id: number; answer: string; grade: string; media_url?: string }
@@ -32,6 +33,7 @@ export default function HomeworkPage() {
   const fileRefs = useRef<Record<number, HTMLInputElement | null>>({})
   // Учитель и админ видят страницу так, как её видит ученик выбранного класса
   const [preview, setPreview] = useState(false)
+  const [groupNames, setGroupNames] = useState<Record<number, string>>({})
 
   useEffect(() => { loadData() }, [])
 
@@ -56,7 +58,11 @@ export default function HomeworkPage() {
       return
     }
 
-    await loadHomework(studentClassNames(profile?.grade, classes || []))
+    // ДЗ параллели и групп учителя, в которые ученик вступил
+    const { data: memberships } = await supabase.from('study_group_members').select('group_id, study_groups(name)').eq('student_id', user.id)
+    const groups = ((memberships || []) as unknown as { group_id: number; study_groups: { name: string } | null }[])
+    setGroupNames(Object.fromEntries(groups.map(g => [g.group_id, g.study_groups?.name ?? ''])))
+    await loadHomework([...studentClassNames(profile?.grade, classes || []), ...groups.map(g => groupClass(g.group_id))])
 
     const { data: subs } = await supabase.from('homework_submissions').select('*').eq('student_id', user.id)
     if (subs) {
@@ -165,6 +171,7 @@ export default function HomeworkPage() {
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
                   <div>
                     <div style={{ fontWeight: 700, fontSize: 16 }}>{tri(hw.id, 'title', hw.title)}</div>
+                    {groupIdOf(hw.class_name) !== null && <div style={{ color: '#a78bfa', fontSize: 12, marginTop: 2 }}>👥 {groupNames[groupIdOf(hw.class_name)!] || t('Группа')}</div>}
                     <div style={{ color: '#888', fontSize: 12, marginTop: 4 }}>
                       {hw.due_date ? t('До {date}', { date: new Date(hw.due_date).toLocaleDateString(dateLocale) }) : t('Без срока')}
                       {isOverdue && !isSent && <span style={{ color: '#f5576c', marginLeft: 8 }}>{t('⚠️ Просрочено')}</span>}

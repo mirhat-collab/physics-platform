@@ -1,6 +1,7 @@
 'use client'
 import { useState } from 'react'
-import { solutionHints, type EntQuestion, type EntSubject } from '@/lib/ent'
+import { solutionHints, solutionSteps, type EntQuestion, type EntSubject } from '@/lib/ent'
+import StepTutor from './StepTutor'
 import { entMistakePayload, logAnswers } from '@/lib/answer-log'
 import Figure from '@/app/components/Figure'
 import MathText from '@/app/components/MathText'
@@ -42,7 +43,7 @@ export function RetryCard({ q, subject, onDone }: { q: EntQuestion; subject: Ent
       })}
       {!answered && hints > 0 && (
         <div style={{ padding: '10px 12px', borderRadius: 10, background: 'rgba(124,108,255,0.08)', border: '1px solid rgba(124,108,255,0.3)', display: 'grid', gap: 4 }}>
-          {steps.slice(0, hints).map((s, k) => <MathText key={k} text={`${k + 1}. ${s}`} style={{ fontSize: 14 }} />)}
+          <StepTutor question={q.question} steps={steps} shown={hints} hideAnswer />
         </div>
       )}
       {!answered && hints < steps.length && (
@@ -55,7 +56,7 @@ export function RetryCard({ q, subject, onDone }: { q: EntQuestion; subject: Ent
           <div style={{ fontWeight: 700, color: chosen === q.correct ? 'var(--good)' : 'var(--bad)' }}>
             {chosen === q.correct ? t('Теперь верно!') : t('Неверно. Правильный ответ: {v0}', { v0: LETTERS[q.correct] })}
           </div>
-          {q.solution && <MathText text={q.solution} style={{ fontSize: 14, color: 'var(--muted)' }} />}
+          {q.solution && <StepTutor question={q.question} steps={solutionSteps(q.solution)} />}
         </>
       )}
     </div>

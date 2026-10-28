@@ -105,7 +105,7 @@ export default function AppNav() {
   }, [])
 
   // Открытые страницы для поиска (/podgotovka, /kk/podgotovka) — со своей шапкой
-  if (NO_NAV.includes(path) || path.startsWith('/podgotovka') || path.startsWith('/kk/')) return null
+  if (NO_NAV.includes(path) || path.startsWith('/podgotovka') || path.startsWith('/kk/') || path === '/join' || path.startsWith('/join/')) return null
 
   const groups = buildGroups(role)
 

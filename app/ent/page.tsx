@@ -2,12 +2,13 @@
 import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
-import { sectionNames, sectionOfTopic, solutionHints, topicsOf, ENT_BATCH, ENT_COUNTS, ENT_DIFFICULTIES, ENT_SUBJECTS, type EntDifficulty, type EntQuestion, type EntSubject } from '@/lib/ent'
+import { sectionNames, sectionOfTopic, solutionHints, solutionSteps, topicsOf, ENT_BATCH, ENT_COUNTS, ENT_DIFFICULTIES, ENT_SUBJECTS, type EntDifficulty, type EntQuestion, type EntSubject } from '@/lib/ent'
 import { sectionStats, type LogRow } from '@/lib/stats'
 import Figure from '@/app/components/Figure'
 import MathText, { MathLine } from '@/app/components/MathText'
 import Icon from '@/app/components/Icon'
 import Explain from './Explain'
+import StepTutor from './StepTutor'
 import PracticeTools from './PracticeTools'
 import QuestionBody, { LETTERS, SKIPPED } from './QuestionBody'
 import { entMistakePayload, logAnswers } from '@/lib/answer-log'
@@ -575,7 +576,7 @@ export default function EntPage() {
         {!answered && hintShown > 0 && (
           <div className="animate-fade-in" style={{ marginTop: 14, padding: '12px 14px', borderRadius: 12, background: 'rgba(124,108,255,0.08)', border: '1px solid rgba(124,108,255,0.3)', display: 'grid', gap: 6 }}>
             <div style={{ fontSize: 12, fontWeight: 700, color: '#c4bbff' }}>{t('ПОДСКАЗКА')}</div>
-            {steps.slice(0, hintShown).map((step, k) => <MathText key={k} text={`${k + 1}. ${step}`} style={{ fontSize: 14 }} />)}
+            <StepTutor question={q.question} steps={steps} shown={hintShown} hideAnswer />
           </div>
         )}
 
@@ -602,10 +603,18 @@ export default function EntPage() {
 
           {isRight ? (
             showSolution
-              ? <div className="card"><MathText text={q.solution} /></div>
+              ? <div className="card"><StepTutor question={q.question} steps={solutionSteps(q.solution || '')} /></div>
               : <button className="btn btn-ghost" onClick={() => setShowSolution(true)}>{t('Показать решение')}</button>
           ) : (
-            <Explain q={q} chosen={chosen === SKIPPED ? null : chosen} turns={dialogs[index] || []} setTurns={t => setDialogs(d => ({ ...d, [index]: t }))} />
+            <>
+              {q.solution && (
+                <div className="card">
+                  <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--muted)', marginBottom: 6 }}>{t('РЕШЕНИЕ ПО ШАГАМ')}</div>
+                  <StepTutor question={q.question} steps={solutionSteps(q.solution)} />
+                </div>
+              )}
+              <Explain q={q} chosen={chosen === SKIPPED ? null : chosen} turns={dialogs[index] || []} setTurns={t => setDialogs(d => ({ ...d, [index]: t }))} />
+            </>
           )}
 
           <Link href={referenceHref(subject, q)} target="_blank" style={{ fontSize: 14, color: '#c4bbff' }}>📘 {t('Повторить теорию по теме «{topic}»', { topic: t(q.topic || q.section || '') })}</Link>
