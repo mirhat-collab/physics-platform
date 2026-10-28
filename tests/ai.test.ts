@@ -1,16 +1,17 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
 
-test('ИИ: если первый провайдер упёрся в лимит, отвечает следующий (Cerebras)', async () => {
+test('ИИ: если провайдер упёрся в лимит, отвечает следующий (Groq → Cerebras → Mistral)', async () => {
   const env = { ...process.env }
   const origFetch = globalThis.fetch
   process.env.GROQ_API_KEY = 'g'
   process.env.CEREBRAS_API_KEY = 'c'
+  process.env.MISTRAL_API_KEY = 'm'
   delete process.env.GEMINI_API_KEY
   const seen: string[] = []
   globalThis.fetch = (async (url: string, init: { body: string }) => {
     seen.push(`${new URL(url).host} ${JSON.parse(init.body).model}`)
-    if (url.includes('groq')) return new Response('rate limited', { status: 429 })
+    if (url.includes('groq') || url.includes('cerebras')) return new Response('rate limited', { status: 429 })
     return new Response(JSON.stringify({ choices: [{ message: { content: 'ответ' } }] }), { status: 200 })
   }) as typeof fetch
   const err = console.error
@@ -18,7 +19,7 @@ test('ИИ: если первый провайдер упёрся в лимит,
   try {
     const { chat } = await import('@/lib/ai')
     assert.equal(await chat([{ role: 'user', content: 'x' }], { maxTokens: 10 }), 'ответ')
-    assert.deepEqual(seen, ['api.groq.com openai/gpt-oss-120b', 'api.cerebras.ai gpt-oss-120b'])
+    assert.deepEqual(seen, ['api.groq.com openai/gpt-oss-120b', 'api.cerebras.ai gpt-oss-120b', 'api.mistral.ai mistral-small-latest'])
   } finally {
     globalThis.fetch = origFetch
     console.error = err
