@@ -13,11 +13,14 @@ function providers(): Provider[] {
   const groq = 'https://api.groq.com/openai/v1/chat/completions'
   const gemini = 'https://generativelanguage.googleapis.com/v1beta/openai/chat/completions'
   const cerebras = 'https://api.cerebras.ai/v1/chat/completions'
+  const mistral = 'https://api.mistral.ai/v1/chat/completions'
   return [
     { name: 'groq-120b', url: groq, key: process.env.GROQ_API_KEY, model: 'openai/gpt-oss-120b', reasoning: true },
     // Та же модель, что у Groq, — ответы того же качества
     { name: 'cerebras-120b', url: cerebras, key: process.env.CEREBRAS_API_KEY, model: process.env.CEREBRAS_MODEL || 'gpt-oss-120b', reasoning: true },
     { name: 'gemini', url: gemini, key: process.env.GEMINI_API_KEY, model: process.env.GEMINI_MODEL || 'gemini-2.5-flash' },
+    // Бесплатный тариф Mistral (Experiment): без «размышлений», но отвечает быстро
+    { name: 'mistral', url: mistral, key: process.env.MISTRAL_API_KEY, model: process.env.MISTRAL_MODEL || 'mistral-small-latest' },
     { name: 'groq-20b', url: groq, key: process.env.GROQ_API_KEY, model: 'openai/gpt-oss-20b', reasoning: true },
   ].filter(p => p.key)
 }
@@ -32,7 +35,7 @@ export class AiUnavailableError extends Error {}
 // должны уложиться в maxDuration роута (иначе Vercel оборвёт запрос)
 export async function chat(messages: ChatMessage[], opts: { json?: boolean; maxTokens: number; effort?: 'low' | 'medium'; budgetMs?: number }): Promise<string> {
   const list = providers()
-  if (!list.length) throw new AiUnavailableError('Не задан ни один ключ ИИ (GROQ_API_KEY, CEREBRAS_API_KEY, GEMINI_API_KEY)')
+  if (!list.length) throw new AiUnavailableError('Не задан ни один ключ ИИ (GROQ_API_KEY, CEREBRAS_API_KEY, GEMINI_API_KEY, MISTRAL_API_KEY)')
 
   const deadline = Date.now() + (opts.budgetMs ?? 55_000)
   for (const p of list) {
