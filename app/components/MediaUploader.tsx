@@ -154,25 +154,25 @@ export default function MediaUploader({ existing, onDone }: { existing: MediaIte
         onDragLeave={() => setDragging(false)}
         onDrop={e => { e.preventDefault(); setDragging(false); upload(Array.from(e.dataTransfer.files)) }}
         style={{
-          border: `2px dashed ${dragging ? '#667eea' : '#2a2a4e'}`, borderRadius: 12, padding: '18px 14px',
-          textAlign: 'center', cursor: uploading ? 'default' : 'pointer', color: '#888', fontSize: 14,
-          background: '#0a0a18', marginBottom: 10,
+          border: `2px dashed ${dragging ? 'var(--accent)' : 'var(--line)'}`, borderRadius: 12, padding: '18px 14px',
+          textAlign: 'center', cursor: uploading ? 'default' : 'pointer', color: 'var(--muted)', fontSize: 14,
+          background: 'var(--bg)', marginBottom: 10,
         }}
       >
         {uploading ? t('⏳ Загружаю...') : t('📎 Нажми или перетащи сюда файлы — любые: PDF, Word, презентации, фото, видео, архивы')}
-        <div style={{ fontSize: 12, marginTop: 4, color: '#555' }}>{t('До {max} МБ на файл. Больше — добавь ссылкой.', { max: MAX_FILE_MB })}</div>
+        <div style={{ fontSize: 12, marginTop: 4, color: 'var(--muted)' }}>{t('До {max} МБ на файл. Больше — добавь ссылкой.', { max: MAX_FILE_MB })}</div>
       </div>
       <input ref={fileRef} type="file" multiple style={{ display: 'none' }} onChange={e => upload(Array.from(e.target.files || []))} />
       {progress && (
         <div style={{ marginBottom: 10 }}>
-          <div style={{ display: 'flex', gap: 8, fontSize: 13, color: '#bbb', marginBottom: 4 }}>
+          <div style={{ display: 'flex', gap: 8, fontSize: 13, color: 'var(--text)', marginBottom: 4 }}>
             <span style={{ flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
               {progress.total > 1 ? `${progress.index}/${progress.total} · ` : ''}{progress.name}
             </span>
             <span>{Math.round(progress.done * 100)}%</span>
           </div>
-          <div style={{ height: 6, borderRadius: 999, background: '#1a1a2e', overflow: 'hidden' }}>
-            <div style={{ width: `${progress.done * 100}%`, height: '100%', background: '#667eea', transition: 'width .2s' }} />
+          <div style={{ height: 6, borderRadius: 999, background: 'var(--surface)', overflow: 'hidden' }}>
+            <div style={{ width: `${progress.done * 100}%`, height: '100%', background: 'var(--accent)', transition: 'width .2s' }} />
           </div>
         </div>
       )}
@@ -190,28 +190,28 @@ export default function MediaUploader({ existing, onDone }: { existing: MediaIte
       ) : (
         <button type="button" className="chip" style={{ marginBottom: 10 }} onClick={() => setLink({ url: '', name: '' })}>🔗 {t('Добавить ссылку')}</button>
       )}
-      {msg && <div style={{ color: '#4ade80', fontSize: 13, marginBottom: 8 }}>{msg}</div>}
-      {errors.map((e, i) => <div key={i} style={{ color: '#f5576c', fontSize: 13, marginBottom: 6 }}>{e}</div>)}
+      {msg && <div style={{ color: 'var(--good)', fontSize: 13, marginBottom: 8 }}>{msg}</div>}
+      {errors.map((e, i) => <div key={i} style={{ color: 'var(--bad)', fontSize: 13, marginBottom: 6 }}>{e}</div>)}
       {items.length > 0 && (
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, marginTop: 6 }}>
           {items.map((item, i) => (
-            <div key={i} style={{ position: 'relative', width: 100, height: 80, borderRadius: 8, overflow: 'hidden', border: '1px solid #2a2a3e' }}>
+            <div key={i} style={{ position: 'relative', width: 100, height: 80, borderRadius: 8, overflow: 'hidden', border: '1px solid var(--line)' }}>
               {item.type === 'image'
                 ? <img src={item.url} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt={item.name} />
                 : item.type === 'video'
                 ? <video src={item.url} style={{ width: '100%', height: '100%', objectFit: 'cover' }} muted />
                 : (
-                  <div style={{ width: '100%', height: '100%', background: '#151530', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 6, textAlign: 'center' }}>
+                  <div style={{ width: '100%', height: '100%', background: 'var(--surface)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 6, textAlign: 'center' }}>
                     <div style={{ fontSize: 22 }}>{mediaIcon(item)}</div>
-                    <div style={{ fontSize: 9, color: '#aaa', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', width: '100%' }}>{item.name}</div>
+                    <div style={{ fontSize: 9, color: 'var(--muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', width: '100%' }}>{item.name}</div>
                   </div>
                 )
               }
               <button
                 onClick={() => remove(i)}
-                style={{ position: 'absolute', top: 3, right: 3, width: 20, height: 20, borderRadius: '50%', background: '#f5576c', border: 'none', color: '#fff', fontSize: 12, cursor: 'pointer', padding: 0, lineHeight: '20px' }}
+                style={{ position: 'absolute', top: 3, right: 3, width: 20, height: 20, borderRadius: '50%', background: 'var(--bad)', border: 'none', color: 'var(--on-accent)', fontSize: 12, cursor: 'pointer', padding: 0, lineHeight: '20px' }}
               >×</button>
-              <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, background: 'rgba(0,0,0,.6)', fontSize: 9, color: '#ccc', padding: '2px 4px', textAlign: 'center' }}>
+              <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, background: 'rgba(0,0,0,.6)', fontSize: 9, color: 'var(--text)', padding: '2px 4px', textAlign: 'center' }}>
                 {item.type === 'video' ? t('▶ видео') : item.type === 'image' ? t('🖼 фото') : item.type === 'link' ? t('🔗 ссылка') : item.size ? fileSize(item.size) : t('📄 файл')}
               </div>
             </div>

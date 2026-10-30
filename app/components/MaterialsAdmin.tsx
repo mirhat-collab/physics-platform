@@ -32,7 +32,7 @@ export default function MaterialsAdmin({ onCount }: { onCount?: (n: number) => v
   return (
     <div>
       <p style={{ color: 'var(--muted)', fontSize: 14, marginBottom: 16 }}>
-        {t('Материалы видят все ученики на странице')} <Link href="/reference" style={{ color: '#c4bbff' }}>{t('Справочник ЕНТ')}</Link>{t(' — могут открыть и скачать.')}
+        {t('Материалы видят все ученики на странице')} <Link href="/reference" style={{ color: 'var(--accent)' }}>{t('Справочник ЕНТ')}</Link>{t(' — могут открыть и скачать.')}
       </p>
       {draft
         ? <MaterialEditor key={draft.id ?? 'new'} initial={draft} onCancel={() => setDraft(null)} onSaved={() => { setDraft(null); load() }} />

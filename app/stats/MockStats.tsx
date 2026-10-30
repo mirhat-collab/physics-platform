@@ -8,7 +8,7 @@ import { mockSummary, type MockAttempt } from '@/lib/mock-result'
 import Icon from '@/app/components/Icon'
 import { useT } from '@/app/components/LanguageProvider'
 
-function color(x: number) { return x >= 0.7 ? 'var(--good)' : x >= 0.4 ? '#f59e0b' : 'var(--bad)' }
+function color(x: number) { return x >= 0.7 ? 'var(--good)' : x >= 0.4 ? 'var(--warn)' : 'var(--bad)' }
 
 // Темы тренажёра раздела спецификации — для ссылки «тренировать»
 function sectionHref(subject: EntSubject, section: string): string {
@@ -87,7 +87,7 @@ export default function MockStats({ userId }: { userId: string }) {
                     </div>
                     <span style={{ width: 40, textAlign: 'right', color: 'var(--muted)', fontSize: 12 }}>{Math.round(sec.pct * 100)}%</span>
                     {sec.pct < 0.7
-                      ? <Link href={sectionHref(subject, sec.name)} style={{ width: 90, textAlign: 'right', fontSize: 12, color: '#c4bbff' }}>{t('тренировать')}</Link>
+                      ? <Link href={sectionHref(subject, sec.name)} style={{ width: 90, textAlign: 'right', fontSize: 12, color: 'var(--accent)' }}>{t('тренировать')}</Link>
                       : <span style={{ width: 90 }} />}
                   </div>
                 ))}

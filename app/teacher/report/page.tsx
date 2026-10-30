@@ -16,9 +16,9 @@ const MIN_TOPIC = 5 // меньше ответов по теме — вывод�
 const WEAK = 0.6
 
 function pct(x: number) { return `${Math.round(x * 100)}%` }
-function color(x: number) { return x >= 0.8 ? 'var(--good)' : x >= WEAK ? '#f59e0b' : 'var(--bad)' }
+function color(x: number) { return x >= 0.8 ? 'var(--good)' : x >= WEAK ? 'var(--warn)' : 'var(--bad)' }
 // Цвет клетки тепловой карты: красный → жёлтый → зелёный
-function heatColor(x: number) { return x >= 0.8 ? '#059669' : x >= 0.5 ? '#d97706' : '#dc2626' }
+function heatColor(x: number) { return x >= 0.8 ? 'var(--good)' : x >= 0.5 ? 'var(--warn)' : 'var(--bad)' }
 
 export default function ClassReportPage() {
   const { t } = useT()
@@ -74,7 +74,7 @@ export default function ClassReportPage() {
     return () => { cancelled = true }
   }, [ready, group, subject, days])
 
-  if (!ready) return <div className="page" style={{ color: 'var(--muted)' }}>{t('Загрузка…')}</div>
+  if (!ready) return <div className="nb-root page" style={{ color: 'var(--muted)' }}>{t('Загрузка…')}</div>
 
   // По темам: точность класса и сколько учеников «проседают»
   const topicMap = new Map<string, { total: number; correct: number; per: Map<string, { t: number; c: number }> }>()
@@ -138,7 +138,7 @@ export default function ClassReportPage() {
   const printHref = `/ent/print?subject=${subject}${[...new Set(weakTopics.map(x => sectionOfTopic(subject, x)!))].slice(0, 6).map(x => `&section=${encodeURIComponent(x)}`).join('')}`
 
   return (
-    <div className="page animate-fade-in-up">
+    <div className="nb-root page animate-fade-in-up">
       <Link href="/teacher" style={{ color: 'var(--muted)', fontSize: 14, textDecoration: 'none' }}>← {t('Панель учителя')}</Link>
       <h1 className="page-title" style={{ marginTop: 8 }}>{t('Отчёт по классу (ЕНТ)')}</h1>
       <p className="page-sub">{t('Какие темы класс решает хуже всего и кому нужна помощь — по ответам в тренажёре ЕНТ и пробных ЕНТ.')}</p>
@@ -220,7 +220,7 @@ export default function ClassReportPage() {
                   {cells.map((c, i) => (
                     <td key={i} title={c.n ? `${t(heat.sections[i])}: ${c.c}/${c.n}` : t(heat.sections[i])}
                       style={{ width: 34, height: 26, textAlign: 'center', borderRadius: 6, fontWeight: 700, fontSize: 11,
-                        background: c.n ? heatColor(c.c / c.n) : 'var(--surface-2)', color: c.n ? '#fff' : 'var(--muted)' }}>
+                        background: c.n ? heatColor(c.c / c.n) : 'var(--surface-2)', color: c.n ? 'var(--text)' : 'var(--muted)' }}>
                       {c.n ? Math.round((c.c / c.n) * 100) : ''}
                     </td>
                   ))}
