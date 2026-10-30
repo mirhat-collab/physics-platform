@@ -64,7 +64,7 @@ export default function EntCoach() {
   return (
     <div className="card" style={{ marginBottom: 20 }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14, flexWrap: 'wrap' }}>
-        <div style={{ fontWeight: 800, fontSize: 17, flex: 1 }}>🎯 {t('Подготовка к ЕНТ')}</div>
+        <div style={{ fontWeight: 800, fontSize: 17, flex: 1 }}>{t('Подготовка к ЕНТ')}</div>
         {(Object.keys(ENT_SUBJECTS) as EntSubject[]).map(s => (
           <button key={s} className={`chip${subject === s ? ' on' : ''}`} onClick={() => setSubject(s)}>{t(ENT_SUBJECTS[s].label)}</button>
         ))}
@@ -102,13 +102,13 @@ export default function EntCoach() {
           </div>
         )}
         {fc && fc.score >= target && <div style={{ marginTop: 8, color: 'var(--good)', fontSize: 14, fontWeight: 700 }}>{t('Прогноз уже на уровне цели — подними цель!')}</div>}
-        {!mocks.some(m => m.subject === subject) && <Link href="/ent/mock" style={{ display: 'inline-block', marginTop: 8, fontSize: 13, color: '#c4bbff' }}>{t('Пройти пробный ЕНТ →')}</Link>}
+        {!mocks.some(m => m.subject === subject) && <Link href="/ent/mock" style={{ display: 'inline-block', marginTop: 8, fontSize: 13, color: 'var(--accent)', fontWeight: 600 }}>{t('Пройти пробный ЕНТ →')}</Link>}
       </div>
 
       {/* План на сегодня */}
       <div style={box}>
         <div style={{ display: 'flex', alignItems: 'baseline', marginBottom: 8 }}>
-          <span style={{ fontWeight: 700, flex: 1 }}>📋 {t('План на сегодня')} <span style={{ color: 'var(--muted)', fontWeight: 400, fontSize: 13 }}>{t('≈ 15 минут')}</span></span>
+          <span style={{ fontWeight: 700, flex: 1 }}>{t('План на сегодня')} <span style={{ color: 'var(--muted)', fontWeight: 400, fontSize: 13 }}>{t('≈ 15 минут')}</span></span>
           {planTotal > 0 && <span style={{ fontSize: 13, color: planDone >= planTotal ? 'var(--good)' : 'var(--muted)' }}>{planDone} / {planTotal}</span>}
         </div>
         {plan.length === 0 && <div style={{ color: 'var(--muted)', fontSize: 14 }}>{t('Все темы уже пройдены — реши пробный ЕНТ.')}</div>}
@@ -117,7 +117,7 @@ export default function EntCoach() {
             const done = p.done >= p.count
             return (
               <Link key={i} href={href(subject, p.topics, p.kind === 'repeat')} style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0, padding: '9px 10px', borderRadius: 10, border: '1px solid var(--line)', textDecoration: 'none', color: 'var(--text)', opacity: done ? 0.6 : 1 }}>
-                <span style={{ fontSize: 16 }}>{done ? '✅' : p.kind === 'repeat' ? '🔁' : p.kind === 'weak' ? '💪' : '🆕'}</span>
+                <span aria-hidden style={{ flex: 'none', width: 26, height: 26, borderRadius: '50%', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 700, border: `1.5px solid ${done ? 'var(--good)' : 'var(--accent)'}`, color: done ? 'var(--good)' : 'var(--accent)' }}>{done ? '✓' : i + 1}</span>
                 <span style={{ flex: 1, minWidth: 0 }}>
                   <span style={{ display: 'block', fontSize: 12, color: 'var(--muted)' }}>{label(p.kind)}</span>
                   <span style={{ display: 'block', fontSize: 14, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.topics.map(x => t(x)).join(', ')}</span>
@@ -132,9 +132,8 @@ export default function EntCoach() {
       {/* Серия и неделя */}
       <div style={{ ...box, marginBottom: 0 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', marginBottom: 10 }}>
-          <span style={{ fontSize: 22 }}>🔥</span>
           <span style={{ fontWeight: 800, fontSize: 18 }}>{t('{n} дн. подряд', { n: streak.days })}</span>
-          <span style={{ color: streak.today ? 'var(--good)' : '#f59e0b', fontSize: 13 }}>
+          <span style={{ color: streak.today ? 'var(--good)' : 'var(--muted)', fontSize: 13 }}>
             {streak.today ? t('занятие сегодня уже есть') : streak.days ? t('реши задание сегодня, чтобы не прервать серию') : t('начни серию сегодня')}
           </span>
         </div>
@@ -151,7 +150,7 @@ export default function EntCoach() {
           {[t('Пн'), t('Вт'), t('Ср'), t('Чт'), t('Пт'), t('Сб'), t('Вс')].map((d, i) => (
             <div key={d}>
               <div style={{ height: 26, borderRadius: 7, marginBottom: 3, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, color: 'var(--text)',
-                background: week.byDay[i] ? `rgba(139,124,246,${Math.min(0.9, 0.25 + week.byDay[i] / 40)})` : 'var(--bg)' }}>{week.byDay[i] || ''}</div>
+                background: week.byDay[i] ? `color-mix(in srgb, var(--accent) ${Math.round(Math.min(90, 25 + week.byDay[i] * 2.5))}%, transparent)` : 'var(--bg)' }}>{week.byDay[i] || ''}</div>
               {d}
             </div>
           ))}

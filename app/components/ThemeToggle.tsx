@@ -11,14 +11,18 @@ export default function ThemeToggle() {
     const isDark = saved !== 'light'
     setDark(isDark)
     applyTheme(isDark)
+    // Тёмная только по умолчанию — «бумажные» страницы следуют системе
+    if (saved !== 'dark') document.documentElement.classList.remove('dark-theme')
   }, [])
 
   function applyTheme(isDark: boolean) {
     if (isDark) {
       document.documentElement.classList.remove('light-theme')
+      document.documentElement.classList.add('dark-theme')
       document.body.style.background = '#0f0f1a'
     } else {
       document.documentElement.classList.add('light-theme')
+      document.documentElement.classList.remove('dark-theme')
       document.body.style.background = '#f0f2f8'
     }
   }

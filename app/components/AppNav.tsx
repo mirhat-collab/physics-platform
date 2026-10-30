@@ -49,7 +49,7 @@ function buildGroups(role: string | null): NavGroup[] {
       ],
     },
     {
-      title: 'Соревнования',
+      title: 'Успехи',
       items: [
         { href: '/progress', icon: 'chart', label: 'Прогресс' },
         { href: '/achievements', icon: 'medal', label: 'Достижения' },
@@ -88,9 +88,12 @@ export default function AppNav() {
     supabase.auth.getUser().then(async ({ data: { user } }) => {
       // Применяем сохранённую тему на любой странице, а не только в профиле
       try {
-        const isDark = localStorage.getItem('theme') !== 'light'
+        const saved = localStorage.getItem('theme')
+        const isDark = saved !== 'light'
         setDark(isDark)
         document.documentElement.classList.toggle('light-theme', !isDark)
+        // Явно выбранная тёмная тема — «бумажные» страницы тоже тёмные
+        document.documentElement.classList.toggle('dark-theme', saved === 'dark')
         document.body.style.background = isDark ? '#0f0f1a' : '#f0f2f8'
       } catch { /* нет доступа к storage */ }
       if (!user) return
@@ -113,6 +116,7 @@ export default function AppNav() {
     setDark(next)
     try { localStorage.setItem('theme', next ? 'dark' : 'light') } catch { /* нет доступа к storage */ }
     document.documentElement.classList.toggle('light-theme', !next)
+    document.documentElement.classList.toggle('dark-theme', next)
     document.body.style.background = next ? '#0f0f1a' : '#f0f2f8'
   }
 
