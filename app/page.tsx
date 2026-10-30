@@ -5,7 +5,11 @@ import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
 import { useT } from '@/app/components/LanguageProvider'
 import LanguageSwitcher from '@/app/components/LanguageSwitcher'
-import HandwrittenFormulas from '@/app/components/HandwrittenFormulas'
+import PenSheet from '@/app/components/PenSheet'
+import HeroTry from '@/app/components/HeroTry'
+
+// Короткие слова (с, и, к…) не остаются висеть в конце строки
+const glue = (text: string) => text.replace(/(^|\s)(\S{1,2})\s/g, '$1$2\u00a0')
 
 const Arrow = () => (
   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
@@ -63,23 +67,24 @@ export default function LobbyPage() {
         <section className="nb-hero">
           <div className="nb-hero-text">
             <p className="nb-eyebrow">{t('ЕНТ · физика и математика')}</p>
-            <h1 className="nb-h1">{t('Подготовка к ЕНТ')}</h1>
-            <svg className="nb-underline" viewBox="0 0 420 18" preserveAspectRatio="none" aria-hidden>
-              <path pathLength={1} d="M3 12 C 80 5, 190 4, 300 8 S 400 12, 416 6" fill="none" stroke="currentColor" strokeWidth="5" strokeLinecap="round" />
-            </svg>
-            <p className="nb-lead">{t('Физика и математика: задачи ЕНТ с решением, пробный ЕНТ онлайн, рейтинг и XP. Бесплатно.')}</p>
+            {/* Вторая строка курсивом; порядок слов в казахском другой */}
+            <h1 className="nb-h1" aria-label={t('Подготовка к ЕНТ')}>
+              {locale === 'kk'
+                ? <><span>ҰБТ-ға</span><span><em>дайындық</em></span></>
+                : <><span>Подготовка</span><span><em>к&nbsp;ЕНТ</em></span></>}
+            </h1>
+            <p className="nb-lead">{glue(t('Физика и математика: задачи ЕНТ с решением, пробный ЕНТ онлайн, рейтинг и XP.'))}</p>
             <div className="nb-cta">
               <Link href="/login" className="nb-btn">{t('Начать бесплатно')}<Arrow /></Link>
-              <Link href="/login" className="nb-link">{t('У меня уже есть аккаунт')}</Link>
+              <HeroTry pre={pre} />
             </div>
-            <p className="nb-note">{t('Бесплатно · на русском и казахском')}</p>
+            <p className="nb-note"><span className="nb-badge">{t('Бесплатно')}</span> {t('на русском и казахском')}</p>
           </div>
-          <div className="nb-hero-art">
-            <HandwrittenFormulas />
-          </div>
+          <PenSheet />
         </section>
 
         <section className="nb-section" aria-labelledby="nb-inside">
+          <p className="nb-kicker">{t('Что внутри')}</p>
           <h2 id="nb-inside" className="nb-h2">{t('Всё для ЕНТ — в одной тетради')}</h2>
           <ol className="nb-features" role="list">
             {features.map((f, i) => (
@@ -104,8 +109,8 @@ export default function LobbyPage() {
         </nav>
 
         <section className="nb-final">
-          <p className="nb-final-hand">{t('Удачи на ЕНТ!')}</p>
-          <p>{t('Начни с одной задачи — сегодня.')}</p>
+          <p className="nb-final-title">{t('Удачи на ЕНТ!')}</p>
+          <p className="nb-final-sub">{t('Начни с одной задачи — сегодня.')}</p>
           <Link href="/login" className="nb-btn">{t('Начать бесплатно')}<Arrow /></Link>
         </section>
         </main>
