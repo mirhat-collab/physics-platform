@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Caveat, Golos_Text, Literata } from "next/font/google";
 import "./globals.css";
 import AppNav from "./components/AppNav";
+import AppDoodles from "./components/AppDoodles";
 import LandingFooter from "./components/LandingFooter";
 import StreakTracker from "./components/StreakTracker";
 import StreakAlert from "./components/StreakAlert";
@@ -100,6 +101,7 @@ export default async function RootLayout({
           <PwaInstall />
           <RecoveryRedirect />
           <AppNav />
+          <AppDoodles />
           <div className="app-main">{children}</div>
           <LandingFooter />
         </LanguageProvider>

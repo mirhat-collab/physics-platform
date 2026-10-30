@@ -420,40 +420,40 @@ body:has(.app-tabbar) .app-main { padding-bottom: calc(var(--tabbar-h) + env(saf
   --nb-paper-2: #ebe6db;
   --nb-sheet: #fdfbf6;
   --nb-dot: rgba(27, 42, 92, 0.13);
-  --nb-text: #16161a;
-  --nb-text-2: #44444c;
-  --nb-muted: #5f5d58;
-  --nb-line: rgba(22, 22, 26, 0.11);
-  --nb-ink: #1b2a5c;
-  --nb-ink-hover: #121d44;
+  --nb-text: #2a2a30;
+  --nb-text-2: #55545c;
+  --nb-muted: #6a6862;
+  --nb-line: rgba(42, 42, 48, 0.09);
+  --nb-ink: #2c3e78;
+  --nb-ink-hover: #24346a;
   --nb-on-ink: #fbf9f4;
-  --nb-accent: #c0392b;
+  --nb-accent: #b5473a;
   --nb-accent-soft: rgba(192, 57, 43, 0.12);
   --nb-good: #1f7a4d;
   --nb-warn: #9a6400;
   --nb-pencil: rgba(22, 22, 26, 0.34);
   --nb-sheet-shadow:
     0 1px 1px rgba(40, 30, 15, 0.04),
-    0 8px 18px -10px rgba(40, 30, 15, 0.16),
-    0 40px 70px -30px rgba(40, 30, 15, 0.32);
+    0 6px 14px -10px rgba(40, 30, 15, 0.12),
+    0 30px 60px -32px rgba(40, 30, 15, 0.22);
   --nb-btn-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.14),
-    0 1px 2px rgba(18, 29, 68, 0.25),
-    0 12px 24px -12px rgba(18, 29, 68, 0.55);
+    inset 0 1px 0 rgba(255, 255, 255, 0.12),
+    0 1px 2px rgba(18, 29, 68, 0.16),
+    0 10px 22px -14px rgba(18, 29, 68, 0.4);
   --nb-grain-opacity: 0.05;
 }
 
 @media (prefers-color-scheme: dark) {
   :root:not(.light-theme) {
-    --nb-paper: #101012;
-    --nb-paper-2: #17171a;
-    --nb-sheet: #1c1c20;
+    --nb-paper: #17171a;
+    --nb-paper-2: #1d1d21;
+    --nb-sheet: #222226;
     --nb-dot: rgba(220, 227, 245, 0.09);
-    --nb-text: #eeece6;
-    --nb-text-2: #b9b7b0;
+    --nb-text: #dedad0;
+    --nb-text-2: #aaa79f;
     --nb-muted: #95938c;
     --nb-line: rgba(238, 236, 230, 0.1);
-    --nb-ink: #c9d4f2;
+    --nb-ink: #b7c4ea;
     --nb-ink-hover: #e2e8fa;
     --nb-on-ink: #10142a;
     --nb-accent: #f08a7e;
@@ -473,15 +473,15 @@ body:has(.app-tabbar) .app-main { padding-bottom: calc(var(--tabbar-h) + env(saf
 
 /* Тёмная тема, выбранная вручную в меню (класс dark-theme на <html>) */
 :root.dark-theme {
-    --nb-paper: #101012;
-    --nb-paper-2: #17171a;
-    --nb-sheet: #1c1c20;
+    --nb-paper: #17171a;
+    --nb-paper-2: #1d1d21;
+    --nb-sheet: #222226;
     --nb-dot: rgba(220, 227, 245, 0.09);
-    --nb-text: #eeece6;
-    --nb-text-2: #b9b7b0;
+    --nb-text: #dedad0;
+    --nb-text-2: #aaa79f;
     --nb-muted: #95938c;
     --nb-line: rgba(238, 236, 230, 0.1);
-    --nb-ink: #c9d4f2;
+    --nb-ink: #b7c4ea;
     --nb-ink-hover: #e2e8fa;
     --nb-on-ink: #10142a;
     --nb-accent: #f08a7e;
@@ -509,7 +509,7 @@ body:has(.nb-root) .aurora-blob, body:has(.nb-root) .app-backdrop { display: non
   position: relative;
   min-height: 100vh;
   color: var(--nb-text);
-  background: var(--nb-paper);
+  background: transparent; /* бумага — на body, чтобы сквозь поля были видны наброски */
   font-family: var(--font-body), system-ui, sans-serif;
   overflow-x: clip;
 }
@@ -1117,3 +1117,35 @@ body:has(.nb-root) .lang-switch button[aria-pressed="true"] { background: var(--
 
 /* Заголовки страниц в стиле «Тетрадь» — книжный шрифт (у старых страниц вес задан в разметке) */
 .nb-root h1 { font-family: var(--font-display), Georgia, serif !important; font-weight: 400 !important; letter-spacing: -0.025em; }
+
+/* =====================================================================
+   Характер и мягкость: пометки от руки и без «кричащего» жирного
+   ===================================================================== */
+/* Подписи разделов — как пометки ручкой в тетради */
+.nb-eyebrow, .nb-kicker, .nb-root .label {
+  font-family: var(--font-hand), cursive !important;
+  text-transform: none !important; letter-spacing: 0 !important;
+  font-weight: 600 !important; font-size: 21px !important; line-height: 1.1;
+  color: var(--nb-ink) !important;
+}
+.nb-eyebrow::before { height: 1.5px; background: var(--nb-accent); opacity: 0.7; }
+.nb-root .label { color: var(--nb-text-2) !important; margin-bottom: 8px; }
+.dash-next-k { font-family: var(--font-hand), cursive; text-transform: none; letter-spacing: 0; font-size: 22px; font-weight: 600; }
+/* Старые страницы задают вес 800–900 прямо в разметке — на бумаге это слишком резко */
+.nb-root [style*="font-weight: 800"], .nb-root [style*="font-weight: 900"] { font-weight: 650 !important; }
+
+/* Фоновые наброски пером (AppDoodles) — только на страницах «Тетради» */
+.app-doodles { display: none; position: fixed; inset: 0; z-index: -1; pointer-events: none; overflow: hidden; }
+body:has(.nb-root) .app-doodles { display: block; }
+.doodle { position: absolute; height: auto; overflow: visible; transform-origin: center; }
+.app-doodles { --doodle-scale: 1.1; --doodle-opacity: 0.14; }
+.doodle path { fill: none; stroke: var(--nb-ink); stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; opacity: var(--doodle-opacity); }
+.doodle-red path { stroke: var(--nb-accent); opacity: calc(var(--doodle-opacity) * 0.85); }
+/* На телефоне карточки во всю ширину — наброски мельче и тише, чтобы не мешать тексту */
+@media (max-width: 899px) { .app-doodles { --doodle-scale: 0.62; --doodle-opacity: 0.09; } }
+@media (prefers-color-scheme: dark) { :root:not(.light-theme) .app-doodles { --doodle-opacity: 0.09; } }
+:root.dark-theme .app-doodles { --doodle-opacity: 0.09; }
+@media (max-width: 899px) and (prefers-color-scheme: dark) { :root:not(.light-theme) .app-doodles { --doodle-opacity: 0.06; } }
+@media (max-width: 899px) { :root.dark-theme .app-doodles { --doodle-opacity: 0.06; } }
+@media (min-width: 900px) { body:has(.app-sidebar) .app-doodles { left: var(--sidebar-w); } }
+@media print { .app-doodles { display: none !important; } }
