@@ -44,22 +44,22 @@ export default function TeacherGroups({ teacherId, onGroups }: { teacherId: stri
     load()
   }
 
-  const box = { background: '#1a1a2e', borderRadius: 16, padding: 20, border: '1px solid #2a2a3e', marginBottom: 12 } as const
+  const box = { background: 'var(--surface)', borderRadius: 16, padding: 20, border: '1px solid var(--line)', marginBottom: 12 } as const
   return (
     <div>
       <div style={box}>
         <div style={{ fontWeight: 700, marginBottom: 6 }}>➕ {t('Новая группа')}</div>
-        <div style={{ color: '#888', fontSize: 13, marginBottom: 10 }}>{t('Например: «10А, школа №5» или «Подготовка к ЕНТ, вечер». Ученики вступают по ссылке или QR-коду — и вы видите только своих.')}</div>
+        <div style={{ color: 'var(--muted)', fontSize: 13, marginBottom: 10 }}>{t('Например: «10А, школа №5» или «Подготовка к ЕНТ, вечер». Ученики вступают по ссылке или QR-коду — и вы видите только своих.')}</div>
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
           <input className="input" value={name} onChange={e => setName(e.target.value)} onKeyDown={e => e.key === 'Enter' && create()}
             placeholder={t('Название группы')} maxLength={80} style={{ flex: 1, minWidth: 200 }} />
           <button className="btn" onClick={create} disabled={!name.trim()}>{t('Создать')}</button>
         </div>
-        {error && <div style={{ color: '#f5576c', fontSize: 13, marginTop: 8 }}>{error}</div>}
+        {error && <div style={{ color: 'var(--bad)', fontSize: 13, marginTop: 8 }}>{error}</div>}
       </div>
 
-      {groups === null && <div style={{ color: '#888' }}>{t('Загрузка…')}</div>}
-      {groups?.length === 0 && <div style={{ color: '#888', fontSize: 14 }}>{t('Групп пока нет.')}</div>}
+      {groups === null && <div style={{ color: 'var(--muted)' }}>{t('Загрузка…')}</div>}
+      {groups?.length === 0 && <div style={{ color: 'var(--muted)', fontSize: 14 }}>{t('Групп пока нет.')}</div>}
       {groups?.map(g => (
         <GroupCard key={g.id} group={g} open={open === g.id} onToggle={() => setOpen(open === g.id ? null : g.id)} onDelete={() => remove(g)} />
       ))}
@@ -103,39 +103,39 @@ function GroupCard({ group, open, onToggle, onDelete }: { group: StudyGroup; ope
   }
 
   return (
-    <div style={{ background: '#1a1a2e', borderRadius: 16, border: '1px solid #2a2a3e', marginBottom: 12, overflow: 'hidden' }}>
-      <button onClick={onToggle} style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 10, padding: '14px 18px', background: 'transparent', border: 'none', color: '#fff', cursor: 'pointer', fontFamily: 'inherit', textAlign: 'left' }}>
+    <div style={{ background: 'var(--surface)', borderRadius: 16, border: '1px solid var(--line)', marginBottom: 12, overflow: 'hidden' }}>
+      <button onClick={onToggle} style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 10, padding: '14px 18px', background: 'transparent', border: 'none', color: 'var(--text)', cursor: 'pointer', fontFamily: 'inherit', textAlign: 'left' }}>
         <span style={{ fontSize: 20 }}>👥</span>
         <span style={{ flex: 1, fontWeight: 700 }}>{group.name}</span>
-        <span style={{ color: '#a78bfa', fontFamily: 'monospace', fontSize: 15, letterSpacing: 1 }}>{group.join_code}</span>
-        <span style={{ color: '#888' }}>{open ? '▾' : '▸'}</span>
+        <span style={{ color: 'var(--accent)', fontFamily: 'monospace', fontSize: 15, letterSpacing: 1 }}>{group.join_code}</span>
+        <span style={{ color: 'var(--muted)' }}>{open ? '▾' : '▸'}</span>
       </button>
       {open && (
         <div style={{ padding: '0 18px 18px' }}>
           <div style={{ display: 'flex', gap: 18, flexWrap: 'wrap', alignItems: 'flex-start', marginBottom: 14 }}>
-            {qr && <img src={qr} alt={t('QR-код для вступления')} width={160} height={160} style={{ borderRadius: 12, background: '#fff' }} />}
+            {qr && <img src={qr} alt={t('QR-код для вступления')} width={160} height={160} style={{ borderRadius: 12, background: 'var(--text)' }} />}
             <div style={{ flex: 1, minWidth: 220, display: 'grid', gap: 8 }}>
-              <div style={{ color: '#888', fontSize: 13 }}>{t('Покажите ученикам QR-код на уроке или отправьте ссылку в чат класса:')}</div>
-              <div style={{ background: '#0f0f1a', border: '1px solid #2a2a3e', borderRadius: 10, padding: '8px 10px', fontSize: 13, wordBreak: 'break-all' }}>{link}</div>
+              <div style={{ color: 'var(--muted)', fontSize: 13 }}>{t('Покажите ученикам QR-код на уроке или отправьте ссылку в чат класса:')}</div>
+              <div style={{ background: 'var(--bg)', border: '1px solid var(--line)', borderRadius: 10, padding: '8px 10px', fontSize: 13, wordBreak: 'break-all' }}>{link}</div>
               <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                 <button className="btn" style={{ padding: '7px 14px', fontSize: 13 }} onClick={copy}>{copied ? `✅ ${t('Скопировано')}` : `📋 ${t('Скопировать ссылку')}`}</button>
                 <a className="btn btn-ghost" style={{ padding: '7px 14px', fontSize: 13, textDecoration: 'none' }} href={`https://wa.me/?text=${encodeURIComponent(t('Вступай в группу «{name}» на Mirha_Edu: {link}', { name: group.name, link }))}`} target="_blank" rel="noreferrer">WhatsApp</a>
                 {qr && <a className="btn btn-ghost" style={{ padding: '7px 14px', fontSize: 13, textDecoration: 'none' }} href={qr} download={`qr-${group.join_code}.png`}>⬇ {t('QR-код')}</a>}
               </div>
-              <div style={{ color: '#666', fontSize: 12 }}>{t('Или продиктуйте код {code} — ученик вводит его на странице «Вступить в группу» ({site}/join).', { code: group.join_code, site: typeof window === 'undefined' ? '' : window.location.host })}</div>
+              <div style={{ color: 'var(--muted)', fontSize: 12 }}>{t('Или продиктуйте код {code} — ученик вводит его на странице «Вступить в группу» ({site}/join).', { code: group.join_code, site: typeof window === 'undefined' ? '' : window.location.host })}</div>
             </div>
           </div>
 
           <div style={{ fontWeight: 700, marginBottom: 6 }}>{t('Ученики ({n})', { n: members?.length ?? 0 })}</div>
-          {members?.length === 0 && <div style={{ color: '#888', fontSize: 14 }}>{t('Пока никто не вступил.')}</div>}
+          {members?.length === 0 && <div style={{ color: 'var(--muted)', fontSize: 14 }}>{t('Пока никто не вступил.')}</div>}
           {members?.map(m => (
-            <div key={m.student_id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '6px 0', borderBottom: '1px solid #2a2a3e', fontSize: 14 }}>
-              <span style={{ flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{m.name}{m.grade ? <span style={{ color: '#888' }}> · {m.grade}</span> : null}</span>
-              <span style={{ color: '#666', fontSize: 12 }}>{new Date(m.joined_at).toLocaleDateString(dateLocale)}</span>
-              <button onClick={() => kick(m)} title={t('Убрать из группы')} style={{ background: 'none', border: 'none', color: '#f5576c', cursor: 'pointer', fontSize: 16 }}>×</button>
+            <div key={m.student_id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '6px 0', borderBottom: '1px solid var(--line)', fontSize: 14 }}>
+              <span style={{ flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{m.name}{m.grade ? <span style={{ color: 'var(--muted)' }}> · {m.grade}</span> : null}</span>
+              <span style={{ color: 'var(--muted)', fontSize: 12 }}>{new Date(m.joined_at).toLocaleDateString(dateLocale)}</span>
+              <button onClick={() => kick(m)} title={t('Убрать из группы')} style={{ background: 'none', border: 'none', color: 'var(--bad)', cursor: 'pointer', fontSize: 16 }}>×</button>
             </div>
           ))}
-          <button onClick={onDelete} style={{ marginTop: 14, background: 'none', border: 'none', color: '#f5576c', cursor: 'pointer', fontSize: 13, padding: 0, fontFamily: 'inherit' }}>🗑 {t('Удалить группу')}</button>
+          <button onClick={onDelete} style={{ marginTop: 14, background: 'none', border: 'none', color: 'var(--bad)', cursor: 'pointer', fontSize: 13, padding: 0, fontFamily: 'inherit' }}>🗑 {t('Удалить группу')}</button>
         </div>
       )}
     </div>

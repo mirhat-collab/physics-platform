@@ -168,8 +168,8 @@ export default function TeacherPage() {
   }
 
   if (loading) return (
-    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-      <div style={{ color: '#fff', fontSize: 18 }}>{t('Загрузка...')}</div>
+    <div className="nb-root" style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <div style={{ color: 'var(--text)', fontSize: 18 }}>{t('Загрузка...')}</div>
     </div>
   )
 
@@ -185,37 +185,37 @@ export default function TeacherPage() {
   }
 
   const inputStyle: React.CSSProperties = {
-    width: '100%', padding: '10px 14px', borderRadius: 10, border: '1px solid #2a2a3e',
-    background: '#0f0f1a', color: '#fff', fontSize: 14, boxSizing: 'border-box', outline: 'none', marginBottom: 10
+    width: '100%', padding: '10px 14px', borderRadius: 10, border: '1px solid var(--line)',
+    background: 'var(--bg)', color: 'var(--text)', fontSize: 14, boxSizing: 'border-box', outline: 'none', marginBottom: 10
   }
 
   return (
-    <div style={{ minHeight: '100vh', color: '#fff' }}>
+    <div className="nb-root" style={{ minHeight: '100vh', color: 'var(--text)' }}>
       {/* Шапка */}
-      <div style={{ background: 'linear-gradient(135deg, #0a2a1a, #0f0f1a)', borderBottom: '1px solid #2a2a3e', padding: '1.5rem 2rem' }}>
+      <div style={{ background: 'linear-gradient(135deg, #0a2a1a, var(--bg))', borderBottom: '1px solid var(--line)', padding: '1.5rem 2rem' }}>
         <div style={{ maxWidth: 900, margin: '0 auto' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-              <div style={{ width: 48, height: 48, borderRadius: 14, background: 'linear-gradient(135deg, #10b981, #059669)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24 }}>👨‍🏫</div>
+              <div style={{ width: 48, height: 48, borderRadius: 14, background: 'var(--good)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24 }}>👨‍🏫</div>
               <div>
                 <h1 style={{ fontSize: '1.5rem', fontWeight: 800, margin: 0 }}>{t('Панель учителя')}</h1>
-                <p style={{ color: '#888', margin: 0, fontSize: 13 }}>{teacher?.full_name || teacher?.email}</p>
+                <p style={{ color: 'var(--muted)', margin: 0, fontSize: 13 }}>{teacher?.full_name || teacher?.email}</p>
               </div>
             </div>
             <button onClick={async () => { await supabase.auth.signOut(); router.push('/login') }}
-              style={{ padding: '8px 16px', borderRadius: 10, border: '1px solid #2a2a3e', background: '#1a1a2e', color: '#888', cursor: 'pointer', fontSize: 13 }}>
+              style={{ padding: '8px 16px', borderRadius: 10, border: '1px solid var(--line)', background: 'var(--surface)', color: 'var(--muted)', cursor: 'pointer', fontSize: 13 }}>
               {t('🚪 Выйти')}
             </button>
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12 }}>
             {[
-              { val: students.length, label: t('учеников'), color: '#10b981' },
-              { val: classStats.length, label: t('классов'), color: '#a78bfa' },
-              { val: students.length > 0 ? Math.round(students.reduce((s, p) => s + p.total_xp, 0) / students.length) : 0, label: t('средний XP'), color: '#f59e0b' },
+              { val: students.length, label: t('учеников'), color: 'var(--good)' },
+              { val: classStats.length, label: t('классов'), color: 'var(--accent)' },
+              { val: students.length > 0 ? Math.round(students.reduce((s, p) => s + p.total_xp, 0) / students.length) : 0, label: t('средний XP'), color: 'var(--warn)' },
             ].map(({ val, label, color }) => (
-              <div key={label} style={{ background: `rgba(${color === '#10b981' ? '16,185,129' : color === '#a78bfa' ? '167,139,250' : '245,158,11'},0.1)`, border: `1px solid rgba(${color === '#10b981' ? '16,185,129' : color === '#a78bfa' ? '167,139,250' : '245,158,11'},0.2)`, borderRadius: 14, padding: '14px 18px' }}>
+              <div key={label} style={{ background: `color-mix(in srgb, ${color} 10%, transparent)`, border: `1px solid color-mix(in srgb, ${color} 20%, transparent)`, borderRadius: 14, padding: '14px 18px' }}>
                 <div style={{ fontSize: 24, fontWeight: 800, color }}>{val}</div>
-                <div style={{ color: '#888', fontSize: 12, marginTop: 2 }}>{label}</div>
+                <div style={{ color: 'var(--muted)', fontSize: 12, marginTop: 2 }}>{label}</div>
               </div>
             ))}
           </div>
@@ -235,13 +235,13 @@ export default function TeacherPage() {
             <button key={t.key} onClick={() => setTab(t.key as any)} style={{
               padding: '8px 16px', borderRadius: 999, border: 'none', cursor: 'pointer',
               fontSize: 13, fontWeight: 600, transition: 'all 0.2s',
-              background: tab === t.key ? '#10b981' : '#1a1a2e', color: '#fff',
+              background: tab === t.key ? 'var(--good)' : 'var(--surface)', color: 'var(--on-accent)',
             }}>{t.label}</button>
           ))}
         </div>
         <div style={{ display: 'flex', gap: 8, marginBottom: 20, flexWrap: 'wrap' }}>
-          <Link href="/teacher/report" style={{ padding: '8px 16px', borderRadius: 10, border: '1px solid #2a2a3e', background: '#1a1a2e', color: '#fff', fontSize: 13, fontWeight: 600, textDecoration: 'none' }}>{t('📈 Отчёт по классу (ЕНТ)')}</Link>
-          <Link href="/ent/print" style={{ padding: '8px 16px', borderRadius: 10, border: '1px solid #2a2a3e', background: '#1a1a2e', color: '#fff', fontSize: 13, fontWeight: 600, textDecoration: 'none' }}>{t('🖨 Варианты для печати')}</Link>
+          <Link href="/teacher/report" style={{ padding: '8px 16px', borderRadius: 10, border: '1px solid var(--line)', background: 'var(--surface)', color: 'var(--text)', fontSize: 13, fontWeight: 600, textDecoration: 'none' }}>{t('📈 Отчёт по классу (ЕНТ)')}</Link>
+          <Link href="/ent/print" style={{ padding: '8px 16px', borderRadius: 10, border: '1px solid var(--line)', background: 'var(--surface)', color: 'var(--text)', fontSize: 13, fontWeight: 600, textDecoration: 'none' }}>{t('🖨 Варианты для печати')}</Link>
         </div>
 
         {/* ОБЗОР */}
@@ -250,20 +250,20 @@ export default function TeacherPage() {
             {classStats.map(cls => {
               const percent = cls.total_topics > 0 ? Math.round((cls.completed_topics / cls.total_topics) * 100) : 0
               return (
-                <div key={cls.name} style={{ background: '#1a1a2e', borderRadius: 16, padding: '18px 22px', border: '1px solid #2a2a3e', cursor: 'pointer' }}
+                <div key={cls.name} style={{ background: 'var(--surface)', borderRadius: 16, padding: '18px 22px', border: '1px solid var(--line)', cursor: 'pointer' }}
                   onClick={() => { setTab('classes'); setSelectedClass(cls.name) }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
                     <div>
                       <div style={{ fontWeight: 700, fontSize: 16 }}>{cls.name}</div>
-                      <div style={{ color: '#888', fontSize: 13 }}>{cls.students.length} {t('учеников · ср. XP:')} {cls.avg_xp}</div>
+                      <div style={{ color: 'var(--muted)', fontSize: 13 }}>{cls.students.length} {t('учеников · ср. XP:')} {cls.avg_xp}</div>
                     </div>
                     <div style={{ textAlign: 'right' }}>
-                      <div style={{ fontSize: 22, fontWeight: 800, color: percent >= 75 ? '#10b981' : percent >= 40 ? '#f59e0b' : '#667eea' }}>{percent}%</div>
-                      <div style={{ color: '#888', fontSize: 11 }}>{cls.completed_topics}/{cls.total_topics} {t('тем')}</div>
+                      <div style={{ fontSize: 22, fontWeight: 800, color: percent >= 75 ? 'var(--good)' : percent >= 40 ? 'var(--warn)' : 'var(--accent)' }}>{percent}%</div>
+                      <div style={{ color: 'var(--muted)', fontSize: 11 }}>{cls.completed_topics}/{cls.total_topics} {t('тем')}</div>
                     </div>
                   </div>
-                  <div style={{ background: '#0f0f1a', borderRadius: 999, height: 8, overflow: 'hidden' }}>
-                    <div style={{ height: '100%', width: `${percent}%`, background: 'linear-gradient(90deg,#10b981,#059669)', borderRadius: 999 }} />
+                  <div style={{ background: 'var(--bg)', borderRadius: 999, height: 8, overflow: 'hidden' }}>
+                    <div style={{ height: '100%', width: `${percent}%`, background: 'var(--good)', borderRadius: 999 }} />
                   </div>
                 </div>
               )
@@ -278,17 +278,17 @@ export default function TeacherPage() {
               {classStats.map(cls => (
                 <button key={cls.name} onClick={() => setSelectedClass(cls.name === selectedClass ? null : cls.name)} style={{
                   padding: '8px 16px', borderRadius: 999, border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 600,
-                  background: selectedClass === cls.name ? '#10b981' : '#1a1a2e', color: '#fff',
+                  background: selectedClass === cls.name ? 'var(--good)' : 'var(--surface)', color: 'var(--on-accent)',
                 }}>{cls.name} ({cls.students.length})</button>
               ))}
             </div>
             {selectedClass && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                {selectedClassStudents.length === 0 && <div style={{ color: '#888', textAlign: 'center', padding: 40 }}>{t('В этом классе нет учеников')}</div>}
+                {selectedClassStudents.length === 0 && <div style={{ color: 'var(--muted)', textAlign: 'center', padding: 40 }}>{t('В этом классе нет учеников')}</div>}
                 {selectedClassStudents.map((s, i) => (
-                  <div key={s.id} style={{ background: '#1a1a2e', borderRadius: 14, padding: '14px 18px', border: '1px solid #2a2a3e', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div key={s.id} style={{ background: 'var(--surface)', borderRadius: 14, padding: '14px 18px', border: '1px solid var(--line)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                      <div style={{ width: 36, height: 36, borderRadius: '50%', background: 'linear-gradient(135deg,#667eea,#764ba2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 14 }}>
+                      <div style={{ width: 36, height: 36, borderRadius: '50%', background: 'var(--accent)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 14 }}>
                         {(s.full_name || t('Без имени')).slice(0, 2).toUpperCase()}
                       </div>
                       <div>
@@ -296,8 +296,8 @@ export default function TeacherPage() {
                       </div>
                     </div>
                     <div style={{ display: 'flex', gap: 16, textAlign: 'center' }}>
-                      <div><div style={{ fontWeight: 700, color: '#a78bfa' }}>{s.total_xp}</div><div style={{ color: '#888', fontSize: 11 }}>XP</div></div>
-                      <div><div style={{ fontWeight: 700, color: '#f59e0b' }}>🔥{s.streak}</div><div style={{ color: '#888', fontSize: 11 }}>{t('дней')}</div></div>
+                      <div><div style={{ fontWeight: 700, color: 'var(--accent)' }}>{s.total_xp}</div><div style={{ color: 'var(--muted)', fontSize: 11 }}>XP</div></div>
+                      <div><div style={{ fontWeight: 700, color: 'var(--warn)' }}>🔥{s.streak}</div><div style={{ color: 'var(--muted)', fontSize: 11 }}>{t('дней')}</div></div>
                     </div>
                   </div>
                 ))}
@@ -312,20 +312,20 @@ export default function TeacherPage() {
             {students.map((s, i) => {
               const medal = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `${i + 1}.`
               return (
-                <div key={s.id} style={{ background: '#1a1a2e', borderRadius: 14, padding: '14px 18px', border: '1px solid #2a2a3e', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div key={s.id} style={{ background: 'var(--surface)', borderRadius: 14, padding: '14px 18px', border: '1px solid var(--line)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                     <span style={{ fontSize: 18, minWidth: 32 }}>{medal}</span>
-                    <div style={{ width: 36, height: 36, borderRadius: '50%', background: 'linear-gradient(135deg,#667eea,#764ba2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 14 }}>
+                    <div style={{ width: 36, height: 36, borderRadius: '50%', background: 'var(--accent)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 14 }}>
                       {(s.full_name || t('Без имени')).slice(0, 2).toUpperCase()}
                     </div>
                     <div>
                       <div style={{ fontWeight: 600 }}>{s.full_name || t('Без имени')}</div>
-                      <div style={{ color: '#888', fontSize: 12 }}>{gradeLabel(s.grade, t)}</div>
+                      <div style={{ color: 'var(--muted)', fontSize: 12 }}>{gradeLabel(s.grade, t)}</div>
                     </div>
                   </div>
                   <div style={{ display: 'flex', gap: 16, textAlign: 'center' }}>
-                    <div><div style={{ fontWeight: 700, color: '#a78bfa' }}>{s.total_xp}</div><div style={{ color: '#888', fontSize: 11 }}>XP</div></div>
-                    <div><div style={{ fontWeight: 700, color: '#f59e0b' }}>🔥{s.streak}</div><div style={{ color: '#888', fontSize: 11 }}>{t('дней')}</div></div>
+                    <div><div style={{ fontWeight: 700, color: 'var(--accent)' }}>{s.total_xp}</div><div style={{ color: 'var(--muted)', fontSize: 11 }}>XP</div></div>
+                    <div><div style={{ fontWeight: 700, color: 'var(--warn)' }}>🔥{s.streak}</div><div style={{ color: 'var(--muted)', fontSize: 11 }}>{t('дней')}</div></div>
                   </div>
                 </div>
               )
@@ -337,7 +337,7 @@ export default function TeacherPage() {
         {tab === 'homework' && (
           <div>
             {/* Форма создания */}
-            <div style={{ background: '#1a1a2e', borderRadius: 16, padding: '20px', border: '1px solid #2a2a3e', marginBottom: 24 }}>
+            <div style={{ background: 'var(--surface)', borderRadius: 16, padding: '20px', border: '1px solid var(--line)', marginBottom: 24 }}>
               <h3 style={{ margin: '0 0 16px', fontWeight: 700 }}>{t('➕ Новое задание')}</h3>
               <div style={{ display: 'flex', gap: 8, marginBottom: 10, flexWrap: 'wrap' }}>
                 <button type="button" className={`chip${!hwEnt ? ' on' : ''}`} onClick={() => setHwEnt(null)}>{t('📄 Обычное задание')}</button>
@@ -345,7 +345,7 @@ export default function TeacherPage() {
               </div>
               {hwEnt && (
                 <>
-                  <div style={{ color: '#888', fontSize: 13, marginBottom: 8 }}>{t('Ученик решает новые задания по выбранным темам, выполнение и точность видны здесь автоматически.')}</div>
+                  <div style={{ color: 'var(--muted)', fontSize: 13, marginBottom: 8 }}>{t('Ученик решает новые задания по выбранным темам, выполнение и точность видны здесь автоматически.')}</div>
                   <EntHomeworkPicker value={hwEnt} onChange={setHwEnt} />
                 </>
               )}
@@ -369,77 +369,77 @@ export default function TeacherPage() {
               {/* Загрузка медиа */}
               <input ref={hwFileRef} type="file" accept="image/*,video/*" multiple style={{ display: 'none' }} onChange={e => handleHwMedia(e.target.files)} />
               <div onClick={() => hwFileRef.current?.click()}
-                style={{ border: '2px dashed #2a2a4e', borderRadius: 12, padding: '14px', textAlign: 'center', cursor: 'pointer', color: '#888', fontSize: 13, background: '#0a0a18', marginBottom: 10 }}
-                onMouseEnter={e => (e.currentTarget.style.borderColor = '#10b981')}
-                onMouseLeave={e => (e.currentTarget.style.borderColor = '#2a2a4e')}>
+                style={{ border: '2px dashed var(--line)', borderRadius: 12, padding: '14px', textAlign: 'center', cursor: 'pointer', color: 'var(--muted)', fontSize: 13, background: 'var(--bg)', marginBottom: 10 }}
+                onMouseEnter={e => (e.currentTarget.style.borderColor = 'var(--good)')}
+                onMouseLeave={e => (e.currentTarget.style.borderColor = 'var(--line)')}>
                 {t('📎 Прикрепить фото или видео к заданию')}
               </div>
               {hwMediaPreviews.length > 0 && (
                 <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 10 }}>
                   {hwMediaPreviews.map((preview, i) => (
-                    <div key={i} style={{ position: 'relative', width: 80, height: 64, borderRadius: 8, overflow: 'hidden', border: '1px solid #2a2a3e' }}>
+                    <div key={i} style={{ position: 'relative', width: 80, height: 64, borderRadius: 8, overflow: 'hidden', border: '1px solid var(--line)' }}>
                       {hwMediaFiles[i]?.type.startsWith('video')
                         ? <video src={preview} style={{ width: '100%', height: '100%', objectFit: 'cover' }} muted />
                         : <img src={preview} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                       }
                       <button onClick={e => { e.stopPropagation(); setHwMediaFiles(p => p.filter((_, idx) => idx !== i)); setHwMediaPreviews(p => p.filter((_, idx) => idx !== i)) }}
-                        style={{ position: 'absolute', top: 2, right: 2, width: 18, height: 18, borderRadius: '50%', background: '#f5576c', border: 'none', color: '#fff', fontSize: 11, cursor: 'pointer', padding: 0, lineHeight: '18px' }}>×</button>
+                        style={{ position: 'absolute', top: 2, right: 2, width: 18, height: 18, borderRadius: '50%', background: 'var(--bad)', border: 'none', color: 'var(--on-accent)', fontSize: 11, cursor: 'pointer', padding: 0, lineHeight: '18px' }}>×</button>
                     </div>
                   ))}
                 </div>
               )}
 
               <button onClick={createHomework} disabled={savingHw || hwUploading || !hwClass || (hwEnt ? !hwEnt.topics.length : !hwTitle.trim())}
-                style={{ padding: '10px 24px', borderRadius: 10, border: 'none', background: hwClass && (hwEnt ? hwEnt.topics.length : hwTitle) ? 'linear-gradient(135deg,#10b981,#059669)' : '#2a2a3e', color: '#fff', fontWeight: 700, cursor: 'pointer', fontSize: 14 }}>
+                style={{ padding: '10px 24px', borderRadius: 10, border: 'none', background: hwClass && (hwEnt ? hwEnt.topics.length : hwTitle) ? 'var(--good)' : 'var(--line)', color: 'var(--on-accent)', fontWeight: 700, cursor: 'pointer', fontSize: 14 }}>
                 {hwUploading ? t('⏳ Загружаю файлы...') : savingHw ? t('Создаём...') : t('✅ Создать задание')}
               </button>
             </div>
 
             {/* Список заданий */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-              {homeworks.length === 0 && <div style={{ color: '#555', textAlign: 'center', padding: 40 }}>{t('Заданий пока нет')}</div>}
+              {homeworks.length === 0 && <div style={{ color: 'var(--muted)', textAlign: 'center', padding: 40 }}>{t('Заданий пока нет')}</div>}
               {homeworks.map(hw => {
                 const hwSubs = submissions.filter(s => s.homework_id === hw.id)
                 const isOpen = selectedHw === hw.id
                 return (
-                  <div key={hw.id} style={{ background: '#1a1a2e', borderRadius: 14, border: '1px solid #2a2a3e', overflow: 'hidden' }}>
+                  <div key={hw.id} style={{ background: 'var(--surface)', borderRadius: 14, border: '1px solid var(--line)', overflow: 'hidden' }}>
                     <div style={{ padding: '16px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer' }}
                       onClick={() => setSelectedHw(isOpen ? null : hw.id)}>
                       <div>
                         <div style={{ fontWeight: 700 }}>{hw.title}</div>
-                        <div style={{ color: '#888', fontSize: 12, marginTop: 4 }}>{classLabel(hw.class_name)} · {hwSubs.length} {t('ответов')}{hw.due_date ? t(' · до {date}', { date: new Date(hw.due_date).toLocaleDateString(dateLocale) }) : ''}</div>
+                        <div style={{ color: 'var(--muted)', fontSize: 12, marginTop: 4 }}>{classLabel(hw.class_name)} · {hwSubs.length} {t('ответов')}{hw.due_date ? t(' · до {date}', { date: new Date(hw.due_date).toLocaleDateString(dateLocale) }) : ''}</div>
                       </div>
-                      <span style={{ color: '#555' }}>{isOpen ? '▲' : '▼'}</span>
+                      <span style={{ color: 'var(--muted)' }}>{isOpen ? '▲' : '▼'}</span>
                     </div>
                     {isOpen && (
-                      <div style={{ borderTop: '1px solid #2a2a3e', padding: '16px 20px' }}>
-                        {hw.description && <p style={{ color: '#aaa', fontSize: 14, marginBottom: 16 }}>{hw.description}</p>}
+                      <div style={{ borderTop: '1px solid var(--line)', padding: '16px 20px' }}>
+                        {hw.description && <p style={{ color: 'var(--muted)', fontSize: 14, marginBottom: 16 }}>{hw.description}</p>}
                         {hw.ent && <div style={{ marginBottom: 16 }}><EntHomeworkClass hw={hw.ent} since={hw.created_at} className={hw.class_name} /></div>}
-                        {hwSubs.length === 0 && !hw.ent && <div style={{ color: '#555', fontSize: 14 }}>{t('Ответов пока нет')}</div>}
+                        {hwSubs.length === 0 && !hw.ent && <div style={{ color: 'var(--muted)', fontSize: 14 }}>{t('Ответов пока нет')}</div>}
                         {hwSubs.map(sub => (
-                          <div key={sub.id} style={{ background: '#0f0f1a', borderRadius: 10, padding: '12px 16px', marginBottom: 10, border: '1px solid #2a2a3e' }}>
+                          <div key={sub.id} style={{ background: 'var(--bg)', borderRadius: 10, padding: '12px 16px', marginBottom: 10, border: '1px solid var(--line)' }}>
                             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
-                              <span style={{ fontWeight: 600, color: '#a78bfa', fontSize: 13 }}>{sub.student_name}</span>
-                              <span style={{ color: '#555', fontSize: 12 }}>{new Date(sub.submitted_at).toLocaleDateString(dateLocale)}</span>
+                              <span style={{ fontWeight: 600, color: 'var(--accent)', fontSize: 13 }}>{sub.student_name}</span>
+                              <span style={{ color: 'var(--muted)', fontSize: 12 }}>{new Date(sub.submitted_at).toLocaleDateString(dateLocale)}</span>
                             </div>
-                            {sub.answer && <p style={{ color: '#ccc', fontSize: 14, margin: '0 0 10px' }}>{sub.answer}</p>}
+                            {sub.answer && <p style={{ color: 'var(--text)', fontSize: 14, margin: '0 0 10px' }}>{sub.answer}</p>}
                             {sub.media_url && (
                               sub.media_url.match(/\.(mp4|webm|mov)$/i)
                                 ? <video src={sub.media_url} controls style={{ maxWidth: '100%', borderRadius: 8, marginBottom: 10 }} />
                                 : <img src={sub.media_url} alt={t('Работа ученика')} style={{ maxWidth: '100%', maxHeight: 200, borderRadius: 8, marginBottom: 10, objectFit: 'cover' }} />
                             )}
                             {sub.grade ? (
-                              <span style={{ background: 'rgba(16,185,129,0.15)', color: '#10b981', padding: '3px 10px', borderRadius: 999, fontSize: 12, fontWeight: 600 }}>{t('Оценка:')} {sub.grade}</span>
+                              <span style={{ background: 'color-mix(in srgb, var(--good) 15%, transparent)', color: 'var(--good)', padding: '3px 10px', borderRadius: 999, fontSize: 12, fontWeight: 600 }}>{t('Оценка:')} {sub.grade}</span>
                             ) : gradingId === sub.id ? (
                               <div style={{ display: 'flex', gap: 8 }}>
-                                <input style={{ flex: 1, padding: '6px 10px', borderRadius: 8, border: '1px solid #2a2a3e', background: '#1a1a2e', color: '#fff', fontSize: 13 }}
+                                <input style={{ flex: 1, padding: '6px 10px', borderRadius: 8, border: '1px solid var(--line)', background: 'var(--surface)', color: 'var(--text)', fontSize: 13 }}
                                   placeholder={t('Оценка (5, 4, 3...)')} value={gradeValue} onChange={e => setGradeValue(e.target.value)} />
-                                <button onClick={() => gradeSubmission(sub.id)} style={{ padding: '6px 14px', borderRadius: 8, border: 'none', background: '#10b981', color: '#fff', cursor: 'pointer', fontSize: 13, fontWeight: 600 }}>{t('Сохранить')}</button>
-                                <button onClick={() => setGradingId(null)} style={{ padding: '6px 10px', borderRadius: 8, border: 'none', background: '#2a2a3e', color: '#fff', cursor: 'pointer', fontSize: 13 }}>✕</button>
+                                <button onClick={() => gradeSubmission(sub.id)} style={{ padding: '6px 14px', borderRadius: 8, border: 'none', background: 'var(--good)', color: 'var(--on-accent)', cursor: 'pointer', fontSize: 13, fontWeight: 600 }}>{t('Сохранить')}</button>
+                                <button onClick={() => setGradingId(null)} style={{ padding: '6px 10px', borderRadius: 8, border: 'none', background: 'var(--line)', color: 'var(--text)', cursor: 'pointer', fontSize: 13 }}>✕</button>
                               </div>
                             ) : (
                               <button onClick={() => { setGradingId(sub.id); setGradeValue('') }}
-                                style={{ padding: '4px 12px', borderRadius: 8, border: '1px solid #2a2a3e', background: 'transparent', color: '#888', cursor: 'pointer', fontSize: 12 }}>
+                                style={{ padding: '4px 12px', borderRadius: 8, border: '1px solid var(--line)', background: 'transparent', color: 'var(--muted)', cursor: 'pointer', fontSize: 12 }}>
                                 {t('✏️ Поставить оценку')}
                               </button>
                             )}

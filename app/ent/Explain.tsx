@@ -59,8 +59,8 @@ export default function Explain({ q, chosen, turns, setTurns }: {
   }
 
   return (
-    <div className="card animate-fade-in" style={{ background: 'rgba(139,124,246,0.06)', borderColor: 'rgba(139,124,246,0.3)' }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontWeight: 700, color: '#c4bbff', marginBottom: 10 }}>
+    <div className="card animate-fade-in" style={{ background: 'color-mix(in srgb, var(--accent) 6%, transparent)', borderColor: 'color-mix(in srgb, var(--accent) 30%, transparent)' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontWeight: 700, color: 'var(--accent)', marginBottom: 10 }}>
         <Icon name="sparkles" size={18} /> {t('Разбор от ИИ')}
       </div>
 

@@ -46,19 +46,19 @@ export default function StreakAlert() {
   return (
     <div style={{
       position: 'fixed', top: 16, left: '50%', transform: 'translateX(-50%)',
-      zIndex: 9999, background: 'linear-gradient(135deg, #f59e0b, #d97706)',
+      zIndex: 9999, background: 'var(--warn)',
       borderRadius: 16, padding: '14px 20px', display: 'flex',
-      alignItems: 'center', gap: 12, boxShadow: '0 8px 32px rgba(245,158,11,0.4)',
+      alignItems: 'center', gap: 12, boxShadow: '0 8px 32px color-mix(in srgb, var(--warn) 40%, transparent)',
       maxWidth: 360, width: '90%', animation: 'slideDown 0.4s ease'
     }}>
       <span style={{ fontSize: 28 }}>🔥</span>
       <div style={{ flex: 1 }}>
-        <div style={{ fontWeight: 800, color: '#fff', fontSize: 14 }}>{t('Стрик')} {streak} {t('дней!')}</div>
-        <div style={{ color: 'rgba(255,255,255,0.85)', fontSize: 12 }}>{t('Заходи каждый день чтобы не потерять')}</div>
+        <div style={{ fontWeight: 800, color: 'var(--text)', fontSize: 14 }}>{t('Стрик')} {streak} {t('дней!')}</div>
+        <div style={{ color: 'color-mix(in srgb, var(--text) 85%, transparent)', fontSize: 12 }}>{t('Заходи каждый день чтобы не потерять')}</div>
       </div>
       <button onClick={dismiss} style={{
-        background: 'rgba(255,255,255,0.2)', border: 'none', borderRadius: 8,
-        color: '#fff', cursor: 'pointer', padding: '4px 8px', fontSize: 14
+        background: 'color-mix(in srgb, var(--text) 20%, transparent)', border: 'none', borderRadius: 8,
+        color: 'var(--text)', cursor: 'pointer', padding: '4px 8px', fontSize: 14
       }}>✕</button>
       <style>{`@keyframes slideDown { from { opacity:0; transform:translateX(-50%) translateY(-20px) } to { opacity:1; transform:translateX(-50%) translateY(0) } }`}</style>
     </div>

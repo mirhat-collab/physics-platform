@@ -80,23 +80,23 @@ function Shell({ locale, alt, crumbs, children, jsonLd }: { locale: Locale; alt:
     itemListElement: crumbs.map((c, i) => ({ '@type': 'ListItem', position: i + 1, name: c.label, item: SITE_URL + c.href })),
   }
   return (
-    <div style={{ minHeight: '100vh' }}>
-      <header style={{ borderBottom: '1px solid var(--line)', background: 'var(--surface)' }}>
-        <div style={{ maxWidth: 900, margin: '0 auto', padding: '12px 16px', display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
-          <Link href={pagePath(locale)} style={{ display: 'flex', alignItems: 'center', gap: 8, textDecoration: 'none', color: 'var(--text)', fontWeight: 800, flex: 1 }}>
-            <img src="/logo-mark.png" alt="" width={28} height={28} style={{ objectFit: 'contain' }} />
-            Mirha_Edu
-          </Link>
-          <Link href={alt} hrefLang={locale === 'kk' ? 'ru' : 'kk'} style={{ color: 'var(--muted)', fontSize: 13, textDecoration: 'none' }}>{locale === 'kk' ? 'РУС' : 'ҚАЗ'}</Link>
-          <Link href="/login" className="btn" style={{ padding: '8px 14px', fontSize: 14, textDecoration: 'none' }}>{t('Начать бесплатно')}</Link>
+    <div className="nb-root">
+      <header className="nb-wrap nb-top">
+        <Link href={pagePath(locale)} className="nb-brand">
+          <img src="/logo-mark.png" alt="" width={28} height={28} />
+          Mirha_Edu
+        </Link>
+        <div className="nb-top-actions">
+          <Link href={alt} hrefLang={locale === 'kk' ? 'ru' : 'kk'} className="nb-top-login" style={{ color: 'var(--nb-text-2)' }}>{locale === 'kk' ? 'РУС' : 'ҚАЗ'}</Link>
+          <Link href="/login" className="nb-btn pg-cta">{t('Начать бесплатно')}</Link>
         </div>
       </header>
-      <main className="page" style={{ maxWidth: 900 }}>
-        <nav aria-label="breadcrumbs" style={{ fontSize: 13, color: 'var(--muted)', marginBottom: 14, display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+      <main className="app-page pg">
+        <nav aria-label="breadcrumbs" className="pg-crumbs">
           {crumbs.map((c, i) => (
             <span key={c.href}>
               {i > 0 && '› '}
-              {i < crumbs.length - 1 ? <Link href={c.href} style={{ color: 'var(--muted)' }}>{c.label}</Link> : <span>{c.label}</span>}
+              {i < crumbs.length - 1 ? <Link href={c.href}>{c.label}</Link> : <span aria-current="page">{c.label}</span>}
             </span>
           ))}
         </nav>
@@ -112,13 +112,14 @@ function Shell({ locale, alt, crumbs, children, jsonLd }: { locale: Locale; alt:
 function Cta({ locale, href }: { locale: Locale; href?: string }) {
   const t = makeT(locale)
   return (
-    <div className="card" style={{ marginTop: 24, textAlign: 'center', padding: 24 }}>
-      <div style={{ fontWeight: 800, fontSize: 18, marginBottom: 6 }}>{t('Готовься к ЕНТ бесплатно')}</div>
-      <div style={{ color: 'var(--muted)', fontSize: 14, marginBottom: 14, lineHeight: 1.5 }}>
+    <aside className="pg-final">
+      <p className="nb-kicker">{t('Бесплатно')}</p>
+      <h2 className="pg-final-title">{t('Готовься к ЕНТ бесплатно')}</h2>
+      <p className="pg-final-text">
         {t('Тысячи задач с проверкой и разбором, пробный ЕНТ по спецификации НЦТ, прогноз балла и план подготовки.')}
-      </div>
-      <Link href={href ?? '/login'} className="btn" style={{ textDecoration: 'none', display: 'inline-flex' }}>{t('Зарегистрироваться и решать')}</Link>
-    </div>
+      </p>
+      <Link href={href ?? '/login'} className="nb-btn">{t('Зарегистрироваться и решать')}</Link>
+    </aside>
   )
 }
 
@@ -132,24 +133,27 @@ export function HubPage({ locale }: { locale: Locale }) {
     <Shell locale={locale} alt={pagePath(locale === 'kk' ? 'ru' : 'kk')} crumbs={[crumbHome(locale)]}>
       <h1 className="page-title">{t('Подготовка к ЕНТ по физике и математике')}</h1>
       <p className="page-sub">{t('Все темы по спецификации НЦТ: формулы, задачи с подробным решением. Решай онлайн бесплатно и проходи пробный ЕНТ.')}</p>
-      {SUBJECTS.map(s => (
-        <section key={s} className="card" style={{ marginBottom: 14 }}>
-          <h2 style={{ margin: '0 0 8px', fontSize: 20 }}>
-            <Link href={pagePath(locale, SUBJECT_SLUG[s])} style={{ color: 'var(--text)' }}>{t(ENT_SUBJECTS[s].label)} — {t('{n} тем', { n: seoTopics(s).length })}</Link>
-          </h2>
-          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-            <Link className="chip" href={pagePath(locale, SUBJECT_SLUG[s])} style={{ textDecoration: 'none' }}>{t('Все темы и задачи')}</Link>
-            <Link className="chip" href={pagePath(locale, SUBJECT_SLUG[s], 'formuly')} style={{ textDecoration: 'none' }}>{t('Формулы')}</Link>
-          </div>
-        </section>
-      ))}
-      <section className="card" style={{ marginBottom: 14 }}>
-        <h2 style={{ margin: '0 0 8px', fontSize: 20 }}>
-          <Link href={pagePath(locale, 'stati')} style={{ color: 'var(--text)' }}>{t('Всё про ЕНТ: статьи и советы')}</Link>
+      <div className="pg-subjects">
+        {SUBJECTS.map(s => (
+          <section key={s} className={`pg-subject pg-subject-${SUBJECT_SLUG[s]}`}>
+            <p className="pg-subject-n">{t('{n} тем', { n: seoTopics(s).length })}</p>
+            <h2 className="pg-subject-title">
+              <Link href={pagePath(locale, SUBJECT_SLUG[s])}>{t(ENT_SUBJECTS[s].label)}</Link>
+            </h2>
+            <div className="pg-subject-links">
+              <Link href={pagePath(locale, SUBJECT_SLUG[s])}>{t('Все темы и задачи')} →</Link>
+              <Link href={pagePath(locale, SUBJECT_SLUG[s], 'formuly')}>{t('Формулы')} →</Link>
+            </div>
+          </section>
+        ))}
+      </div>
+      <section>
+        <h2 className="pg-h2">
+          <Link href={pagePath(locale, 'stati')}>{t('Всё про ЕНТ: статьи и советы')}</Link>
         </h2>
-        <ul style={{ margin: 0, paddingLeft: 20, lineHeight: 1.9 }}>
-          {articles(locale).map(a => <li key={a.slug}><Link href={pagePath(locale, 'stati', a.slug)} style={{ color: 'var(--text)' }}>{a.title}</Link></li>)}
-          <li><Link href={pagePath(locale, 'voprosy')} style={{ color: 'var(--text)' }}>{t('Частые вопросы о ЕНТ')}</Link></li>
+        <ul className="pg-toc">
+          {articles(locale).map(a => <li key={a.slug}><Link href={pagePath(locale, 'stati', a.slug)}>{a.title}</Link></li>)}
+          <li><Link href={pagePath(locale, 'voprosy')}>{t('Частые вопросы о ЕНТ')}</Link></li>
         </ul>
       </section>
     </Shell>
@@ -168,16 +172,16 @@ export async function SubjectPage({ locale, params }: { locale: Locale; params: 
       <h1 className="page-title">{t('{subject} ЕНТ: темы и задачи с решением', { subject: t(ENT_SUBJECTS[s].label) })}</h1>
       <p className="page-sub">
         {t('Выбери тему — в каждой примеры задач уровня ЕНТ с ответами и подробным решением.')}{' '}
-        <Link href={pagePath(locale, slug, 'formuly')} style={{ color: '#c4bbff' }}>{t('Все формулы')} →</Link>
+        <Link href={pagePath(locale, slug, 'formuly')} className="nb-link">{t('Все формулы')} →</Link>
       </p>
       {ENT_SUBJECTS[s].sections.map(sec => {
         const list = topics.filter(x => x.section === sec.name)
         if (!list.length) return null
         return (
-          <section key={sec.name} style={{ marginBottom: 18 }}>
-            <h2 style={{ fontSize: 17, margin: '0 0 8px' }}>{t(sec.name)}</h2>
-            <ul style={{ margin: 0, paddingLeft: 20, lineHeight: 1.9 }}>
-              {list.map(x => <li key={x.slug}><Link href={pagePath(locale, slug, x.slug)} style={{ color: 'var(--text)' }}>{t(x.topic)}</Link></li>)}
+          <section key={sec.name} className="pg-section">
+            <h2 className="pg-h2">{t(sec.name)}</h2>
+            <ul className="pg-toc">
+              {list.map(x => <li key={x.slug}><Link href={pagePath(locale, slug, x.slug)}>{t(x.topic)}</Link></li>)}
             </ul>
           </section>
         )
@@ -198,15 +202,15 @@ export async function FormulasPage({ locale, params }: { locale: Locale; params:
       <h1 className="page-title">{t('Формулы: {subject} для ЕНТ', { subject: t(ENT_SUBJECTS[s].label) })}</h1>
       <p className="page-sub">
         {t('Все формулы по разделам, с расшифровкой каждой буквы. Запомнить их поможет')}{' '}
-        <Link href="/formulas" style={{ color: '#c4bbff' }}>{t('тренажёр формул')}</Link>.
+        <Link href="/formulas" className="nb-link">{t('тренажёр формул')}</Link>.
       </p>
       {SECTIONS[s].map(sec => (
-        <section key={sec} style={{ marginBottom: 20 }}>
-          <h2 style={{ fontSize: 18, margin: '0 0 10px' }}>{tf(sec)}</h2>
-          <div style={{ display: 'grid', gap: 10 }}>
+        <section key={sec} className="pg-section">
+          <h2 className="pg-h2">{tf(sec)}</h2>
+          <div className="pg-formulas">
             {FORMULAS.filter(f => f.subject === s && f.section === sec).map(f => (
-              <div key={f.id} className="card" style={{ padding: '14px 18px' }}>
-                <h3 style={{ color: 'var(--muted)', fontSize: 13, fontWeight: 600, margin: '0 0 8px' }}>{tf(f.name)}</h3>
+              <div key={f.id} className="pg-formula">
+                <h3 className="pg-formula-name">{tf(f.name)}</h3>
                 <FormulaView toks={parseFormula(f.expr).toks} size={22} />
                 <div style={{ color: 'var(--muted)', fontSize: 12, marginTop: 10, display: 'flex', flexWrap: 'wrap', gap: '4px 14px' }}>
                   {Object.entries(f.legend).map(([k, v]) => <span key={k}><i style={{ color: 'var(--text)', fontFamily: 'serif' }}>{k}</i> — {tf(v)}</span>)}
@@ -237,10 +241,10 @@ export async function TopicPage({ locale, params }: { locale: Locale; params: Pr
       <p className="page-sub">
         {t('{subject} · раздел «{section}». Попробуй решить сам, потом открой решение.', { subject: t(ENT_SUBJECTS[s].label), section: t(tp.section) })}
       </p>
-      <div style={{ display: 'grid', gap: 14 }}>
+      <div className="pg-tasks">
         {examples.map((g, i) => (
-          <article key={i} className="card">
-            <h2 style={{ fontSize: 15, color: 'var(--muted)', margin: '0 0 8px' }}>{t('Задача {n}', { n: i + 1 })}{i === examples.length - 1 ? ` · ${t('повышенной сложности')}` : ''}</h2>
+          <article key={i} className="pg-task">
+            <h2 className="pg-task-n">{t('Задача {n}', { n: i + 1 })}{i === examples.length - 1 ? ` · ${t('повышенной сложности')}` : ''}</h2>
             <MathText text={g.question} style={{ fontSize: 16, lineHeight: 1.6, marginBottom: 10 }} />
             <Figure svg={g.figure} />
             <ol style={{ listStyle: 'none', padding: 0, margin: '0 0 10px', display: 'grid', gap: 6 }}>
@@ -249,7 +253,7 @@ export async function TopicPage({ locale, params }: { locale: Locale; params: Pr
               ))}
             </ol>
             <details>
-              <summary style={{ cursor: 'pointer', color: '#c4bbff', fontWeight: 600 }}>{t('Показать ответ и решение')}</summary>
+              <summary className="pg-reveal">{t('Показать ответ и решение')}</summary>
               <div style={{ marginTop: 10, paddingTop: 10, borderTop: '1px solid var(--line)' }}>
                 <div style={{ display: 'flex', gap: 8, fontWeight: 700, marginBottom: 6 }}><span>{t('Ответ')}: {LETTERS[g.correct]})</span> <MathText text={g.options[g.correct]} /></div>
                 <MathText text={g.solution} style={{ lineHeight: 1.7 }} />
@@ -258,15 +262,15 @@ export async function TopicPage({ locale, params }: { locale: Locale; params: Pr
           </article>
         ))}
       </div>
-      <div className="card" style={{ marginTop: 16, display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
-        <span style={{ flex: 1, minWidth: 200 }}>{t('Хочешь ещё? В тренажёре по этой теме — сотни задач с проверкой и разбором ошибок.')}</span>
-        <Link href={practice} className="btn" style={{ textDecoration: 'none' }}>{t('Решать задачи по теме')}</Link>
+      <div className="pg-more">
+        <span>{t('Хочешь ещё? В тренажёре по этой теме — сотни задач с проверкой и разбором ошибок.')}</span>
+        <Link href={practice} className="nb-btn">{t('Решать задачи по теме')}</Link>
       </div>
       {siblings.length > 0 && (
-        <section style={{ marginTop: 20 }}>
-          <h2 style={{ fontSize: 17, margin: '0 0 8px' }}>{t('Другие темы раздела «{section}»', { section: t(tp.section) })}</h2>
-          <ul style={{ margin: 0, paddingLeft: 20, lineHeight: 1.9 }}>
-            {siblings.map(x => <li key={x.slug}><Link href={pagePath(locale, slug, x.slug)} style={{ color: 'var(--text)' }}>{t(x.topic)}</Link></li>)}
+        <section className="pg-section">
+          <h2 className="pg-h2">{t('Другие темы раздела «{section}»', { section: t(tp.section) })}</h2>
+          <ul className="pg-toc">
+            {siblings.map(x => <li key={x.slug}><Link href={pagePath(locale, slug, x.slug)}>{t(x.topic)}</Link></li>)}
           </ul>
         </section>
       )}
@@ -298,13 +302,13 @@ function SpecList({ locale, subject }: { locale: Locale; subject: EntSubject }) 
   const t = makeT(locale)
   const pages = new Set(seoTopics(subject).map(x => x.topic))
   return (
-    <div style={{ display: 'grid', gap: 10, marginBottom: 12 }}>
+    <div className="pg-spec">
       {specSections(subject).map(sec => (
         <div key={sec}>
-          <div style={{ fontWeight: 700, marginBottom: 4 }}>{t(sec)}</div>
-          <div style={{ color: 'var(--muted)', fontSize: 14, lineHeight: 1.8 }}>
+          <div className="pg-spec-h">{t(sec)}</div>
+          <div className="pg-spec-list">
             {ENT_SPEC[subject].filter(st => st.section === sec).flatMap(st => st.ours).filter(x => pages.has(x)).map((x, i) => (
-              <span key={x}>{i > 0 && ' · '}<Link href={pagePath(locale, SUBJECT_SLUG[subject], slugify(x))} style={{ color: 'var(--muted)' }}>{t(x)}</Link></span>
+              <span key={x}>{i > 0 && ' · '}<Link href={pagePath(locale, SUBJECT_SLUG[subject], slugify(x))}>{t(x)}</Link></span>
             ))}
           </div>
         </div>
@@ -315,16 +319,16 @@ function SpecList({ locale, subject }: { locale: Locale; subject: EntSubject }) 
 
 function Blocks({ locale, blocks }: { locale: Locale; blocks: Block[] }) {
   return (
-    <div style={{ lineHeight: 1.7, fontSize: 16 }}>
+    <div className="pg-prose">
       {blocks.map((b, i) => {
-        if ('h' in b) return <h2 key={i} style={{ fontSize: 19, fontWeight: 800, margin: '22px 0 8px' }}>{b.h}</h2>
-        if ('p' in b) return <MathText key={i} text={b.p} style={{ marginBottom: 10 }} />
-        if ('ul' in b) return <ul key={i} style={{ margin: '0 0 12px', paddingLeft: 22, listStyle: 'disc' }}>{b.ul.map((x, j) => <li key={j}><MathText text={x} /></li>)}</ul>
-        if ('check' in b) return <div key={i} className="card" style={{ borderColor: '#f59e0b', margin: '14px 0', fontSize: 14 }}>⚠️ {b.check}</div>
+        if ('h' in b) return <h2 key={i}>{b.h}</h2>
+        if ('p' in b) return <MathText key={i} text={b.p} style={{ marginBottom: 14 }} />
+        if ('ul' in b) return <ul key={i}>{b.ul.map((x, j) => <li key={j}><MathText text={x} /></li>)}</ul>
+        if ('check' in b) return <p key={i} className="pg-note">{b.check}</p>
         if ('spec' in b) return <SpecList key={i} locale={locale} subject={b.spec} />
         return (
-          <div key={i} style={{ display: 'flex', gap: 8, flexWrap: 'wrap', margin: '16px 0' }}>
-            {b.links.map(l => <Link key={l.href} href={l.href} className="chip" style={{ textDecoration: 'none' }}>{l.label} →</Link>)}
+          <div key={i} className="pg-links">
+            {b.links.map(l => <Link key={l.href} href={l.href}>{l.label} →</Link>)}
           </div>
         )
       })}
@@ -339,17 +343,22 @@ export function ArticlesPage({ locale }: { locale: Locale }) {
       crumbs={[crumbHome(locale), { href: pagePath(locale, 'stati'), label: t('Статьи') }]}>
       <h1 className="page-title">{t('Всё про ЕНТ: статьи и советы')}</h1>
       <p className="page-sub">{t('Как устроен тест, сколько баллов нужно на грант и как готовиться к физике и математике.')}</p>
-      <div style={{ display: 'grid', gap: 10 }}>
+      <ol className="pg-articles">
         {articles(locale).map(a => (
-          <Link key={a.slug} href={pagePath(locale, 'stati', a.slug)} className="card" style={{ textDecoration: 'none', color: 'var(--text)' }}>
-            <h2 style={{ fontSize: 17, margin: '0 0 4px' }}>{a.title}</h2>
-            <div style={{ color: 'var(--muted)', fontSize: 14 }}>{a.description}</div>
-          </Link>
+          <li key={a.slug}>
+            <Link href={pagePath(locale, 'stati', a.slug)}>
+              <h2>{a.title}</h2>
+              <p>{a.description}</p>
+            </Link>
+          </li>
         ))}
-        <Link href={pagePath(locale, 'voprosy')} className="card" style={{ textDecoration: 'none', color: 'var(--text)' }}>
-          <h2 style={{ fontSize: 17, margin: 0 }}>{t('Частые вопросы о ЕНТ')}</h2>
-        </Link>
-      </div>
+        <li>
+          <Link href={pagePath(locale, 'voprosy')}>
+            <h2>{t('Частые вопросы о ЕНТ')}</h2>
+            <p>{t('Коротко о баллах, заданиях, времени и гранте.')}</p>
+          </Link>
+        </li>
+      </ol>
     </Shell>
   )
 }
@@ -367,13 +376,13 @@ export async function ArticlePage({ locale, params }: { locale: Locale; params: 
       <article>
         <h1 className="page-title">{a.title}</h1>
         <p className="page-sub">{a.description}</p>
-        <Blocks locale={locale} blocks={a.blocks} />
+        <div className="pg-sheet"><Blocks locale={locale} blocks={a.blocks} /></div>
       </article>
-      <section style={{ marginTop: 20 }}>
-        <h2 style={{ fontSize: 17, margin: '0 0 8px' }}>{t('Ещё статьи')}</h2>
-        <ul style={{ margin: 0, paddingLeft: 20, lineHeight: 1.9 }}>
-          {others.map(x => <li key={x.slug}><Link href={pagePath(locale, 'stati', x.slug)} style={{ color: 'var(--text)' }}>{x.title}</Link></li>)}
-          <li><Link href={pagePath(locale, 'voprosy')} style={{ color: 'var(--text)' }}>{t('Частые вопросы о ЕНТ')}</Link></li>
+      <section className="pg-section">
+        <h2 className="pg-h2">{t('Ещё статьи')}</h2>
+        <ul className="pg-toc">
+          {others.map(x => <li key={x.slug}><Link href={pagePath(locale, 'stati', x.slug)}>{x.title}</Link></li>)}
+          <li><Link href={pagePath(locale, 'voprosy')}>{t('Частые вопросы о ЕНТ')}</Link></li>
         </ul>
       </section>
     </Shell>
@@ -389,16 +398,16 @@ export function FaqPage({ locale }: { locale: Locale }) {
       crumbs={[crumbHome(locale), { href: pagePath(locale, 'voprosy'), label: t('Частые вопросы о ЕНТ') }]}>
       <h1 className="page-title">{t('Частые вопросы о ЕНТ')}</h1>
       <p className="page-sub">{t('Коротко о баллах, заданиях, времени и гранте.')}</p>
-      <div style={{ display: 'grid', gap: 10 }}>
-        {items.map(x => (
-          <section key={x.q} className="card">
-            <h2 style={{ fontSize: 17, fontWeight: 700, margin: '0 0 6px' }}>{x.q}</h2>
-            <div style={{ lineHeight: 1.6 }}>{x.a}</div>
+      <div className="pg-sheet pg-faq">
+        {items.map((x, i) => (
+          <section key={x.q}>
+            <h2><span className="ls-n">{i + 1}.</span> {x.q}</h2>
+            <p>{x.a}</p>
           </section>
         ))}
       </div>
-      <div style={{ marginTop: 16 }}>
-        <Link href={pagePath(locale, 'stati')} style={{ color: '#c4bbff' }}>{t('Все статьи про ЕНТ')} →</Link>
+      <div className="pg-section">
+        <Link href={pagePath(locale, 'stati')} className="nb-link">{t('Все статьи про ЕНТ')} →</Link>
       </div>
     </Shell>
   )

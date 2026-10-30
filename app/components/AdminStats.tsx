@@ -5,7 +5,7 @@ import { useT } from '@/app/components/LanguageProvider'
 
 const ROLE_LABEL: Record<string, string> = { student: 'Ученики', teacher: 'Учителя', parent: 'Родители', admin: 'Админы' }
 const pct = (x: number) => `${Math.round(x * 100)}%`
-const accColor = (a: number) => (a >= 0.8 ? '#10b981' : a >= 0.6 ? '#f59e0b' : '#f5576c')
+const accColor = (a: number) => (a >= 0.8 ? 'var(--good)' : a >= 0.6 ? 'var(--warn)' : 'var(--bad)')
 
 // Вкладка админки «Статистика»
 export default function AdminStats() {
@@ -52,7 +52,7 @@ export default function AdminStats() {
           {s.byDay.map(d => (
             <div key={d.date} title={t('{date}: заданий {a}, учеников {u}, регистраций {r}', { date: day(d.date), a: d.answers, u: d.users, r: d.signups })}
               style={{ flex: 1, minWidth: 0, height: `${Math.max(2, (d.answers / max) * 100)}%`, borderRadius: 4, background: d.answers ? 'var(--accent)' : 'var(--line)', position: 'relative' }}>
-              {d.signups > 0 && <span style={{ position: 'absolute', top: -14, left: '50%', transform: 'translateX(-50%)', fontSize: 10, color: '#10b981' }}>+{d.signups}</span>}
+              {d.signups > 0 && <span style={{ position: 'absolute', top: -14, left: '50%', transform: 'translateX(-50%)', fontSize: 10, color: 'var(--good)' }}>+{d.signups}</span>}
             </div>
           ))}
         </div>
@@ -88,7 +88,7 @@ export default function AdminStats() {
 
       <div className="card" style={{ fontSize: 14, color: 'var(--muted)' }}>
         {t('Посещаемость (сколько людей заходит на сайт, какие страницы смотрят, с телефона или компьютера) — на')}{' '}
-        <a href="https://vercel.com/mirhat-collabs-projects/mirha-edu./analytics" target="_blank" rel="noreferrer" style={{ color: '#c4bbff' }}>vercel.com → Analytics</a>.
+        <a href="https://vercel.com/mirhat-collabs-projects/mirha-edu./analytics" target="_blank" rel="noreferrer" style={{ color: 'var(--accent)' }}>vercel.com → Analytics</a>.
       </div>
     </div>
   )

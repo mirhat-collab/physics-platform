@@ -31,8 +31,8 @@ export function RetryCard({ q, subject, onDone }: { q: EntQuestion; subject: Ent
       <Figure svg={q.figure} />
       {q.options.map((opt, i) => {
         let border = 'var(--line)', bg = 'var(--surface-2)'
-        if (answered && i === q.correct) { border = 'var(--good)'; bg = 'rgba(52,211,153,0.1)' }
-        else if (answered && i === chosen) { border = 'var(--bad)'; bg = 'rgba(248,113,113,0.1)' }
+        if (answered && i === q.correct) { border = 'var(--good)'; bg = 'color-mix(in srgb, var(--good) 10%, transparent)' }
+        else if (answered && i === chosen) { border = 'var(--bad)'; bg = 'color-mix(in srgb, var(--bad) 10%, transparent)' }
         return (
           <button key={i} onClick={() => choose(i)} disabled={answered}
             style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', borderRadius: 10, border: `1.5px solid ${border}`, background: bg, color: 'var(--text)', cursor: answered ? 'default' : 'pointer', textAlign: 'left', fontFamily: 'inherit', fontSize: 14 }}>
@@ -42,12 +42,12 @@ export function RetryCard({ q, subject, onDone }: { q: EntQuestion; subject: Ent
         )
       })}
       {!answered && hints > 0 && (
-        <div style={{ padding: '10px 12px', borderRadius: 10, background: 'rgba(124,108,255,0.08)', border: '1px solid rgba(124,108,255,0.3)', display: 'grid', gap: 4 }}>
+        <div style={{ padding: '10px 12px', borderRadius: 10, background: 'color-mix(in srgb, var(--accent) 8%, transparent)', border: '1px solid color-mix(in srgb, var(--accent) 30%, transparent)', display: 'grid', gap: 4 }}>
           <StepTutor question={q.question} steps={steps} shown={hints} hideAnswer />
         </div>
       )}
       {!answered && hints < steps.length && (
-        <button onClick={() => setHints(hints + 1)} style={{ justifySelf: 'start', background: 'none', border: 'none', color: '#c4bbff', fontSize: 14, cursor: 'pointer', fontFamily: 'inherit', textDecoration: 'underline', padding: 0 }}>
+        <button onClick={() => setHints(hints + 1)} style={{ justifySelf: 'start', background: 'none', border: 'none', color: 'var(--accent)', fontSize: 14, cursor: 'pointer', fontFamily: 'inherit', textDecoration: 'underline', padding: 0 }}>
           💡 {hints ? t('Следующий шаг ({a}/{b})', { a: hints + 1, b: steps.length }) : t('Подсказка')}
         </button>
       )}

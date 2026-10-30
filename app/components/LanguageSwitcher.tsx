@@ -8,7 +8,7 @@ export default function LanguageSwitcher({ compact = false, tone = 'default' }: 
   const paper = tone === 'paper'
   const { locale, setLocale, t } = useT()
   return (
-    <div role="group" aria-label={t('Язык')} style={{ display: 'flex', gap: 4, background: paper ? 'transparent' : 'rgba(127,127,127,0.12)', border: paper ? '1px solid var(--nb-line)' : undefined, borderRadius: 10, padding: 3 }}>
+    <div role="group" aria-label={t('Язык')} className={paper ? undefined : 'lang-switch'} style={{ display: 'flex', gap: 4, background: paper ? 'transparent' : 'rgba(127,127,127,0.12)', border: paper ? '1px solid var(--nb-line)' : undefined, borderRadius: 10, padding: 3 }}>
       {LOCALES.map(l => (
         <button
           key={l}

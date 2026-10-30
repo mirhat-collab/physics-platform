@@ -39,7 +39,7 @@ export default function StepTutor({ question, steps, shown, hideAnswer = false, 
     setLoading(null)
   }
 
-  const link = { background: 'none', border: 'none', color: '#c4bbff', fontSize: 12, cursor: 'pointer', fontFamily: 'inherit', padding: 0, textDecoration: 'underline' } as const
+  const link = { background: 'none', border: 'none', color: 'var(--accent)', fontSize: 12, cursor: 'pointer', fontFamily: 'inherit', padding: 0, textDecoration: 'underline' } as const
   return (
     <div style={{ display: 'grid', gap: 6 }}>
       {steps.slice(0, shown ?? steps.length).map((s, i) => (
@@ -47,7 +47,7 @@ export default function StepTutor({ question, steps, shown, hideAnswer = false, 
           <MathText text={numbered ? `${i + 1}. ${s}` : s} style={{ fontSize: 14 }} />
           {open !== i && <button style={link} onClick={() => explain(i)}>🤔 {t('Не понимаю этот шаг')}</button>}
           {open === i && (
-            <div className="animate-fade-in" style={{ margin: '6px 0 4px', padding: '10px 12px', borderRadius: 10, background: 'rgba(124,108,255,0.08)', borderLeft: '3px solid #8b7cf6' }}>
+            <div className="animate-fade-in" style={{ margin: '6px 0 4px', padding: '10px 12px', borderRadius: 10, background: 'color-mix(in srgb, var(--accent) 8%, transparent)', borderLeft: '3px solid var(--accent)' }}>
               {loading === i && <div style={{ color: 'var(--muted)', fontSize: 13 }}>{t('Объясняю…')}</div>}
               {error[i] && <div style={{ color: 'var(--bad)', fontSize: 13 }}>{error[i]}</div>}
               {texts[i] && loading !== i && (

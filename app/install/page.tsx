@@ -5,28 +5,28 @@ import { useT } from '@/app/components/LanguageProvider'
 export default function InstallPage() {
   const { t } = useT()
   return (
-    <div style={{ minHeight: '100vh', color: '#fff', padding: '2rem' }}>
+    <div className="nb-root" style={{ minHeight: '100vh', color: 'var(--text)', padding: '2rem' }}>
       <div style={{ maxWidth: 600, margin: '0 auto' }}>
 
-        <Link href="/dashboard" style={{ color: '#666', textDecoration: 'none', fontSize: 14, display: 'inline-flex', alignItems: 'center', gap: 6, marginBottom: 32 }}>
+        <Link href="/dashboard" style={{ color: 'var(--muted)', textDecoration: 'none', fontSize: 14, display: 'inline-flex', alignItems: 'center', gap: 6, marginBottom: 32 }}>
           {t('← Назад')}
         </Link>
 
         <div style={{ textAlign: 'center', marginBottom: 32 }}>
           <div style={{ fontSize: 64, marginBottom: 16 }}>📲</div>
           <h1 style={{ fontSize: '2rem', fontWeight: 800, margin: '0 0 8px' }}>{t('Установи приложение')}</h1>
-          <p style={{ color: '#888', fontSize: 15, margin: 0 }}>{t('Бесплатно — прямо с браузера, без магазинов!')}</p>
+          <p style={{ color: 'var(--muted)', fontSize: 15, margin: 0 }}>{t('Бесплатно — прямо с браузера, без магазинов!')}</p>
         </div>
 
         {/* Android */}
-        <div style={{ background: '#1a1a2e', borderRadius: 20, padding: '24px', border: '1px solid #2a2a3e', marginBottom: 16 }}>
+        <div style={{ background: 'var(--surface)', borderRadius: 20, padding: '24px', border: '1px solid var(--line)', marginBottom: 16 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 20 }}>
-            <div style={{ width: 48, height: 48, borderRadius: 14, background: 'linear-gradient(135deg, #10b981, #059669)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 26 }}>
+            <div style={{ width: 48, height: 48, borderRadius: 14, background: 'var(--good)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 26 }}>
               🤖
             </div>
             <div>
               <div style={{ fontWeight: 800, fontSize: 18 }}>Android</div>
-              <div style={{ color: '#888', fontSize: 13 }}>{t('Через Google Chrome')}</div>
+              <div style={{ color: 'var(--muted)', fontSize: 13 }}>{t('Через Google Chrome')}</div>
             </div>
           </div>
 
@@ -37,23 +37,23 @@ export default function InstallPage() {
             { num: 4, text: t('Нажми "Установить" — готово!') },
           ].map(step => (
             <div key={step.num} style={{ display: 'flex', gap: 14, marginBottom: 14, alignItems: 'flex-start' }}>
-              <div style={{ width: 28, height: 28, borderRadius: '50%', background: 'linear-gradient(135deg,#10b981,#059669)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: 13, flexShrink: 0 }}>
+              <div style={{ width: 28, height: 28, borderRadius: '50%', background: 'var(--good)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: 13, flexShrink: 0 }}>
                 {step.num}
               </div>
-              <div style={{ color: '#ccc', fontSize: 14, lineHeight: 1.6, paddingTop: 4 }}>{step.text}</div>
+              <div style={{ color: 'var(--text)', fontSize: 14, lineHeight: 1.6, paddingTop: 4 }}>{step.text}</div>
             </div>
           ))}
         </div>
 
         {/* iPhone */}
-        <div style={{ background: '#1a1a2e', borderRadius: 20, padding: '24px', border: '1px solid #2a2a3e', marginBottom: 32 }}>
+        <div style={{ background: 'var(--surface)', borderRadius: 20, padding: '24px', border: '1px solid var(--line)', marginBottom: 32 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 20 }}>
-            <div style={{ width: 48, height: 48, borderRadius: 14, background: 'linear-gradient(135deg, #667eea, #764ba2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 26 }}>
+            <div style={{ width: 48, height: 48, borderRadius: 14, background: 'var(--accent)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 26 }}>
               🍎
             </div>
             <div>
               <div style={{ fontWeight: 800, fontSize: 18 }}>iPhone / iPad</div>
-              <div style={{ color: '#888', fontSize: 13 }}>{t('Через Safari (не Chrome!)')}</div>
+              <div style={{ color: 'var(--muted)', fontSize: 13 }}>{t('Через Safari (не Chrome!)')}</div>
             </div>
           </div>
 
@@ -65,19 +65,19 @@ export default function InstallPage() {
             { num: 5, text: t('Нажми "Добавить" — иконка появится на рабочем столе!') },
           ].map(step => (
             <div key={step.num} style={{ display: 'flex', gap: 14, marginBottom: 14, alignItems: 'flex-start' }}>
-              <div style={{ width: 28, height: 28, borderRadius: '50%', background: 'linear-gradient(135deg,#667eea,#764ba2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: 13, flexShrink: 0 }}>
+              <div style={{ width: 28, height: 28, borderRadius: '50%', background: 'var(--accent)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: 13, flexShrink: 0 }}>
                 {step.num}
               </div>
-              <div style={{ color: '#ccc', fontSize: 14, lineHeight: 1.6, paddingTop: 4 }}>{step.text}</div>
+              <div style={{ color: 'var(--text)', fontSize: 14, lineHeight: 1.6, paddingTop: 4 }}>{step.text}</div>
             </div>
           ))}
         </div>
 
         {/* После установки */}
-        <div style={{ background: 'rgba(102,126,234,0.1)', border: '1px solid rgba(102,126,234,0.3)', borderRadius: 16, padding: '20px', textAlign: 'center', marginBottom: 32 }}>
+        <div style={{ background: 'color-mix(in srgb, var(--accent) 10%, transparent)', border: '1px solid color-mix(in srgb, var(--accent) 30%, transparent)', borderRadius: 16, padding: '20px', textAlign: 'center', marginBottom: 32 }}>
           <div style={{ fontSize: 28, marginBottom: 8 }}>✨</div>
           <div style={{ fontWeight: 700, marginBottom: 6 }}>{t('После установки:')}</div>
-          <div style={{ color: '#aaa', fontSize: 14, lineHeight: 1.8 }}>
+          <div style={{ color: 'var(--muted)', fontSize: 14, lineHeight: 1.8 }}>
             {t('Иконка появится на рабочем столе')}<br />
             {t('Открывается как настоящее приложение')}<br />
             {t('Работает быстрее чем через браузер')}<br />
@@ -101,8 +101,8 @@ export default function InstallPage() {
           }}
           style={{
             width: '100%', padding: '16px', borderRadius: 16, border: 'none',
-            background: 'linear-gradient(135deg, #667eea, #764ba2)',
-            color: '#fff', fontSize: 16, fontWeight: 700, cursor: 'pointer',
+            background: 'var(--accent)',
+            color: 'var(--on-accent)', fontSize: 16, fontWeight: 700, cursor: 'pointer',
             marginBottom: 32
           }}>
           {t('📤 Поделиться инструкцией')}

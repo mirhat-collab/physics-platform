@@ -91,42 +91,42 @@ export default function ParentPage() {
   }
 
   if (loading) return (
-    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-      <div style={{ color: '#fff' }}>{t('Загрузка...')}</div>
+    <div className="nb-root" style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <div style={{ color: 'var(--text)' }}>{t('Загрузка...')}</div>
     </div>
   )
 
   const level = (xp: number) => Math.floor(xp / 100) + 1
 
   return (
-    <div style={{ minHeight: '100vh', color: '#fff', padding: '2rem' }}>
+    <div className="nb-root" style={{ minHeight: '100vh', color: 'var(--text)', padding: '2rem' }}>
       <div style={{ maxWidth: 700, margin: '0 auto' }}>
-        <div style={{ background: 'linear-gradient(135deg, #1a1a3e, #0f0f1a)', borderRadius: 20, padding: '24px', marginBottom: 24, border: '1px solid #2a2a3e' }}>
+        <div style={{ background: 'var(--surface)', borderRadius: 20, padding: '24px', marginBottom: 24, border: '1px solid var(--line)' }}>
           <h1 style={{ fontSize: '1.8rem', fontWeight: 800, margin: '0 0 4px' }}>{t('👨‍👩‍👧 Родительский доступ')}</h1>
-          <p style={{ color: '#888', margin: 0 }}>{t('Следи за успехами своего ребёнка')}</p>
+          <p style={{ color: 'var(--muted)', margin: 0 }}>{t('Следи за успехами своего ребёнка')}</p>
         </div>
 
         {/* Привязать ученика */}
-        <div style={{ background: '#1a1a2e', borderRadius: 16, padding: '20px', border: '1px solid #2a2a3e', marginBottom: 24 }}>
+        <div style={{ background: 'var(--surface)', borderRadius: 16, padding: '20px', border: '1px solid var(--line)', marginBottom: 24 }}>
           <h3 style={{ margin: '0 0 14px', fontWeight: 700 }}>{t('🔗 Привязать ученика')}</h3>
           <div style={{ display: 'flex', gap: 10 }}>
             <input
               value={linkEmail} onChange={e => setLinkEmail(e.target.value)}
               placeholder={t('Email ученика')}
-              style={{ flex: 1, padding: '10px 14px', borderRadius: 10, border: '1px solid #2a2a3e', background: '#0f0f1a', color: '#fff', fontSize: 14, outline: 'none' }}
+              style={{ flex: 1, padding: '10px 14px', borderRadius: 10, border: '1px solid var(--line)', background: 'var(--bg)', color: 'var(--text)', fontSize: 14, outline: 'none' }}
             />
             <button onClick={linkStudent} disabled={linking || !linkEmail.trim()}
-              style={{ padding: '10px 20px', borderRadius: 10, border: 'none', background: 'linear-gradient(135deg,#667eea,#764ba2)', color: '#fff', fontWeight: 700, cursor: 'pointer', fontSize: 14, whiteSpace: 'nowrap' }}>
+              style={{ padding: '10px 20px', borderRadius: 10, border: 'none', background: 'var(--accent)', color: 'var(--on-accent)', fontWeight: 700, cursor: 'pointer', fontSize: 14, whiteSpace: 'nowrap' }}>
               {linking ? '...' : t('Привязать')}
             </button>
           </div>
-          {linkMsg && <div style={{ marginTop: 10, fontSize: 13, color: linkMsg.startsWith('✅') ? '#10b981' : '#f5576c' }}>{linkMsg}</div>}
-          <p style={{ color: '#555', fontSize: 12, marginTop: 10 }}>{t('Введи email который ученик использовал при регистрации')}</p>
+          {linkMsg && <div style={{ marginTop: 10, fontSize: 13, color: linkMsg.startsWith('✅') ? 'var(--good)' : 'var(--bad)' }}>{linkMsg}</div>}
+          <p style={{ color: 'var(--muted)', fontSize: 12, marginTop: 10 }}>{t('Введи email который ученик использовал при регистрации')}</p>
         </div>
 
         {/* Список привязанных учеников */}
         {students.length === 0 ? (
-          <div style={{ textAlign: 'center', color: '#555', padding: '40px 0' }}>
+          <div style={{ textAlign: 'center', color: 'var(--muted)', padding: '40px 0' }}>
             <div style={{ fontSize: 40, marginBottom: 12 }}>👶</div>
             {t('Привяжи ученика чтобы видеть его прогресс')}
           </div>
@@ -134,40 +134,40 @@ export default function ParentPage() {
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
             {students.map(s => (
               <div key={s.id}>
-                <div style={{ background: '#1a1a2e', borderRadius: 16, padding: '18px 20px', border: `1px solid ${selectedStudent?.id === s.id ? '#667eea55' : '#2a2a3e'}`, cursor: 'pointer' }}
+                <div style={{ background: 'var(--surface)', borderRadius: 16, padding: '18px 20px', border: `1px solid ${selectedStudent?.id === s.id ? 'color-mix(in srgb, var(--accent) 33%, transparent)' : 'var(--line)'}`, cursor: 'pointer' }}
                   onClick={() => selectedStudent?.id === s.id ? setSelectedStudent(null) : loadProgress(s)}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                      <div style={{ width: 44, height: 44, borderRadius: '50%', background: 'linear-gradient(135deg,#667eea,#764ba2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700 }}>
+                      <div style={{ width: 44, height: 44, borderRadius: '50%', background: 'var(--accent)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700 }}>
                         {(s.full_name || t('Без имени')).slice(0, 2).toUpperCase()}
                       </div>
                       <div>
                         <div style={{ fontWeight: 700 }}>{s.full_name || t('Без имени')}</div>
-                        <div style={{ color: '#888', fontSize: 13 }}>{gradeLabel(s.grade, t)}</div>
+                        <div style={{ color: 'var(--muted)', fontSize: 13 }}>{gradeLabel(s.grade, t)}</div>
                       </div>
                     </div>
                     <div style={{ display: 'flex', gap: 16, textAlign: 'center' }}>
-                      <div><div style={{ fontWeight: 800, color: '#a78bfa', fontSize: 18 }}>{s.total_xp}</div><div style={{ color: '#888', fontSize: 11 }}>XP</div></div>
-                      <div><div style={{ fontWeight: 800, color: '#10b981', fontSize: 18 }}>{level(s.total_xp)}</div><div style={{ color: '#888', fontSize: 11 }}>{t('Уровень')}</div></div>
-                      <div><div style={{ fontWeight: 800, color: '#f59e0b', fontSize: 18 }}>🔥{s.streak}</div><div style={{ color: '#888', fontSize: 11 }}>{t('дней')}</div></div>
+                      <div><div style={{ fontWeight: 800, color: 'var(--accent)', fontSize: 18 }}>{s.total_xp}</div><div style={{ color: 'var(--muted)', fontSize: 11 }}>XP</div></div>
+                      <div><div style={{ fontWeight: 800, color: 'var(--good)', fontSize: 18 }}>{level(s.total_xp)}</div><div style={{ color: 'var(--muted)', fontSize: 11 }}>{t('Уровень')}</div></div>
+                      <div><div style={{ fontWeight: 800, color: 'var(--warn)', fontSize: 18 }}>🔥{s.streak}</div><div style={{ color: 'var(--muted)', fontSize: 11 }}>{t('дней')}</div></div>
                     </div>
                   </div>
                 </div>
 
                 {selectedStudent?.id === s.id && (
-                  <div style={{ background: '#1a1a2e', borderRadius: '0 0 16px 16px', padding: '16px 20px', border: '1px solid #667eea33', borderTop: 'none', marginTop: -4 }}>
-                    <div style={{ fontWeight: 600, marginBottom: 12, fontSize: 14, color: '#888' }}>{t('Пройденные темы (')}{progress.length}):</div>
+                  <div style={{ background: 'var(--surface)', borderRadius: '0 0 16px 16px', padding: '16px 20px', border: '1px solid color-mix(in srgb, var(--accent) 20%, transparent)', borderTop: 'none', marginTop: -4 }}>
+                    <div style={{ fontWeight: 600, marginBottom: 12, fontSize: 14, color: 'var(--muted)' }}>{t('Пройденные темы (')}{progress.length}):</div>
                     {progress.length === 0 ? (
-                      <div style={{ color: '#555', fontSize: 14 }}>{t('Пока не прошёл ни одной темы')}</div>
+                      <div style={{ color: 'var(--muted)', fontSize: 14 }}>{t('Пока не прошёл ни одной темы')}</div>
                     ) : (
                       <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                         {progress.slice(0, 10).map((p, i) => (
-                          <div key={i} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, padding: '8px 12px', background: '#0f0f1a', borderRadius: 8 }}>
-                            <span style={{ color: '#ccc' }}>✅ {p.name ? topicName(p.topic, p.name) : t('Тема #{topic}', { topic: p.topic })}</span>
-                            <span style={{ color: '#555' }}>{new Date(p.completed_at).toLocaleDateString(dateLocale)}</span>
+                          <div key={i} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, padding: '8px 12px', background: 'var(--bg)', borderRadius: 8 }}>
+                            <span style={{ color: 'var(--text)' }}>✅ {p.name ? topicName(p.topic, p.name) : t('Тема #{topic}', { topic: p.topic })}</span>
+                            <span style={{ color: 'var(--muted)' }}>{new Date(p.completed_at).toLocaleDateString(dateLocale)}</span>
                           </div>
                         ))}
-                        {progress.length > 10 && <div style={{ color: '#555', fontSize: 12, textAlign: 'center' }}>{t('и ещё')} {progress.length - 10} {t('тем...')}</div>}
+                        {progress.length > 10 && <div style={{ color: 'var(--muted)', fontSize: 12, textAlign: 'center' }}>{t('и ещё')} {progress.length - 10} {t('тем...')}</div>}
                       </div>
                     )}
                   </div>
@@ -178,7 +178,7 @@ export default function ParentPage() {
         )}
 
         <button onClick={async () => { await supabase.auth.signOut(); router.push('/login') }}
-          style={{ marginTop: 32, width: '100%', padding: '14px', borderRadius: 14, border: '1px solid #f5576c33', background: '#2d1a1a', color: '#f5576c', fontSize: 15, fontWeight: 700, cursor: 'pointer' }}>
+          style={{ marginTop: 32, width: '100%', padding: '14px', borderRadius: 14, border: '1px solid color-mix(in srgb, var(--bad) 20%, transparent)', background: 'var(--surface)', color: 'var(--bad)', fontSize: 15, fontWeight: 700, cursor: 'pointer' }}>
           {t('🚪 Выйти')}
         </button>
       </div>

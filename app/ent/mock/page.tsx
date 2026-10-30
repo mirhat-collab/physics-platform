@@ -185,20 +185,20 @@ export default function MockEntPage() {
   // ---------- Начало ----------
   if (phase === 'setup' || phase === 'loading') {
     return (
-      <div className="page animate-fade-in-up">
+      <div className="nb-root page animate-fade-in-up">
         <Link href="/ent" style={{ color: 'var(--muted)', fontSize: 14, textDecoration: 'none' }}>← {t('Подготовка к ЕНТ')}</Link>
         <h1 className="page-title" style={{ marginTop: 8 }}>{t('Пробный ЕНТ')}</h1>
         <p className="page-sub">{t('Вариант по спецификации НЦТ: {count} заданий по всем темам предмета, {hours} часа, до {max} баллов. Трудность как на ЕНТ: 50% базовых, 30% средних, 20% сложных. Последние {hard} заданий стоят по 2 балла. Правильные ответы — только после сдачи.', { count: MOCK.count, hours: MOCK.minutes / 60, max: MOCK_MAX, hard: MOCK.count - MOCK.hardFrom })}
           <span style={{ display: 'block', marginTop: 6, fontSize: 13 }}>{t('Задания {a}–{b} — «один или несколько правильных ответов», {c}–{d} — «на соответствие». За одну ошибку в них ставится 1 балл из 2.', { a: MOCK.multiFrom + 1, b: MOCK.matchFrom, c: MOCK.matchFrom + 1, d: MOCK.count })}</span></p>
 
         {loggedIn === false && (
-          <div className="card" style={{ marginBottom: 16, borderColor: 'rgba(245,158,11,0.4)' }}>
-            <Link href="/login" style={{ color: '#c4bbff' }}>{t('Войди в аккаунт')}</Link>{t(', чтобы сохранялись результаты пробных ЕНТ.')}
+          <div className="card" style={{ marginBottom: 16, borderColor: 'color-mix(in srgb, var(--warn) 40%, transparent)' }}>
+            <Link href="/login" style={{ color: 'var(--accent)' }}>{t('Войди в аккаунт')}</Link>{t(', чтобы сохранялись результаты пробных ЕНТ.')}
           </div>
         )}
 
         {saved && (
-          <div className="card" style={{ marginBottom: 16, borderColor: 'rgba(124,108,255,0.5)' }}>
+          <div className="card" style={{ marginBottom: 16, borderColor: 'color-mix(in srgb, var(--accent) 50%, transparent)' }}>
             <div style={{ fontWeight: 700, marginBottom: 6 }}>{t('У тебя есть начатый вариант')} · {t(ENT_SUBJECTS[saved.subject].label)}</div>
             <div style={{ color: 'var(--muted)', fontSize: 14, marginBottom: 12 }}>
               {t('Отвечено: {a} из {b}', { a: saved.answers.filter(isAnswered).length, b: saved.questions.length })}
@@ -221,7 +221,7 @@ export default function MockEntPage() {
           <button className="btn" onClick={start} disabled={phase === 'loading'} style={{ width: '100%' }}>
             {phase === 'loading' ? (
               <>
-                <span className="spin" style={{ width: 16, height: 16, border: '2px solid rgba(255,255,255,0.3)', borderTopColor: '#fff', borderRadius: '50%', display: 'inline-block' }} />
+                <span className="spin" style={{ width: 16, height: 16, border: '2px solid color-mix(in srgb, currentColor 30%, transparent)', borderTopColor: 'currentColor', borderRadius: '50%', display: 'inline-block' }} />
                 {t('Собираю вариант…')}
               </>
             ) : <><Icon name="sparkles" size={18} /> {t('Начать пробный ЕНТ')}</>}
@@ -263,16 +263,16 @@ export default function MockEntPage() {
       `/ent?subject=${subject}${repair ? '&repair=1' : ''}${topics.slice(0, 8).map(x => `&topic=${encodeURIComponent(x)}`).join('')}`
     const list = questions.map((q, i) => ({ q, a: answers[i], i })).filter(x => !onlyWrong || answerErrors(x.q, x.a) > 0)
     return (
-      <div className="page animate-fade-in-up">
+      <div className="nb-root page animate-fade-in-up">
         <div className="card" style={{ textAlign: 'center', padding: '28px 20px', marginBottom: 18 }}>
           <div style={{ color: 'var(--muted)', fontSize: 13, fontWeight: 700 }}>{t('Пробный ЕНТ')} · {t(ENT_SUBJECTS[subject].label)}</div>
-          <div style={{ fontSize: 46, fontWeight: 800, color: pct >= 70 ? 'var(--good)' : pct >= 40 ? '#f59e0b' : 'var(--bad)' }}>
+          <div style={{ fontSize: 46, fontWeight: 800, color: pct >= 70 ? 'var(--good)' : pct >= 40 ? 'var(--warn)' : 'var(--bad)' }}>
             {score} / {max}
           </div>
           <div style={{ color: 'var(--muted)', marginTop: 4 }}>
             {t('баллов')} · {t('верных ответов: {a} из {b}', { a: result.correct, b: questions.length })}
           </div>
-          {xpMsg && <div style={{ marginTop: 8, color: '#c4bbff', fontWeight: 700 }}>{xpMsg}</div>}
+          {xpMsg && <div style={{ marginTop: 8, color: 'var(--accent)', fontWeight: 700 }}>{xpMsg}</div>}
           <div style={{ display: 'flex', gap: 10, justifyContent: 'center', marginTop: 20, flexWrap: 'wrap' }}>
             {wrongTopics.length > 0 && <Link className="btn" href={practice(wrongTopics, true)}><Icon name="refresh" size={18} /> {t('Отработать ошибки')}</Link>}
             <button className="btn btn-ghost" onClick={() => setPhase('setup')}>{t('Новый вариант')}</button>
@@ -309,11 +309,11 @@ export default function MockEntPage() {
             return (
               <div key={i} className="card" style={{ padding: 0, overflow: 'hidden' }}>
                 <button onClick={() => setReviewOpen(open ? null : i)} style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 12, padding: '14px 16px', background: 'transparent', border: 'none', color: 'var(--text)', cursor: 'pointer', textAlign: 'left', fontFamily: 'inherit' }}>
-                  <span style={{ width: 28, height: 28, borderRadius: 8, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: ok ? 'rgba(52,211,153,0.15)' : 'rgba(248,113,113,0.15)', color: ok ? 'var(--good)' : 'var(--bad)' }}>
+                  <span style={{ width: 28, height: 28, borderRadius: 8, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: ok ? 'color-mix(in srgb, var(--good) 15%, transparent)' : 'color-mix(in srgb, var(--bad) 15%, transparent)', color: ok ? 'var(--good)' : 'var(--bad)' }}>
                     <Icon name={ok ? 'check' : 'x'} size={16} />
                   </span>
                   <MathLine text={`${i + 1}. ${q.question}`} style={{ flex: 1, minWidth: 0, fontSize: 14 }} />
-                  <span style={{ fontSize: 12, color: got && !ok ? '#f59e0b' : 'var(--muted)', flexShrink: 0 }}>{got}/{mockPoints(i)} {t('б.')}</span>
+                  <span style={{ fontSize: 12, color: got && !ok ? 'var(--warn)' : 'var(--muted)', flexShrink: 0 }}>{got}/{mockPoints(i)} {t('б.')}</span>
                 </button>
                 {open && (
                   <div style={{ padding: '0 16px 16px' }}>
@@ -340,7 +340,7 @@ export default function MockEntPage() {
   const left = endAt - now
   const answered = answers.filter(isAnswered).length
   return (
-    <div className="page animate-fade-in">
+    <div className="nb-root page animate-fade-in">
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 14 }}>
         <span style={{ fontWeight: 800, fontSize: 20, fontVariantNumeric: 'tabular-nums', color: left < 5 * 60 * 1000 ? 'var(--bad)' : 'var(--text)' }}>
           ⏱ {clock(left)}
@@ -355,7 +355,7 @@ export default function MockEntPage() {
             style={{
               width: 30, height: 30, borderRadius: 8, fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
               border: i === index ? '2px solid var(--accent)' : '1px solid var(--line)',
-              background: isAnswered(answers[i]) ? 'rgba(124,108,255,0.25)' : i >= MOCK.hardFrom ? 'rgba(245,158,11,0.08)' : 'var(--surface-2)',
+              background: isAnswered(answers[i]) ? 'color-mix(in srgb, var(--accent) 25%, transparent)' : i >= MOCK.hardFrom ? 'color-mix(in srgb, var(--warn) 8%, transparent)' : 'var(--surface-2)',
               color: 'var(--text)',
             }}>
             {i + 1}
@@ -370,7 +370,7 @@ export default function MockEntPage() {
         </div>
         <MathText text={q.question} style={{ fontSize: 16, lineHeight: 1.6, marginBottom: 12 }} />
         <Figure svg={q.figure} />
-        {q.kind === 'multi' && <div style={{ color: '#c4bbff', fontSize: 13, fontWeight: 700, marginBottom: 12 }}>{t('Выберите один или несколько правильных ответов')}</div>}
+        {q.kind === 'multi' && <div style={{ color: 'var(--accent)', fontSize: 13, fontWeight: 700, marginBottom: 12 }}>{t('Выберите один или несколько правильных ответов')}</div>}
         {q.kind === 'match' ? (
           <div style={{ display: 'grid', gap: 14 }}>
             {q.left!.map((l, k) => {
@@ -381,7 +381,7 @@ export default function MockEntPage() {
                   <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
                     {q.options.map((_, i) => (
                       <button key={i} onClick={() => choose(i, k)} aria-label={`${k + 1} — ${LETTERS[i]}`}
-                        style={{ width: 40, height: 36, borderRadius: 8, border: `1.5px solid ${sel === i ? 'var(--accent)' : 'var(--line)'}`, background: sel === i ? 'var(--accent)' : 'var(--bg)', color: sel === i ? '#fff' : 'var(--text)', fontWeight: 800, cursor: 'pointer', fontFamily: 'inherit' }}>
+                        style={{ width: 40, height: 36, borderRadius: 8, border: `1.5px solid ${sel === i ? 'var(--accent)' : 'var(--line)'}`, background: sel === i ? 'var(--accent)' : 'var(--bg)', color: sel === i ? 'var(--on-accent)' : 'var(--text)', fontWeight: 800, cursor: 'pointer', fontFamily: 'inherit' }}>
                         {LETTERS[i]}
                       </button>
                     ))}
@@ -405,8 +405,8 @@ export default function MockEntPage() {
               const on = Array.isArray(a) ? a.includes(i) : a === i
               return (
                 <button key={i} onClick={() => choose(i)}
-                  style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 14px', borderRadius: 12, border: `1.5px solid ${on ? 'var(--accent)' : 'var(--line)'}`, background: on ? 'rgba(124,108,255,0.15)' : 'var(--surface-2)', color: 'var(--text)', cursor: 'pointer', textAlign: 'left', fontFamily: 'inherit', fontSize: 15 }}>
-                  <span style={{ width: 28, height: 28, borderRadius: q.kind === 'multi' ? 6 : 8, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: on ? 'var(--accent)' : 'var(--bg)', fontWeight: 800, fontSize: 13, color: on ? '#fff' : 'var(--muted)' }}>{q.kind === 'multi' && on ? '✓' : LETTERS[i]}</span>
+                  style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 14px', borderRadius: 12, border: `1.5px solid ${on ? 'var(--accent)' : 'var(--line)'}`, background: on ? 'color-mix(in srgb, var(--accent) 15%, transparent)' : 'var(--surface-2)', color: 'var(--text)', cursor: 'pointer', textAlign: 'left', fontFamily: 'inherit', fontSize: 15 }}>
+                  <span style={{ width: 28, height: 28, borderRadius: q.kind === 'multi' ? 6 : 8, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: on ? 'var(--accent)' : 'var(--bg)', fontWeight: 800, fontSize: 13, color: on ? 'var(--on-accent)' : 'var(--muted)' }}>{q.kind === 'multi' && on ? '✓' : LETTERS[i]}</span>
                   <MathText text={opt} style={{ flex: 1 }} />
                 </button>
               )

@@ -53,27 +53,27 @@ export default function ProgressPage() {
   }
 
   if (loading) return (
-    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-      <div style={{ color: '#fff', fontSize: 18 }}>{t('Загрузка...')}</div>
+    <div className="nb-root" style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <div style={{ color: 'var(--text)', fontSize: 18 }}>{t('Загрузка...')}</div>
     </div>
   )
 
   return (
-    <div style={{ minHeight: '100vh', color: '#fff' }}>
-      <div style={{ background: 'linear-gradient(135deg, #1a1a3e 0%, #0f0f1a 100%)', borderBottom: '1px solid #2a2a3e', padding: '2rem 2rem 1.5rem' }}>
+    <div className="nb-root" style={{ minHeight: '100vh', color: 'var(--text)' }}>
+      <div style={{ borderBottom: '1px solid var(--line)', padding: '2rem 2rem 1.5rem' }}>
         <div style={{ maxWidth: 800, margin: '0 auto' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 16 }}>
-            <div style={{ width: 48, height: 48, borderRadius: 14, background: 'linear-gradient(135deg, #f59e0b, #d97706)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24 }}>
+            <div style={{ width: 48, height: 48, borderRadius: 14, background: 'var(--warn)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24 }}>
               📈
             </div>
             <div>
               <h1 style={{ fontSize: '1.9rem', fontWeight: 800, margin: 0 }}>{t('Прогресс')}</h1>
-              <p style={{ color: '#888', margin: 0, fontSize: 14 }}>{t('Твой XP и успехи классов')}</p>
+              <p style={{ color: 'var(--muted)', margin: 0, fontSize: 14 }}>{t('Твой XP и успехи классов')}</p>
             </div>
           </div>
 
           {currentUser && (
-            <div style={{ background: 'linear-gradient(135deg, #667eea, #764ba2)', borderRadius: 16, padding: '16px 20px', marginBottom: 16 }}>
+            <div style={{ background: 'var(--surface)', boxShadow: 'var(--shadow-md)', borderRadius: 16, padding: '16px 20px', marginBottom: 16 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12 }}>
                 <div>
                   <div style={{ fontSize: 12, opacity: 0.8, marginBottom: 2 }}>{t('Твой профиль')}</div>
@@ -100,32 +100,32 @@ export default function ProgressPage() {
         <div style={{ display: 'grid', gap: 12 }}>
             {classStats.map((cls) => {
               const percent = cls.total_topics > 0 ? Math.round((cls.completed_topics / cls.total_topics) * 100) : 0
-              const barColor = percent >= 75 ? 'linear-gradient(90deg, #10b981, #059669)' : percent >= 40 ? 'linear-gradient(90deg, #f59e0b, #d97706)' : 'linear-gradient(90deg, #667eea, #764ba2)'
+              const barColor = percent >= 75 ? 'var(--good)' : percent >= 40 ? 'var(--warn)' : 'var(--accent)'
               return (
-                <div key={cls.name} style={{ background: '#1a1a2e', borderRadius: 16, padding: '20px 24px', border: '1px solid #2a2a3e' }}>
+                <div key={cls.name} style={{ background: 'var(--surface)', borderRadius: 16, padding: '20px 24px', border: '1px solid var(--line)' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
                     <div>
                       <div style={{ fontWeight: 700, fontSize: 18 }}>{cls.name}</div>
-                      <div style={{ color: '#888', fontSize: 13, marginTop: 2 }}>{cls.locked
+                      <div style={{ color: 'var(--muted)', fontSize: 13, marginTop: 2 }}>{cls.locked
                           ? (currentUser ? t('🔒 закрытый класс') : t('🔒 по списку администратора · {student_count} учеников', { student_count: cls.student_count }))
                           : t('{student_count} учеников', { student_count: cls.student_count })}</div>
                     </div>
                     <div style={{ display: 'flex', gap: 20, textAlign: 'center' }}>
                       <div>
-                        <div style={{ fontSize: 22, fontWeight: 800, color: '#a78bfa' }}>{cls.avg_xp}</div>
-                        <div style={{ color: '#888', fontSize: 11 }}>{t('ср. XP')}</div>
+                        <div style={{ fontSize: 22, fontWeight: 800, color: 'var(--accent)' }}>{cls.avg_xp}</div>
+                        <div style={{ color: 'var(--muted)', fontSize: 11 }}>{t('ср. XP')}</div>
                       </div>
                       <div>
-                        <div style={{ fontSize: 22, fontWeight: 800, color: '#60a5fa' }}>{cls.completed_topics}/{cls.total_topics}</div>
-                        <div style={{ color: '#888', fontSize: 11 }}>{t('тем')}</div>
+                        <div style={{ fontSize: 22, fontWeight: 800, color: 'var(--accent)' }}>{cls.completed_topics}/{cls.total_topics}</div>
+                        <div style={{ color: 'var(--muted)', fontSize: 11 }}>{t('тем')}</div>
                       </div>
                       <div>
-                        <div style={{ fontSize: 22, fontWeight: 800, color: percent >= 75 ? '#10b981' : percent >= 40 ? '#f59e0b' : '#667eea' }}>{percent}%</div>
-                        <div style={{ color: '#888', fontSize: 11 }}>{t('прогресс')}</div>
+                        <div style={{ fontSize: 22, fontWeight: 800, color: percent >= 75 ? 'var(--good)' : percent >= 40 ? 'var(--warn)' : 'var(--accent)' }}>{percent}%</div>
+                        <div style={{ color: 'var(--muted)', fontSize: 11 }}>{t('прогресс')}</div>
                       </div>
                     </div>
                   </div>
-                  <div style={{ background: '#0f0f1a', borderRadius: 999, height: 8, overflow: 'hidden' }}>
+                  <div style={{ background: 'var(--bg)', borderRadius: 999, height: 8, overflow: 'hidden' }}>
                     <div style={{ height: '100%', width: `${percent}%`, background: barColor, borderRadius: 999, transition: 'width 0.6s ease' }} />
                   </div>
                 </div>

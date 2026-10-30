@@ -4,6 +4,7 @@ import { getActualGrade } from '@/lib/grade-match'
 import { supabase } from '@/lib/supabase'
 import { kzDate, nextStreak } from '@/lib/streak'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { useT } from '@/app/components/LanguageProvider'
 import LanguageSwitcher from '@/app/components/LanguageSwitcher'
 import { PENDING_JOIN, joinPath } from '@/lib/groups'
@@ -157,172 +158,137 @@ export default function LoginPage() {
     setLoading(false)
   }
 
-  const input: React.CSSProperties = {
-    width: '100%', padding: '12px 16px', borderRadius: 10,
-    border: '1px solid #2a2a3e', background: '#1a1a2e',
-    color: '#fff', fontSize: 15, marginBottom: 12,
-    boxSizing: 'border-box', outline: 'none'
-  }
+  const roles = [
+    { key: 'student' as const, label: t('Ученик') },
+    { key: 'parent' as const, label: t('Родитель') },
+    { key: 'teacher' as const, label: t('Учитель') },
+  ]
 
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16, position: 'relative', overflow: 'hidden' }}>
-      <div style={{ position: 'absolute', top: '-15%', left: '50%', transform: 'translateX(-50%)', width: 600, height: 600, borderRadius: '50%', background: 'radial-gradient(circle, rgba(102,126,234,0.15) 0%, transparent 70%)', pointerEvents: 'none' }} />
-      <div className="animate-scale-in" style={{ background: '#1a1a2e', borderRadius: 20, padding: 40, width: '100%', maxWidth: 440, border: '1px solid #2a2a3e', boxShadow: 'var(--shadow-lg)', position: 'relative' }}>
+    <div className="nb-root">
+      <div className="nb-wrap">
+        <header className="nb-top">
+          <Link href="/" className="nb-brand" aria-label={t('На главную')}>
+            <img src="/logo-mark.png" alt="" />
+            Mirha_Edu
+          </Link>
+          <LanguageSwitcher compact tone="paper" />
+        </header>
 
-        <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 8 }}><LanguageSwitcher compact /></div>
-        <img src="/logo-mark.png" alt="Mirha_Edu" style={{ width: 56, height: 56, objectFit: 'contain', display: 'block', margin: '0 auto 12px' }} />
+        <main className="auth">
+          {/* Слева на компьютере — зачем входить */}
+          <section className="auth-side">
+            <h2 className="auth-side-title">{t('Подготовка к ЕНТ')}<br /><em>{t('каждый день')}</em></h2>
+            <ul className="auth-perks" role="list">
+              {[t('Задачи ЕНТ с подробным решением'), t('Пробный ЕНТ и прогноз балла'), t('ИИ объяснит непонятный шаг')].map(p => (
+                <li key={p}>
+                  <svg viewBox="0 0 30 30" aria-hidden><path d="M4 15 C 7 18, 9 21, 11 25 C 15 15, 20 8, 27 3" /></svg>
+                  {p}
+                </li>
+              ))}
+            </ul>
+          </section>
 
-        <h1 style={{ color: '#fff', fontSize: '1.8rem', fontWeight: 800, marginBottom: 8, textAlign: 'center' }}>
-          {isSignUp ? t('🚀 Регистрация') : t('⚡ Вход')}
-        </h1>
-        <p style={{ color: '#888', textAlign: 'center', marginBottom: 24 }}>
-          {isSignUp ? t('Создай аккаунт и начни учиться') : t('Войди в свой аккаунт')}
-        </p>
-
-        {/* Выбор роли — только при регистрации */}
-        {isSignUp && (
-          <div style={{ marginBottom: 20 }}>
-            <div style={{ color: '#888', fontSize: 13, marginBottom: 8 }}>{t('Кто ты?')}</div>
-            <div style={{ display: 'flex', gap: 10 }}>
-              <button onClick={() => setRole('student')} style={{
-                flex: 1, padding: '12px', borderRadius: 12,
-                border: role === 'student' ? '2px solid #667eea' : '1px solid #2a2a3e',
-                background: role === 'student' ? 'rgba(102,126,234,0.15)' : '#0f0f1a',
-                color: role === 'student' ? '#a78bfa' : '#888',
-                fontSize: 15, fontWeight: role === 'student' ? 700 : 400,
-                cursor: 'pointer', transition: 'all 0.2s',
-              }}>
-                {t('🎓 Ученик')}
-              </button>
-              <button onClick={() => setRole('parent')} style={{
-                flex: 1, padding: '12px', borderRadius: 12,
-                border: role === 'parent' ? '2px solid #f59e0b' : '1px solid #2a2a3e',
-                background: role === 'parent' ? 'rgba(245,158,11,0.15)' : '#0f0f1a',
-                color: role === 'parent' ? '#f59e0b' : '#888',
-                fontSize: 15, fontWeight: role === 'parent' ? 700 : 400,
-                cursor: 'pointer', transition: 'all 0.2s',
-              }}>
-                {t('👨‍👩‍👧 Родитель')}
-              </button>
-              <button onClick={() => setRole('teacher')} style={{
-                flex: 1, padding: '12px', borderRadius: 12,
-                border: role === 'teacher' ? '2px solid #10b981' : '1px solid #2a2a3e',
-                background: role === 'teacher' ? 'rgba(16,185,129,0.15)' : '#0f0f1a',
-                color: role === 'teacher' ? '#10b981' : '#888',
-                fontSize: 15, fontWeight: role === 'teacher' ? 700 : 400,
-                cursor: 'pointer', transition: 'all 0.2s',
-              }}>
-                {t('👨‍🏫 Учитель')}
-              </button>
-            </div>
-          </div>
-        )}
-
-        {isSignUp && (
-          <>
-            <input style={input} placeholder={t('Твоё имя')} value={fullName} onChange={e => setFullName(e.target.value)} />
-
-            {/* Только для ученика — выбор класса */}
-            {role === 'student' && (
-              <div style={{ marginBottom: 12 }}>
-                <div style={{ color: '#888', fontSize: 13, marginBottom: 8 }}>{t('Выбери свой класс:')}</div>
-                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                  {GRADES.map(g => (
-                    <button key={g} onClick={() => setGrade(g)} style={{
-                      padding: '10px 18px', borderRadius: 10,
-                      border: grade === g ? '2px solid #a78bfa' : '1px solid #2a2a3e',
-                      background: grade === g ? 'rgba(167,139,250,0.2)' : '#0f0f1a',
-                      color: grade === g ? '#a78bfa' : '#888',
-                      fontSize: 15, fontWeight: grade === g ? 700 : 400,
-                      cursor: 'pointer', transition: 'all 0.2s',
-                    }}>
-                      {t('{g} класс', { g: g })}
-                    </button>
-                  ))}
-                </div>
+          <section className="auth-sheet" aria-labelledby="auth-title">
+            {!forgot && (
+              <div className="auth-tabs" role="tablist" aria-label={t('Вход или регистрация')}>
+                {[false, true].map(up => (
+                  <button
+                    key={String(up)} type="button" role="tab" aria-selected={isSignUp === up}
+                    className={isSignUp === up ? 'on' : ''}
+                    onClick={() => { setIsSignUp(up); setRole('student'); setTeacherCode(''); setError('') }}
+                  >
+                    {up ? t('Регистрация') : t('Вход')}
+                  </button>
+                ))}
               </div>
             )}
 
-            {/* Только для учителя — секретный код */}
-            {role === 'teacher' && (
-              <div style={{ marginBottom: 12 }}>
-                <div style={{ color: '#888', fontSize: 13, marginBottom: 8 }}>{t('🔐 Код учителя:')}</div>
-                <input
-                  style={{ ...input, marginBottom: 0, border: '1px solid #10b98144', background: '#0a1a14' }}
-                  type="password"
-                  placeholder={t('Введи секретный код учителя')}
-                  value={teacherCode}
-                  onChange={e => setTeacherCode(e.target.value)}
-                />
-                <div style={{ color: '#555', fontSize: 11, marginTop: 4 }}>
-                  {t('Код выдаётся администратором платформы')}
-                </div>
-              </div>
-            )}
-          </>
-        )}
-
-        {forgot ? (
-          <div>
-            <p style={{ color: '#bbb', fontSize: 14, marginBottom: 12, lineHeight: 1.5 }}>
-              {sent
-                ? t('✅ Письмо отправлено на {email}. Открой ссылку из письма в этом же браузере и придумай новый пароль. Если письма нет — проверь «Спам».', { email })
-                : t('Введи почту аккаунта — пришлём ссылку, по которой можно задать новый пароль.')}
+            <h1 id="auth-title" className="auth-title">
+              {forgot ? t('Новый пароль') : isSignUp ? t('Создай аккаунт') : t('С возвращением')}
+            </h1>
+            <p className="auth-sub">
+              {forgot
+                ? (sent
+                  ? t('✅ Письмо отправлено на {email}. Открой ссылку из письма в этом же браузере и придумай новый пароль. Если письма нет — проверь «Спам».', { email })
+                  : t('Введи почту аккаунта — пришлём ссылку, по которой можно задать новый пароль.'))
+                : isSignUp ? t('Это бесплатно и займёт минуту') : t('Войди в свой аккаунт')}
             </p>
-            {!sent && <input style={input} type="email" placeholder="Email" value={email} onChange={e => setEmail(e.target.value)} onKeyDown={e => e.key === 'Enter' && sendReset()} />}
-            {error && (
-              <div className="animate-scale-in" style={{ background: '#2d1a1a', border: '1px solid #f5576c', borderRadius: 8, padding: '10px 14px', color: '#f5576c', fontSize: 14, marginBottom: 12 }}>
-                ❌ {error}
-              </div>
+
+            <form className="auth-form" noValidate onSubmit={e => { e.preventDefault(); if (forgot) sendReset(); else handleSubmit() }}>
+              {!forgot && isSignUp && (
+                <>
+                  <fieldset className="auth-field">
+                    <legend>{t('Кто ты?')}</legend>
+                    <div className="auth-seg">
+                      {roles.map(r => (
+                        <button key={r.key} type="button" aria-pressed={role === r.key} className={role === r.key ? 'on' : ''} onClick={() => setRole(r.key)}>{r.label}</button>
+                      ))}
+                    </div>
+                  </fieldset>
+
+                  <label className="auth-field">
+                    <span>{t('Твоё имя')}</span>
+                    <input className="auth-input" autoComplete="name" value={fullName} onChange={e => setFullName(e.target.value)} />
+                  </label>
+
+                  {role === 'student' && (
+                    <fieldset className="auth-field">
+                      <legend>{t('Класс')}</legend>
+                      <div className="auth-seg auth-seg-grades">
+                        {GRADES.map(g => (
+                          <button key={g} type="button" aria-pressed={grade === g} aria-label={t('{g} класс', { g })} className={grade === g ? 'on' : ''} onClick={() => setGrade(g)}>{g}</button>
+                        ))}
+                      </div>
+                    </fieldset>
+                  )}
+
+                  {role === 'teacher' && (
+                    <label className="auth-field">
+                      <span>{t('Код учителя')}</span>
+                      <input className="auth-input" type="password" placeholder={t('Введи секретный код учителя')} value={teacherCode} onChange={e => setTeacherCode(e.target.value)} />
+                      <small>{t('Код выдаётся администратором платформы')}</small>
+                    </label>
+                  )}
+                </>
+              )}
+
+              {!(forgot && sent) && (
+                <label className="auth-field">
+                  <span>{t('Почта')}</span>
+                  <input className="auth-input" type="email" inputMode="email" autoComplete="email" value={email} onChange={e => setEmail(e.target.value)} />
+                </label>
+              )}
+
+              {!forgot && (
+                <label className="auth-field">
+                  <span className="auth-label-row">
+                    {t('Пароль')}
+                    {!isSignUp && <button type="button" className="auth-text-btn" onClick={() => { setForgot(true); setError('') }}>{t('Забыли пароль?')}</button>}
+                  </span>
+                  <input className="auth-input" type="password" autoComplete={isSignUp ? 'new-password' : 'current-password'} value={password} onChange={e => setPassword(e.target.value)} />
+                  {isSignUp && <small>{t('Минимум 6 символов')}</small>}
+                </label>
+              )}
+
+              {error && <p className="auth-error" role="alert">{error}</p>}
+
+              {!(forgot && sent) && (
+                <button type="submit" className="nb-btn auth-submit" disabled={loading}>
+                  {loading && <span className="spin auth-spin" aria-hidden />}
+                  {loading ? t('Загрузка...')
+                    : forgot ? t('Отправить ссылку')
+                    : isSignUp ? (role === 'teacher' ? t('Зарегистрироваться как учитель') : t('Зарегистрироваться'))
+                    : t('Войти')}
+                </button>
+              )}
+            </form>
+
+            {forgot && (
+              <button type="button" className="auth-text-btn auth-back" onClick={() => { setForgot(false); setSent(false); setError('') }}>{t('← Назад ко входу')}</button>
             )}
-            {!sent && (
-              <button onClick={sendReset} disabled={loading} style={{ width: '100%', padding: 14, borderRadius: 10, border: 'none', background: 'linear-gradient(135deg, #667eea, #764ba2)', color: '#fff', fontSize: 16, fontWeight: 700, cursor: 'pointer', marginBottom: 16, opacity: loading ? 0.75 : 1 }}>
-                {loading ? t('Загрузка...') : t('Отправить ссылку')}
-              </button>
-            )}
-            <p style={{ textAlign: 'center', fontSize: 14 }}>
-              <span onClick={() => { setForgot(false); setSent(false); setError('') }} style={{ color: '#a78bfa', cursor: 'pointer', fontWeight: 600 }}>{t('← Назад ко входу')}</span>
-            </p>
-          </div>
-        ) : (<>
-        <input style={input} type="email" placeholder="Email" value={email} onChange={e => setEmail(e.target.value)} />
-        <input style={input} type="password" placeholder={t('Пароль (минимум 6 символов)')} value={password} onChange={e => setPassword(e.target.value)} />
-        {!isSignUp && (
-          <div style={{ textAlign: 'right', marginTop: -4, marginBottom: 12 }}>
-            <span onClick={() => { setForgot(true); setError('') }} style={{ color: '#a78bfa', cursor: 'pointer', fontSize: 13 }}>{t('Забыли пароль?')}</span>
-          </div>
-        )}
-
-        {error && (
-          <div className="animate-scale-in" style={{ background: '#2d1a1a', border: '1px solid #f5576c', borderRadius: 8, padding: '10px 14px', color: '#f5576c', fontSize: 14, marginBottom: 12 }}>
-            ❌ {error}
-          </div>
-        )}
-
-        <button onClick={handleSubmit} disabled={loading} className="btn-glow" style={{
-          width: '100%', padding: '14px', borderRadius: 10, border: 'none',
-          background: role === 'teacher' && isSignUp
-            ? 'linear-gradient(135deg, #10b981, #059669)'
-            : 'linear-gradient(135deg, #667eea, #764ba2)',
-          color: '#fff', fontSize: 16, fontWeight: 700, cursor: loading ? 'default' : 'pointer', marginBottom: 16,
-          opacity: loading ? 0.75 : 1,
-          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-        }}>
-          {loading && <span className="spin" style={{ width: 16, height: 16, borderRadius: '50%', border: '2px solid rgba(255,255,255,0.35)', borderTopColor: '#fff', display: 'inline-block' }} />}
-          {loading ? t('Загрузка...') : isSignUp
-            ? (role === 'teacher' ? t('👨‍🏫 Зарегистрироваться как учитель') : t('🎓 Зарегистрироваться'))
-            : t('⚡ Войти')}
-        </button>
-
-        <p style={{ color: '#888', textAlign: 'center', fontSize: 14 }}>
-          {isSignUp ? t('Уже есть аккаунт? ') : t('Нет аккаунта? ')}
-          <span onClick={() => { setIsSignUp(!isSignUp); setRole('student'); setTeacherCode('') }}
-            style={{ color: '#a78bfa', cursor: 'pointer', fontWeight: 600 }}>
-            {isSignUp ? t('Войти') : t('Зарегистрироваться')}
-          </span>
-        </p>
-        </>)}
-
+          </section>
+        </main>
       </div>
     </div>
   )

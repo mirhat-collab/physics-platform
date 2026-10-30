@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Caveat, Golos_Text, Literata } from "next/font/google";
 import "./globals.css";
 import AppNav from "./components/AppNav";
+import AppDoodles from "./components/AppDoodles";
 import LandingFooter from "./components/LandingFooter";
 import StreakTracker from "./components/StreakTracker";
 import StreakAlert from "./components/StreakAlert";
@@ -79,7 +80,8 @@ export default async function RootLayout({
     <html lang={locale}>
       <head>
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <meta name="theme-color" content="#667eea" />
+        <meta name="theme-color" content="#f3efe7" media="(prefers-color-scheme: light)" />
+        <meta name="theme-color" content="#17171a" media="(prefers-color-scheme: dark)" />
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
@@ -89,7 +91,7 @@ export default async function RootLayout({
         <link rel="apple-touch-icon" href="/icon-192.png" />
       </head>
       <body className={`${golos.variable} ${literata.variable} ${caveat.variable}`}style={{ margin: 0, fontFamily: 'var(--font-body), sans-serif', background: '#0f0f1a' }}>
-        <div aria-hidden style={{ position: 'fixed', inset: 0, zIndex: -1, overflow: 'hidden', background: '#0f0f1a' }}>
+        <div aria-hidden className="app-backdrop" style={{ position: 'fixed', inset: 0, zIndex: -1, overflow: 'hidden', background: '#0f0f1a' }}>
           <div className="aurora-blob aurora-blob-1" />
           <div className="aurora-blob aurora-blob-2" />
           <div className="aurora-blob aurora-blob-3" />
@@ -100,6 +102,7 @@ export default async function RootLayout({
           <PwaInstall />
           <RecoveryRedirect />
           <AppNav />
+          <AppDoodles />
           <div className="app-main">{children}</div>
           <LandingFooter />
         </LanguageProvider>

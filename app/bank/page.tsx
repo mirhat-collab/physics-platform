@@ -93,13 +93,13 @@ export default function BankPage() {
     await load(page)
   }
 
-  if (allowed === null) return <div className="page" style={{ color: 'var(--muted)' }}>{t('Загрузка…')}</div>
-  if (!allowed) return <div className="page"><div className="card">{t('Эта страница доступна только учителям и администратору.')}</div></div>
+  if (allowed === null) return <div className="nb-root page" style={{ color: 'var(--muted)' }}>{t('Загрузка…')}</div>
+  if (!allowed) return <div className="nb-root page"><div className="card">{t('Эта страница доступна только учителям и администратору.')}</div></div>
 
   const input: React.CSSProperties = { width: '100%', padding: '10px 12px', borderRadius: 10, border: '1px solid var(--line)', background: 'var(--bg)', color: 'var(--text)', fontSize: 14, fontFamily: 'inherit', boxSizing: 'border-box' }
 
   return (
-    <div className="page animate-fade-in-up">
+    <div className="nb-root page animate-fade-in-up">
       <h1 className="page-title">{t('Банк задач ЕНТ')}</h1>
       <p className="page-sub">{t('Задания отсюда случайно подмешиваются к заданиям от ИИ в «Подготовке к ЕНТ». Сейчас в банке:')} <b>{count}</b>.</p>
 
@@ -136,7 +136,7 @@ export default function BankPage() {
             {options.map((o, i) => (
               <div key={i} style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
                 <button onClick={() => setCorrect(i)} title={t('Отметить как правильный')}
-                  style={{ width: 34, height: 34, flexShrink: 0, borderRadius: 8, border: `1.5px solid ${correct === i ? 'var(--good)' : 'var(--line)'}`, background: correct === i ? 'rgba(52,211,153,0.15)' : 'transparent', color: correct === i ? 'var(--good)' : 'var(--muted)', fontWeight: 800, cursor: 'pointer' }}>
+                  style={{ width: 34, height: 34, flexShrink: 0, borderRadius: 8, border: `1.5px solid ${correct === i ? 'var(--good)' : 'var(--line)'}`, background: correct === i ? 'color-mix(in srgb, var(--good) 15%, transparent)' : 'transparent', color: correct === i ? 'var(--good)' : 'var(--muted)', fontWeight: 800, cursor: 'pointer' }}>
                   {LETTERS[i]}
                 </button>
                 <input value={o} onChange={e => setOptions(options.map((x, j) => (j === i ? e.target.value : x)))} placeholder={t('Вариант {v0}', { v0: LETTERS[i] })} style={input} />

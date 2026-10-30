@@ -25,7 +25,7 @@ type Turn = { role: 'user' | 'assistant'; content: string }
 const LETTERS = 'ABCDE'
 
 function pct(x: number) { return `${Math.round(x * 100)}%` }
-function accColor(x: number) { return x >= 0.8 ? 'var(--good)' : x >= WEAK_THRESHOLD ? '#f59e0b' : 'var(--bad)' }
+function accColor(x: number) { return x >= 0.8 ? 'var(--good)' : x >= WEAK_THRESHOLD ? 'var(--warn)' : 'var(--bad)' }
 
 // Куда отправить ученика тренировать раздел
 function practiceHref(s: SectionStat): string | null {
@@ -98,7 +98,7 @@ export default function StatsPage() {
   }
 
   if (loading) return (
-    <div className="page" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '60vh', color: 'var(--muted)' }}>{t('Загрузка…')}</div>
+    <div className="nb-root page" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '60vh', color: 'var(--muted)' }}>{t('Загрузка…')}</div>
   )
 
   const stats = sectionStats(rows)
@@ -115,7 +115,7 @@ export default function StatsPage() {
 
   if (!total) {
     return (
-      <div className="page animate-fade-in-up">
+      <div className="nb-root page animate-fade-in-up">
         <h1 className="page-title">{t('Моя статистика')}</h1>
         <p className="page-sub">{t('Здесь будет видно, какие темы получаются хорошо, а какие стоит подтянуть.')}</p>
         <div className="card" style={{ textAlign: 'center', padding: '36px 20px' }}>
@@ -130,7 +130,7 @@ export default function StatsPage() {
   }
 
   return (
-    <div className="page animate-fade-in-up">
+    <div className="nb-root page animate-fade-in-up">
       <h1 className="page-title">{t('Моя статистика')}</h1>
       <p className="page-sub">{t('По последним ответам (до 1000 за 90 дней): где получается хорошо, где ошибаешься чаще и что делать дальше.')}</p>
 
@@ -167,7 +167,7 @@ export default function StatsPage() {
         <div style={{ display: 'flex', gap: 14, marginTop: 10, fontSize: 12, color: 'var(--muted)', flexWrap: 'wrap' }}>
           <span>{t('Высота — сколько заданий решено')}</span>
           <span><span style={{ color: 'var(--good)' }}>■</span> 80%+</span>
-          <span><span style={{ color: '#f59e0b' }}>■</span> 60–80%</span>
+          <span><span style={{ color: 'var(--warn)' }}>■</span> 60–80%</span>
           <span><span style={{ color: 'var(--bad)' }}>■</span> {t('меньше 60%')}</span>
         </div>
       </div>
@@ -179,7 +179,7 @@ export default function StatsPage() {
           {weak.slice(0, 5).map(s => {
             const href = practiceHref(s)
             return (
-              <div key={`${s.source}${s.subject}${s.section}${s.topic}`} className="card" style={{ display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap', borderColor: 'rgba(248,113,113,0.3)' }}>
+              <div key={`${s.source}${s.subject}${s.section}${s.topic}`} className="card" style={{ display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap', borderColor: 'color-mix(in srgb, var(--bad) 30%, transparent)' }}>
                 <div style={{ flex: 1, minWidth: 200 }}>
                   <div style={{ fontWeight: 700 }}>{t(s.label)}</div>
                   <div style={{ color: 'var(--muted)', fontSize: 13, marginTop: 2 }}>
@@ -206,7 +206,7 @@ export default function StatsPage() {
           <div className="label">{t('Сильные стороны')}</div>
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 16 }}>
             {strong.slice(0, 8).map(s => (
-              <span key={`${s.source}${s.subject}${s.section}${s.topic}`} className="chip on" style={{ cursor: 'default', borderColor: 'rgba(52,211,153,0.4)', background: 'rgba(52,211,153,0.1)', color: 'var(--good)' }}>
+              <span key={`${s.source}${s.subject}${s.section}${s.topic}`} className="chip on" style={{ cursor: 'default', borderColor: 'color-mix(in srgb, var(--good) 40%, transparent)', background: 'color-mix(in srgb, var(--good) 10%, transparent)', color: 'var(--good)' }}>
                 {t(s.label)} · {pct(s.accuracy)}
               </span>
             ))}
@@ -217,8 +217,8 @@ export default function StatsPage() {
       {userId && <MockStats userId={userId} />}
 
       {/* Совет от ИИ */}
-      <div className="card" style={{ marginBottom: 16, background: 'rgba(139,124,246,0.06)', borderColor: 'rgba(139,124,246,0.3)' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontWeight: 700, color: '#c4bbff', marginBottom: advice ? 12 : 6 }}>
+      <div className="card" style={{ marginBottom: 16, background: 'color-mix(in srgb, var(--accent) 6%, transparent)', borderColor: 'color-mix(in srgb, var(--accent) 30%, transparent)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontWeight: 700, color: 'var(--accent)', marginBottom: advice ? 12 : 6 }}>
           <Icon name="sparkles" size={18} /> {t('Как поднять балл')}
         </div>
         {advice ? (
@@ -299,7 +299,7 @@ export default function StatsPage() {
             return (
               <div key={m.id} className="card" style={{ padding: 0, overflow: 'hidden' }}>
                 <button onClick={() => setOpenMistake(open ? null : m.id)} style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 12, padding: '14px 16px', background: 'transparent', border: 'none', color: 'var(--text)', cursor: 'pointer', textAlign: 'left', fontFamily: 'inherit' }}>
-                  <span style={{ width: 28, height: 28, borderRadius: 8, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: tried === m.payload.correct ? 'rgba(52,211,153,0.15)' : 'rgba(248,113,113,0.15)', color: tried === m.payload.correct ? 'var(--good)' : 'var(--bad)' }}>
+                  <span style={{ width: 28, height: 28, borderRadius: 8, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: tried === m.payload.correct ? 'color-mix(in srgb, var(--good) 15%, transparent)' : 'color-mix(in srgb, var(--bad) 15%, transparent)', color: tried === m.payload.correct ? 'var(--good)' : 'var(--bad)' }}>
                     <Icon name={tried === m.payload.correct ? 'check' : 'x'} size={16} />
                   </span>
                   <span style={{ flex: 1, minWidth: 0 }}>
@@ -318,8 +318,8 @@ export default function StatsPage() {
                     <div style={{ display: 'grid', gap: 6, marginBottom: 12 }}>
                       {m.payload.options.map((opt, i) => {
                         let border = 'var(--line)', bg = 'var(--surface-2)'
-                        if (tried !== undefined && i === m.payload.correct) { border = 'var(--good)'; bg = 'rgba(52,211,153,0.1)' }
-                        else if (tried === i) { border = 'var(--bad)'; bg = 'rgba(248,113,113,0.1)' }
+                        if (tried !== undefined && i === m.payload.correct) { border = 'var(--good)'; bg = 'color-mix(in srgb, var(--good) 10%, transparent)' }
+                        else if (tried === i) { border = 'var(--bad)'; bg = 'color-mix(in srgb, var(--bad) 10%, transparent)' }
                         return (
                           <button key={i} onClick={() => retryAnswer(m, i)} disabled={tried !== undefined}
                             style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', borderRadius: 10, border: `1.5px solid ${border}`, background: bg, color: 'var(--text)', cursor: tried === undefined ? 'pointer' : 'default', textAlign: 'left', fontFamily: 'inherit', fontSize: 14 }}>

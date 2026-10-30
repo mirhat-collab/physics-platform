@@ -16,17 +16,12 @@ type Topic = {
 
 const GRADE_ORDER = ['7', '8', '9', '10', '11']
 
-const gradeColors: Record<string, string> = {
-  '7': '#667eea', '8': '#f59e0b', '9': '#10b981', '10': '#ec4899', '11': '#06b6d4',
-}
-
 export default function TopicsPage() {
   const { t } = useT()
   const [topics, setTopics] = useState<Topic[]>([])
   const [completedIds, setCompletedIds] = useState<Set<string>>(new Set())
   const [recentIds, setRecentIds] = useState<string[]>([])
   const [loading, setLoading] = useState(true)
-  const [hovered, setHovered] = useState<string | null>(null)
   const [gradeFilter, setGradeFilter] = useState<string>('all')
   const [statusFilter, setStatusFilter] = useState<'all' | 'completed' | 'recent' | 'bookmarked'>('all')
   const [bookmarkIds, setBookmarkIds] = useState<Set<string>>(new Set())
@@ -100,167 +95,100 @@ export default function TopicsPage() {
   const progressPercent = topics.length > 0 ? Math.round((completedIds.size / topics.length) * 100) : 0
 
   if (loading) return (
-    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-      <div style={{ color: '#fff', fontSize: 18 }}>{t('Загрузка...')}</div>
+    <div className="nb-root" aria-busy="true">
+      <div className="app-page"><span className="sr-only">{t('Загрузка...')}</span></div>
     </div>
   )
 
+  const statusTabs = [
+    { key: 'all', label: t('Все темы') },
+    { key: 'completed', label: t('Изученные') },
+    { key: 'bookmarked', label: t('Закладки') },
+    { key: 'recent', label: t('Недавние') },
+  ] as const
+
+  // Запомнить тему в «Недавних» при переходе
+  const remember = (id: string) => {
+    try {
+      const recent: string[] = JSON.parse(localStorage.getItem('recentTopics') || '[]')
+      const updated = [id, ...(Array.isArray(recent) ? recent : []).filter(x => x !== id)].slice(0, 20)
+      localStorage.setItem('recentTopics', JSON.stringify(updated))
+    } catch { /* нет доступа к storage */ }
+  }
+
   return (
-    <main style={{ minHeight: '100vh', color: '#fff' }}>
+    <div className="nb-root">
+      <div className="app-page">
+        <header className="dash-head">
+          <p className="nb-eyebrow">{t('Учёба')}</p>
+          <h1 className="dash-name">{t('Темы')}</h1>
+          <p className="dash-meta">{t('Выбери тему и начни изучать')}</p>
+        </header>
 
-      {/* Шапка */}
-      <div className="animate-fade-in-up" style={{ background: 'linear-gradient(135deg, #1a1a3e 0%, #0f0f1a 100%)', borderBottom: '1px solid #2a2a3e', padding: '2rem 2rem 1.5rem' }}>
-        <div style={{ maxWidth: 900, margin: '0 auto' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 8 }}>
-            <div style={{ width: 48, height: 48, borderRadius: 14, background: 'linear-gradient(135deg, #667eea, #764ba2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24 }}>
-              📚
-            </div>
-            <div>
-              <h1 style={{ fontSize: '1.9rem', fontWeight: 800, margin: 0 }}>{t('Темы')}</h1>
-              <p style={{ color: '#888', margin: 0, fontSize: 14 }}>{t('Выбери тему и начни изучать')}</p>
-            </div>
+        <ul className="nb-stats dash-stats" role="list">
+          <li><span className="nb-stat-n">{topics.length}</span><span className="nb-stat-l">{t('тем всего')}</span></li>
+          <li><span className="nb-stat-n">{completedIds.size}</span><span className="nb-stat-l">{t('изучено')}</span></li>
+          <li><span className="nb-stat-n">{grades.length - 1}</span><span className="nb-stat-l">{t('классов')}</span></li>
+        </ul>
+        <div className="dash-level">
+          <div className="dash-level-row"><span>{t('Твой прогресс')}</span><span>{completedIds.size} / {topics.length} · {progressPercent}%</span></div>
+          <div className="app-bar" role="progressbar" aria-valuenow={progressPercent} aria-valuemin={0} aria-valuemax={100} aria-label={t('Твой прогресс')}>
+            <span style={{ width: `${progressPercent}%` }} />
           </div>
+        </div>
 
-          {/* Статистика */}
-          <div style={{ display: 'flex', gap: 12, marginTop: 16, flexWrap: 'wrap' }}>
-            <div style={{ background: 'rgba(102,126,234,0.1)', border: '1px solid rgba(102,126,234,0.2)', borderRadius: 10, padding: '8px 16px', fontSize: 13 }}>
-              <span style={{ color: '#a78bfa', fontWeight: 700 }}>{topics.length}</span>
-              <span style={{ color: '#888', marginLeft: 6 }}>{t('тем всего')}</span>
-            </div>
-            <div style={{ background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.2)', borderRadius: 10, padding: '8px 16px', fontSize: 13 }}>
-              <span style={{ color: '#10b981', fontWeight: 700 }}>{completedIds.size}</span>
-              <span style={{ color: '#888', marginLeft: 6 }}>{t('изучено')}</span>
-            </div>
-            <div style={{ background: 'rgba(245,158,11,0.1)', border: '1px solid rgba(245,158,11,0.2)', borderRadius: 10, padding: '8px 16px', fontSize: 13 }}>
-              <span style={{ color: '#f59e0b', fontWeight: 700 }}>{grades.length - 1}</span>
-              <span style={{ color: '#888', marginLeft: 6 }}>{t('классов')}</span>
-            </div>
-          </div>
-
-          {/* Прогресс-бар */}
-          <div style={{ marginTop: 16, background: '#1a1a2e', borderRadius: 12, padding: '12px 16px', border: '1px solid #2a2a3e' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, marginBottom: 8 }}>
-              <span style={{ color: '#888' }}>{t('Твой прогресс')}</span>
-              <span style={{ color: '#a78bfa', fontWeight: 700 }}>{completedIds.size} / {topics.length} {t('тем (')}{progressPercent}%)</span>
-            </div>
-            <div style={{ background: '#0f0f1a', borderRadius: 999, height: 8 }}>
-              <div style={{
-                height: '100%', width: `${progressPercent}%`,
-                background: 'linear-gradient(90deg, #667eea, #10b981)',
-                borderRadius: 999, transition: 'width 0.6s ease'
-              }} />
-            </div>
-          </div>
-
-          {/* Поиск */}
-          <div style={{ marginTop: 12, position: 'relative' }}>
-            <span style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', fontSize: 16, color: '#555' }}>🔍</span>
-            <input
-              value={search}
-              onChange={e => setSearch(e.target.value)}
-              placeholder={t('Поиск темы...')}
-              style={{
-                width: '100%', padding: '10px 16px 10px 40px',
-                borderRadius: 12, border: '1px solid #2a2a3e',
-                background: '#1a1a2e', color: '#fff', fontSize: 14,
-                outline: 'none', boxSizing: 'border-box',
-              }}
-            />
-          </div>
-
-          {/* Фильтр по классам */}
-          <div style={{ display: 'flex', gap: 8, marginTop: 12, flexWrap: 'wrap' }}>
+        <div className="tp-tools">
+          <label className="tp-search">
+            <span className="sr-only">{t('Поиск')}</span>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden><circle cx="11" cy="11" r="7" /><path d="m20 20-3.5-3.5" /></svg>
+            <input type="search" value={search} onChange={e => setSearch(e.target.value)} placeholder={t('Поиск темы...')} />
+          </label>
+          <div className="tp-chips" role="group" aria-label={t('Класс')}>
             {grades.map(g => (
-              <button key={g} onClick={() => setGradeFilter(g)} style={{
-                padding: '6px 14px', borderRadius: 999, border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 600, transition: 'all 0.2s',
-                background: gradeFilter === g ? (gradeColors[g] || '#667eea') : '#1a1a2e',
-                color: gradeFilter === g ? '#fff' : '#888',
-                boxShadow: gradeFilter === g ? `0 0 12px ${gradeColors[g] || '#667eea'}44` : 'none',
-              }}>
-                {g === 'all' ? t('✦ Все') : t('{g} класс', { g: g })}
+              <button key={g} type="button" aria-pressed={gradeFilter === g} className={`chip${gradeFilter === g ? ' on' : ''}`} onClick={() => setGradeFilter(g)}>
+                {g === 'all' ? t('Все') : t('{g} класс', { g })}
               </button>
             ))}
           </div>
-
-          {/* Фильтр по статусу */}
-          <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
-            {[
-              { key: 'all', label: t('📋 Все темы') },
-              { key: 'completed', label: t('✅ Изученные') },
-              { key: 'bookmarked', label: t('🔖 Закладки') },
-              { key: 'recent', label: t('🕐 Недавние') },
-            ].map(({ key, label }) => (
-              <button key={key} onClick={() => setStatusFilter(key as typeof statusFilter)} style={{
-                padding: '6px 14px', borderRadius: 999, cursor: 'pointer', fontSize: 12, fontWeight: 600, transition: 'all 0.2s',
-                background: statusFilter === key ? '#2a2a4e' : 'transparent',
-                color: statusFilter === key ? '#a78bfa' : '#555',
-                border: statusFilter === key ? '1px solid #667eea55' : '1px solid transparent',
-              }}>
+          <div className="auth-tabs tp-status" role="tablist" aria-label={t('Темы')}>
+            {statusTabs.map(({ key, label }) => (
+              <button key={key} type="button" role="tab" aria-selected={statusFilter === key} className={statusFilter === key ? 'on' : ''} onClick={() => setStatusFilter(key)}>
                 {label}
               </button>
             ))}
           </div>
         </div>
-      </div>
 
-      {/* Список тем */}
-      <div style={{ maxWidth: 900, margin: '0 auto', padding: '1.5rem 2rem' }}>
-        {filtered.length === 0 && (
-          <div style={{ textAlign: 'center', color: '#555', padding: '60px 0', fontSize: 15 }}>
+        {filtered.length === 0 ? (
+          <p className="tp-empty">
             {search ? t('😕 Ничего не найдено по запросу "{search}"', { search: search }) : statusFilter === 'completed' ? t('😅 Ты ещё не изучил ни одной темы') : statusFilter === 'bookmarked' ? t('🔖 Нет сохранённых тем — нажми 📌 на странице темы') : t('😅 Нет недавно открытых тем')}
-          </div>
-        )}
-        <div className="stagger-children" style={{ display: 'grid', gap: 12 }}>
-          {filtered.map((topic) => {
-            const grade = topic.grade.replace('th Grade', '')
-            const color = gradeColors[grade] || '#667eea'
-            const isHovered = hovered === topic.id
-            const isDone = completedIds.has(topic.id) || completedIds.has(String(topic.id))
-            return (
-              <Link key={topic.id} href={`/topics/${topic.id}`} style={{ textDecoration: 'none' }}
-                onClick={() => {
-                  try {
-                    const recent: string[] = JSON.parse(localStorage.getItem('recentTopics') || '[]')
-                    const updated = [topic.id, ...(Array.isArray(recent) ? recent : []).filter(id => id !== topic.id)].slice(0, 20)
-                    localStorage.setItem('recentTopics', JSON.stringify(updated))
-                  } catch {}
-                }}
-              >
-                <div
-                  onMouseEnter={() => setHovered(topic.id)}
-                  onMouseLeave={() => setHovered(null)}
-                  style={{
-                    background: isHovered ? '#20203e' : '#1a1a2e',
-                    border: '1px solid #2a2a3e',
-                    borderLeft: `4px solid ${isDone ? '#10b981' : color}`,
-                    borderRadius: 16, padding: '18px 22px',
-                    cursor: 'pointer', transition: 'all 0.2s ease',
-                    display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 16,
-                    transform: isHovered ? 'translateX(6px)' : 'translateX(0)',
-                    boxShadow: isHovered ? `0 0 20px ${color}22` : 'none',
-                  }}
-                >
-                  <div style={{ flex: 1 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 6, flexWrap: 'wrap' }}>
-                      <h2 style={{ margin: 0, fontSize: '1rem', fontWeight: 700, color: '#fff' }}>{topicName(topic.id, topic.name)}</h2>
-                      <span style={{ background: `${color}22`, color, fontSize: 11, fontWeight: 600, padding: '3px 10px', borderRadius: 999, border: `1px solid ${color}44`, whiteSpace: 'nowrap' }}>
-                        {t('{g} класс', { g: grade })}
+          </p>
+        ) : (
+          <ol className="tp-list" role="list">
+            {filtered.map(topic => {
+              const grade = topic.grade.replace('th Grade', '')
+              const isDone = completedIds.has(topic.id) || completedIds.has(String(topic.id))
+              return (
+                <li key={topic.id}>
+                  <Link href={`/topics/${topic.id}`} className={`tp-row${isDone ? ' done' : ''}`} onClick={() => remember(topic.id)}>
+                    <span className="tp-grade" aria-label={t('{g} класс', { g: grade })}>{grade}</span>
+                    <span className="tp-body">
+                      <span className="tp-title">{topicName(topic.id, topic.name)}</span>
+                      {topic.theory && <span className="tp-snippet">{topic.theory.slice(0, 110)}…</span>}
+                    </span>
+                    {isDone && (
+                      <span className="tp-done" title={t('Изучено')}>
+                        <svg viewBox="0 0 30 30" aria-hidden><path d="M4 15 C 7 18, 9 21, 11 25 C 15 15, 20 8, 27 3" /></svg>
+                        <span className="sr-only">{t('Изучено')}</span>
                       </span>
-                      {isDone && (
-                        <span style={{ background: 'rgba(16,185,129,0.15)', color: '#10b981', fontSize: 11, fontWeight: 600, padding: '3px 10px', borderRadius: 999, border: '1px solid rgba(16,185,129,0.3)', whiteSpace: 'nowrap' }}>
-                          {t('✅ Изучено')}
-                        </span>
-                      )}
-                    </div>
-                    <p style={{ margin: 0, color: '#666', fontSize: 13 }}>{topic.theory?.slice(0, 100)}...</p>
-                  </div>
-                  <div style={{ color: isHovered ? '#fff' : '#444', fontSize: 20, flexShrink: 0, transition: 'color 0.2s' }}>→</div>
-                </div>
-              </Link>
-            )
-          })}
-        </div>
+                    )}
+                  </Link>
+                </li>
+              )
+            })}
+          </ol>
+        )}
       </div>
-    </main>
+    </div>
   )
 }

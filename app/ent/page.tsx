@@ -286,14 +286,14 @@ export default function EntPage() {
   if (mode === 'setup' || mode === 'loading') {
     const totals = attempts.reduce((acc, a) => ({ q: acc.q + a.total, c: acc.c + a.correct }), { q: 0, c: 0 })
     return (
-      <div className="page animate-fade-in-up">
+      <div className="nb-root page animate-fade-in-up">
         <h1 className="page-title">{t('Подготовка к ЕНТ')}</h1>
         <p className="page-sub">{t('Каждый раз новые задания по выбранной теме: числа и варианты меняются, так что задачи не повторяются. Не получилось решить — нажми «Объясни», и ИИ разберёт задачу по шагам.')}</p>
         <EntCoach />
         <Link href="/reference" className="card" style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16, padding: '12px 16px', color: 'var(--text)', textDecoration: 'none' }}>
           <Icon name="book" size={18} /> <span style={{ flex: 1 }}>{t('Справочник ЕНТ: формулы и важные материалы')}</span> <Icon name="arrowRight" size={16} />
         </Link>
-        <Link href="/ent/mock" className="card" style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16, padding: '12px 16px', color: 'var(--text)', textDecoration: 'none', borderColor: 'rgba(124,108,255,0.5)' }}>
+        <Link href="/ent/mock" className="card" style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16, padding: '12px 16px', color: 'var(--text)', textDecoration: 'none', borderColor: 'color-mix(in srgb, var(--accent) 50%, transparent)' }}>
           <span style={{ fontSize: 18 }}>⏱</span>
           <span style={{ flex: 1 }}>
             <b>{t('Пробный ЕНТ')}</b>
@@ -303,7 +303,7 @@ export default function EntPage() {
         </Link>
 
         {repair && topics.length > 0 && (
-          <div className="card" style={{ marginBottom: 16, borderColor: 'rgba(245,158,11,0.5)' }}>
+          <div className="card" style={{ marginBottom: 16, borderColor: 'color-mix(in srgb, var(--warn) 50%, transparent)' }}>
             <div style={{ fontWeight: 700, marginBottom: 4 }}>{t('Работа над ошибками')}</div>
             <div style={{ color: 'var(--muted)', fontSize: 14, marginBottom: 10 }}>
               {t('Темы с ошибками: {n}. Каждую нужно решить верно {k} раза подряд — ошибка начинает отсчёт заново.', { n: topics.length, k: REPAIR_STREAK })}
@@ -315,8 +315,8 @@ export default function EntPage() {
         )}
 
         {loggedIn === false && (
-          <div className="card" style={{ marginBottom: 16, borderColor: 'rgba(245,158,11,0.4)' }}>
-            <Link href="/login" style={{ color: '#c4bbff' }}>{t('Войди в аккаунт')}</Link>{t(', чтобы сохранялась статистика и работали объяснения от ИИ.')}
+          <div className="card" style={{ marginBottom: 16, borderColor: 'color-mix(in srgb, var(--warn) 40%, transparent)' }}>
+            <Link href="/login" style={{ color: 'var(--accent)' }}>{t('Войди в аккаунт')}</Link>{t(', чтобы сохранялась статистика и работали объяснения от ИИ.')}
           </div>
         )}
 
@@ -410,7 +410,7 @@ export default function EntPage() {
           <button className="btn" onClick={generate} disabled={mode === 'loading'} style={{ width: '100%' }}>
             {mode === 'loading' ? (
               <>
-                <span className="spin" style={{ width: 16, height: 16, border: '2px solid rgba(255,255,255,0.3)', borderTopColor: '#fff', borderRadius: '50%', display: 'inline-block' }} />
+                <span className="spin" style={{ width: 16, height: 16, border: '2px solid color-mix(in srgb, currentColor 30%, transparent)', borderTopColor: 'currentColor', borderRadius: '50%', display: 'inline-block' }} />
                 {t('Готовлю задания…')}
               </>
             ) : (
@@ -429,17 +429,17 @@ export default function EntPage() {
     const correct = done.filter(x => x.a === x.q.correct).length
     const pct = done.length ? Math.round((correct / done.length) * 100) : 0
     return (
-      <div className="page animate-fade-in-up">
+      <div className="nb-root page animate-fade-in-up">
         <div className="card" style={{ textAlign: 'center', padding: '28px 20px', marginBottom: 18 }}>
-          <div style={{ fontSize: 46, fontWeight: 800, color: pct >= 70 ? 'var(--good)' : pct >= 40 ? '#f59e0b' : 'var(--bad)' }}>
+          <div style={{ fontSize: 46, fontWeight: 800, color: pct >= 70 ? 'var(--good)' : pct >= 40 ? 'var(--warn)' : 'var(--bad)' }}>
             {correct} / {done.length}
           </div>
           <div style={{ color: 'var(--muted)', marginTop: 4 }}>{pct}{t('% верных ответов')}</div>
-          {xpMsg && <div style={{ marginTop: 8, color: '#c4bbff', fontWeight: 700 }}>{xpMsg}</div>}
+          {xpMsg && <div style={{ marginTop: 8, color: 'var(--accent)', fontWeight: 700 }}>{xpMsg}</div>}
           {repair && topics.length > 0 && (() => {
             const left = topics.filter(x => (need[x] ?? 0) > 0)
             return (
-              <div style={{ marginTop: 12, fontSize: 14, color: left.length ? '#f59e0b' : 'var(--good)' }}>
+              <div style={{ marginTop: 12, fontSize: 14, color: left.length ? 'var(--warn)' : 'var(--good)' }}>
                 {left.length
                   ? t('Отработано тем: {a} из {b}. Остались: {list}', { a: topics.length - left.length, b: topics.length, list: left.map(x => t(x)).join(', ') })
                   : t('Все темы с ошибками отработаны!')}
@@ -460,7 +460,7 @@ export default function EntPage() {
             return (
               <div key={i} className="card" style={{ padding: 0, overflow: 'hidden' }}>
                 <button onClick={() => setReviewOpen(open ? null : i)} style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 12, padding: '14px 16px', background: 'transparent', border: 'none', color: 'var(--text)', cursor: 'pointer', textAlign: 'left', fontFamily: 'inherit' }}>
-                  <span style={{ width: 28, height: 28, borderRadius: 8, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: ok ? 'rgba(52,211,153,0.15)' : 'rgba(248,113,113,0.15)', color: ok ? 'var(--good)' : 'var(--bad)' }}>
+                  <span style={{ width: 28, height: 28, borderRadius: 8, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: ok ? 'color-mix(in srgb, var(--good) 15%, transparent)' : 'color-mix(in srgb, var(--bad) 15%, transparent)', color: ok ? 'var(--good)' : 'var(--bad)' }}>
                     <Icon name={ok ? 'check' : 'x'} size={16} />
                   </span>
                   <MathLine text={`${i + 1}. ${q.question}`} style={{ flex: 1, minWidth: 0, fontSize: 14 }} />
@@ -469,7 +469,7 @@ export default function EntPage() {
                 {open && (
                   <div style={{ padding: '0 16px 16px' }}>
                     <QuestionBody q={q} chosen={a} />
-                    <Link href={referenceHref(subject, q)} style={{ display: 'inline-block', marginTop: 10, fontSize: 13, color: '#c4bbff' }}>📘 {t('Повторить теорию в справочнике')}</Link>
+                    <Link href={referenceHref(subject, q)} style={{ display: 'inline-block', marginTop: 10, fontSize: 13, color: 'var(--accent)' }}>📘 {t('Повторить теорию в справочнике')}</Link>
                     <div style={{ marginTop: 12 }}>
                       <Explain q={q} chosen={a === SKIPPED ? null : a} turns={dialogs[i] || []} setTurns={t => setDialogs(d => ({ ...d, [i]: t }))} />
                     </div>
@@ -504,7 +504,7 @@ export default function EntPage() {
         </div>
       ) : (
         <div style={{ flex: 1, background: 'var(--surface-2)', borderRadius: 999, height: 8, overflow: 'hidden' }}>
-          <div style={{ width: `${(answeredCount / total) * 100}%`, height: '100%', background: 'linear-gradient(90deg,#667eea,#a78bfa)', transition: 'width 0.4s ease' }} />
+          <div style={{ width: `${(answeredCount / total) * 100}%`, height: '100%', background: 'var(--accent)', transition: 'width 0.4s ease' }} />
         </div>
       )}
       <span style={{ color: 'var(--muted)', fontSize: 13, fontWeight: 600 }}>{index + 1} / {total}</span>
@@ -520,7 +520,7 @@ export default function EntPage() {
   if (!q) {
     // Ученик решает быстрее, чем подгружаются задания
     return (
-      <div className="page animate-fade-in">
+      <div className="nb-root page animate-fade-in">
         {header}
         <div className="card" style={{ textAlign: 'center', padding: '40px 20px' }}>
           {fetchError ? (
@@ -550,7 +550,7 @@ export default function EntPage() {
   const hintShown = Math.min(hints[index] ?? 0, hintMax)
 
   return (
-    <div className="page animate-fade-in">
+    <div className="nb-root page animate-fade-in">
       {header}
 
       <div className="card" style={{ padding: '20px 18px' }}>
@@ -561,8 +561,8 @@ export default function EntPage() {
         <div style={{ display: 'grid', gap: 8 }}>
           {q.options.map((opt, i) => {
             let border = 'var(--line)', bg = 'var(--surface-2)'
-            if (answered && i === q.correct) { border = 'var(--good)'; bg = 'rgba(52,211,153,0.1)' }
-            else if (answered && i === chosen) { border = 'var(--bad)'; bg = 'rgba(248,113,113,0.1)' }
+            if (answered && i === q.correct) { border = 'var(--good)'; bg = 'color-mix(in srgb, var(--good) 10%, transparent)' }
+            else if (answered && i === chosen) { border = 'var(--bad)'; bg = 'color-mix(in srgb, var(--bad) 10%, transparent)' }
             return (
               <button key={i} onClick={() => answer(i)} disabled={answered}
                 style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 14px', borderRadius: 12, border: `1.5px solid ${border}`, background: bg, color: 'var(--text)', cursor: answered ? 'default' : 'pointer', textAlign: 'left', fontFamily: 'inherit', fontSize: 15 }}>
@@ -574,8 +574,8 @@ export default function EntPage() {
         </div>
 
         {!answered && hintShown > 0 && (
-          <div className="animate-fade-in" style={{ marginTop: 14, padding: '12px 14px', borderRadius: 12, background: 'rgba(124,108,255,0.08)', border: '1px solid rgba(124,108,255,0.3)', display: 'grid', gap: 6 }}>
-            <div style={{ fontSize: 12, fontWeight: 700, color: '#c4bbff' }}>{t('ПОДСКАЗКА')}</div>
+          <div className="animate-fade-in" style={{ marginTop: 14, padding: '12px 14px', borderRadius: 12, background: 'color-mix(in srgb, var(--accent) 8%, transparent)', border: '1px solid color-mix(in srgb, var(--accent) 30%, transparent)', display: 'grid', gap: 6 }}>
+            <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--accent)' }}>{t('ПОДСКАЗКА')}</div>
             <StepTutor question={q.question} steps={steps} shown={hintShown} hideAnswer />
           </div>
         )}
@@ -583,7 +583,7 @@ export default function EntPage() {
         {!answered && (
           <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', alignItems: 'center', marginTop: 12 }}>
             {hintShown < hintMax && (
-              <button onClick={() => setHints(h => ({ ...h, [index]: hintShown + 1 }))} style={{ background: 'none', border: 'none', color: '#c4bbff', fontSize: 14, cursor: 'pointer', fontFamily: 'inherit', textDecoration: 'underline', padding: 0 }}>
+              <button onClick={() => setHints(h => ({ ...h, [index]: hintShown + 1 }))} style={{ background: 'none', border: 'none', color: 'var(--accent)', fontSize: 14, cursor: 'pointer', fontFamily: 'inherit', textDecoration: 'underline', padding: 0 }}>
                 💡 {hintShown ? t('Следующий шаг ({a}/{b})', { a: hintShown + 1, b: hintMax }) : t('Подсказка')}
               </button>
             )}
@@ -617,7 +617,7 @@ export default function EntPage() {
             </>
           )}
 
-          <Link href={referenceHref(subject, q)} target="_blank" style={{ fontSize: 14, color: '#c4bbff' }}>📘 {t('Повторить теорию по теме «{topic}»', { topic: t(q.topic || q.section || '') })}</Link>
+          <Link href={referenceHref(subject, q)} target="_blank" style={{ fontSize: 14, color: 'var(--accent)' }}>📘 {t('Повторить теорию по теме «{topic}»', { topic: t(q.topic || q.section || '') })}</Link>
 
           <button className="btn" onClick={next}>
             {index + 1 < total ? t('Следующее задание') : t('Завершить')} <Icon name="arrowRight" size={18} />

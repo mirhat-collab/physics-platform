@@ -48,8 +48,8 @@ export default function DashboardPage() {
   }
 
   if (loading) return (
-    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-      <div style={{ color: '#fff', fontSize: 18 }}>{t('Загрузка...')}</div>
+    <div className="nb-root" aria-busy="true">
+      <div className="app-page"><span className="sr-only">{t('Загрузка...')}</span></div>
     </div>
   )
 
@@ -60,88 +60,69 @@ export default function DashboardPage() {
   const level = Math.floor((profile?.total_xp || 0) / 100) + 1
   const xpInLevel = (profile?.total_xp || 0) % 100
 
+  const tools = [
+    { href: '/ent', icon: 'target', title: t('Подготовка к ЕНТ'), text: t('Задания уровня ЕНТ с разбором от ИИ') },
+    { href: '/formulas', icon: 'formula', title: t('Тренажёр формул'), text: t('Собери формулу из букв — физика и математика') },
+    { href: '/topics', icon: 'book', title: t('Все темы'), text: t('Теория, формулы и тесты по классам') },
+    { href: '/progress', icon: 'chart', title: t('Прогресс'), text: t('Твой XP и успехи классов') },
+  ]
+
   return (
-    <div style={{ minHeight: '100vh', color: '#fff', padding: '1.5rem' }}>
-      <div className="animate-fade-in-up" style={{ maxWidth: 800, margin: '0 auto' }}>
+    <div className="nb-root">
+      <div className="app-page">
+        <header className="dash-head">
+          <p className="nb-eyebrow">{t('Добро пожаловать')}</p>
+          <h1 className="dash-name">{profile?.full_name || profile?.email}</h1>
+          <p className="dash-meta">{gradeDisplay} · {t('Уровень')} {level}</p>
+        </header>
 
-        <div style={{ background: 'linear-gradient(135deg, #667eea, #764ba2)', borderRadius: 24, padding: '28px 32px', marginBottom: 20, boxShadow: 'var(--shadow-md)' }}>
-          <div style={{ fontSize: 13, opacity: 0.8, marginBottom: 6 }}>{t('Добро пожаловать 👋')}</div>
-          <h1 style={{ fontSize: '1.8rem', fontWeight: 800, margin: '0 0 4px' }}>
-            {profile?.full_name || profile?.email}
-          </h1>
-          <div style={{ opacity: 0.8, fontSize: 14 }}>{gradeDisplay} {t('· Уровень')} {level}</div>
-          <div style={{ marginTop: 16 }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, opacity: 0.8, marginBottom: 6 }}>
-              <span>{t('XP до следующего уровня')}</span>
-              <span>{xpInLevel} / 100</span>
-            </div>
-            <div style={{ background: 'rgba(255,255,255,0.2)', borderRadius: 999, height: 8 }}>
-              <div style={{ height: '100%', width: `${xpInLevel}%`, background: '#fff', borderRadius: 999, transition: 'width 0.6s ease' }} />
-            </div>
-          </div>
-        </div>
-
-        <div className="stagger-children" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12, marginBottom: 20 }}>
-          <div className="hover-lift" style={{ background: '#1a1a2e', borderRadius: 16, padding: '16px', border: '1px solid #2a2a3e', textAlign: 'center' }}>
-            <div style={{ fontSize: 28, fontWeight: 800, color: '#a78bfa' }}>{profile?.total_xp ?? 0}</div>
-            <div style={{ color: '#888', fontSize: 12, marginTop: 4 }}>{t('Всего XP')}</div>
-          </div>
-          <div className="hover-lift" style={{ background: '#1a1a2e', borderRadius: 16, padding: '16px', border: '1px solid #2a2a3e', textAlign: 'center' }}>
-            <div style={{ fontSize: 28, fontWeight: 800, color: '#f59e0b' }}>🔥{profile?.streak ?? 0}</div>
-            <div style={{ color: '#888', fontSize: 12, marginTop: 4 }}>{t('Дней подряд')}</div>
-          </div>
-          <div className="hover-lift" style={{ background: '#1a1a2e', borderRadius: 16, padding: '16px', border: '1px solid #2a2a3e', textAlign: 'center' }}>
-            <div style={{ fontSize: 28, fontWeight: 800, color: '#10b981' }}>{percent}%</div>
-            <div style={{ color: '#888', fontSize: 12, marginTop: 4 }}>{t('Прогресс')}</div>
-          </div>
-        </div>
-
-        <EntCoach />
-
-        <div style={{ background: '#1a1a2e', borderRadius: 20, padding: '20px 24px', marginBottom: 20, border: '1px solid #2a2a3e' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 12 }}>
-            <span style={{ fontWeight: 600 }}>{t('📚 Прогресс класса')}</span>
-            <span style={{ color: '#888', fontSize: 13 }}>{doneCount} / {topics.length} {t('тем')}</span>
-          </div>
-          <div style={{ background: '#0f0f1a', borderRadius: 999, height: 10, overflow: 'hidden' }}>
-            <div style={{ height: '100%', width: `${percent}%`, background: 'linear-gradient(90deg, #667eea, #764ba2)', borderRadius: 999, transition: 'width 0.6s ease' }} />
+        <ul className="nb-stats dash-stats" role="list">
+          <li><span className="nb-stat-n">{profile?.total_xp ?? 0}</span><span className="nb-stat-l">{t('Всего XP')}</span></li>
+          <li><span className="nb-stat-n">{profile?.streak ?? 0}</span><span className="nb-stat-l">{t('Дней подряд')}</span></li>
+          <li><span className="nb-stat-n">{percent}%</span><span className="nb-stat-l">{t('Пройдено тем')}</span></li>
+        </ul>
+        <div className="dash-level">
+          <div className="dash-level-row"><span>{t('До уровня {n}', { n: level + 1 })}</span><span>{xpInLevel} / 100 XP</span></div>
+          <div className="app-bar" role="progressbar" aria-valuenow={xpInLevel} aria-valuemin={0} aria-valuemax={100} aria-label={t('До уровня {n}', { n: level + 1 })}>
+            <span style={{ width: `${xpInLevel}%` }} />
           </div>
         </div>
 
         {nextTopic && (
-          <div style={{ marginBottom: 20 }}>
-            <h2 style={{ fontSize: '1rem', fontWeight: 700, marginBottom: 12, color: '#888' }}>{t('▶ СЛЕДУЮЩАЯ ТЕМА')}</h2>
-            <Link href={`/topics/${nextTopic.id}`} style={{ textDecoration: 'none' }}>
-              <div className="hover-lift animate-pulse-glow" style={{ background: 'linear-gradient(135deg, #1a1a2e, #16213e)', border: '1px solid #667eea', borderRadius: 16, padding: '20px 24px', cursor: 'pointer' }}>
-                <div style={{ fontWeight: 700, fontSize: 16, marginBottom: 6 }}>{topicName(nextTopic.id, nextTopic.name)}</div>
-                <div style={{ color: '#667eea', fontSize: 13, fontWeight: 600 }}>{t('Начать → +10 XP')}</div>
-              </div>
-            </Link>
-          </div>
+          <Link href={`/topics/${nextTopic.id}`} className="dash-next">
+            <span className="dash-next-k">{t('Следующая тема')}</span>
+            <span className="dash-next-t">{topicName(nextTopic.id, nextTopic.name)}</span>
+            <span className="nb-btn">{t('Начать · +10 XP')}</span>
+          </Link>
         )}
 
-        <h2 style={{ fontSize: '1rem', fontWeight: 700, marginBottom: 12, color: '#888' }}>{t('ТРЕНИРОВКА')}</h2>
-        <div className="stagger-children" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 12 }}>
-          {[
-            { href: '/formulas', icon: 'formula', title: t('Тренажёр формул'), text: t('Собери формулу из букв — физика и математика'), color: '#8b7cf6' },
-            { href: '/ent', icon: 'target', title: t('Подготовка к ЕНТ'), text: t('Задания уровня ЕНТ с разбором от ИИ'), color: '#34d399' },
-            { href: '/topics', icon: 'book', title: t('Все темы'), text: t('Теория, формулы и тесты по классам'), color: '#60a5fa' },
-            { href: '/progress', icon: 'chart', title: t('Прогресс'), text: t('Твой XP и успехи классов'), color: '#f59e0b' },
-          ].map(c => (
-            <Link key={c.href} href={c.href} style={{ textDecoration: 'none' }}>
-              <div className="hover-lift" style={{ background: '#1a1a2e', border: '1px solid #2a2a3e', borderRadius: 16, padding: '18px', display: 'flex', gap: 14, alignItems: 'flex-start', cursor: 'pointer', height: '100%', boxSizing: 'border-box' }}>
-                <div style={{ width: 40, height: 40, borderRadius: 12, background: `${c.color}22`, color: c.color, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                  <Icon name={c.icon} size={22} />
-                </div>
-                <div>
-                  <div style={{ fontWeight: 700, color: '#fff', marginBottom: 4 }}>{c.title}</div>
-                  <div style={{ color: '#888', fontSize: 13, lineHeight: 1.4 }}>{c.text}</div>
-                </div>
-              </div>
-            </Link>
-          ))}
-        </div>
+        <EntCoach />
 
+        {topics.length > 0 && (
+          <section className="dash-block" aria-labelledby="dash-class">
+            <div className="dash-class">
+              <div className="dash-class-row">
+                <b id="dash-class">{t('Прогресс класса')}</b>
+                <span>{doneCount} / {topics.length} {t('тем')}</span>
+              </div>
+              <div className="app-bar" role="progressbar" aria-valuenow={percent} aria-valuemin={0} aria-valuemax={100} aria-labelledby="dash-class">
+                <span style={{ width: `${percent}%` }} />
+              </div>
+            </div>
+          </section>
+        )}
+
+        <section className="dash-block" aria-labelledby="dash-tools">
+          <h2 id="dash-tools" className="app-h2">{t('Тренировка')}</h2>
+          <div className="dash-tools">
+            {tools.map(c => (
+              <Link key={c.href} href={c.href} className="dash-tool">
+                <span className="dash-tool-i"><Icon name={c.icon} size={20} /></span>
+                <span><b>{c.title}</b><small>{c.text}</small></span>
+              </Link>
+            ))}
+          </div>
+        </section>
       </div>
     </div>
   )

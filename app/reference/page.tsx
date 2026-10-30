@@ -73,13 +73,13 @@ export default function ReferencePage() {
   }
 
   return (
-    <div className="page animate-fade-in-up">
+    <div className="nb-root page animate-fade-in-up">
       <h1 className="page-title">{t('Справочник ЕНТ')}</h1>
       <p className="page-sub">{t('Формулы, таблицы, константы и важные материалы для подготовки к ЕНТ в одном месте.')}</p>
 
       {loggedIn === false && (
         <div className="card" style={{ marginBottom: 16 }}>
-          <Link href="/login" style={{ color: '#c4bbff' }}>{t('Войди в аккаунт')}</Link>{t(', чтобы открыть справочник.')}
+          <Link href="/login" style={{ color: 'var(--accent)' }}>{t('Войди в аккаунт')}</Link>{t(', чтобы открыть справочник.')}
         </div>
       )}
 
