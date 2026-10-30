@@ -7,7 +7,7 @@ import { useT } from '@/app/components/LanguageProvider'
 import LanguageSwitcher from '@/app/components/LanguageSwitcher'
 import PenSheet from '@/app/components/PenSheet'
 import HeroTry from '@/app/components/HeroTry'
-import { RatingSticker, StatsStrip } from '@/app/components/LandingLive'
+import { StatsStrip } from '@/app/components/LandingLive'
 
 // Короткие слова (с, и, к…) не остаются висеть в конце строки
 const glue = (text: string) => text.replace(/(^|\s)(\S{1,2})\s/g, '$1$2\u00a0')
@@ -44,7 +44,7 @@ export default function LobbyPage() {
   const steps = [
     { title: t('Выбери предмет и тему'), text: t('Физика или математика — все темы по спецификации НЦТ, от простого к сложному.') },
     { title: t('Решай и разбирай ошибки'), text: t('К каждой задаче — подробное решение, а ИИ объяснит непонятный шаг.') },
-    { title: t('Проверь себя на пробном ЕНТ'), text: t('Узнай прогноз балла, зарабатывай XP и поднимайся в рейтинге.') },
+    { title: t('Проверь себя на пробном ЕНТ'), text: t('Узнай прогноз балла и зарабатывай XP за каждую задачу.') },
   ]
 
   // Открытые страницы без входа — и для гостей, и для поисковиков
@@ -91,7 +91,7 @@ export default function LobbyPage() {
                 ? <><span>ҰБТ-ға</span><span><em>дайындық</em></span></>
                 : <><span>Подготовка</span><span><em>к&nbsp;ЕНТ</em></span></>}
             </h1>
-            <p className="nb-lead">{glue(t('Физика и математика: задачи ЕНТ с решением, пробный ЕНТ онлайн, рейтинг и XP.'))}</p>
+            <p className="nb-lead">{glue(t('Физика и математика: задачи ЕНТ с решением, пробный ЕНТ онлайн и прогноз балла.'))}</p>
             <div className="nb-cta">
               <Link href="/login" className="nb-btn">{t('Начать бесплатно')}<Arrow /></Link>
               <HeroTry pre={pre} />
@@ -100,7 +100,6 @@ export default function LobbyPage() {
           </div>
           <div className="nb-art">
             <PenSheet />
-            <RatingSticker />
           </div>
         </section>
 

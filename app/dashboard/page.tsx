@@ -126,7 +126,7 @@ export default function DashboardPage() {
             { href: '/formulas', icon: 'formula', title: t('Тренажёр формул'), text: t('Собери формулу из букв — физика и математика'), color: '#8b7cf6' },
             { href: '/ent', icon: 'target', title: t('Подготовка к ЕНТ'), text: t('Задания уровня ЕНТ с разбором от ИИ'), color: '#34d399' },
             { href: '/topics', icon: 'book', title: t('Все темы'), text: t('Теория, формулы и тесты по классам'), color: '#60a5fa' },
-            { href: '/progress', icon: 'chart', title: t('Рейтинг'), text: t('Сравни свой XP с одноклассниками'), color: '#f59e0b' },
+            { href: '/progress', icon: 'chart', title: t('Прогресс'), text: t('Твой XP и успехи классов'), color: '#f59e0b' },
           ].map(c => (
             <Link key={c.href} href={c.href} style={{ textDecoration: 'none' }}>
               <div className="hover-lift" style={{ background: '#1a1a2e', border: '1px solid #2a2a3e', borderRadius: 16, padding: '18px', display: 'flex', gap: 14, alignItems: 'flex-start', cursor: 'pointer', height: '100%', boxSizing: 'border-box' }}>

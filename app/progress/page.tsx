@@ -9,20 +9,18 @@ type ClassStat = { name: string; total_topics: number; completed_topics: number;
 
 export default function ProgressPage() {
   const { t } = useT()
-  const [profiles, setProfiles] = useState<Profile[]>([])
   const [currentUser, setCurrentUser] = useState<Profile | null>(null)
   const [classStats, setClassStats] = useState<ClassStat[]>([])
   const [loading, setLoading] = useState(true)
-  const [tab, setTab] = useState<'leaderboard' | 'classes'>('leaderboard')
 
   useEffect(() => { loadData() }, [])
 
   async function loadData() {
     const { data: { user } } = await supabase.auth.getUser()
-    const { data: profilesData } = await supabase.from('profiles').select('id, full_name, grade, total_xp, streak, role').eq('role', 'student').order('total_xp', { ascending: false })
-    if (profilesData) setProfiles(profilesData)
-    if (user && profilesData) {
-      const me = profilesData.find(p => p.id === user.id)
+    // Только для средних цифр по классам — без имён учеников
+    const { data: profilesData } = await supabase.from('profiles').select('id, grade, total_xp, role').eq('role', 'student')
+    if (user) {
+      const { data: me } = await supabase.from('profiles').select('id, full_name, grade, total_xp, streak').eq('id', user.id).maybeSingle()
       if (me) setCurrentUser(me)
     }
     const { data: classes } = await supabase.from('classes').select('id, name, is_locked')
@@ -53,8 +51,6 @@ export default function ProgressPage() {
     setLoading(false)
   }
 
-  const maxXp = profiles[0]?.total_xp || 1
-
   if (loading) return (
     <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
       <div style={{ color: '#fff', fontSize: 18 }}>{t('Загрузка...')}</div>
@@ -67,11 +63,11 @@ export default function ProgressPage() {
         <div style={{ maxWidth: 800, margin: '0 auto' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 16 }}>
             <div style={{ width: 48, height: 48, borderRadius: 14, background: 'linear-gradient(135deg, #f59e0b, #d97706)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24 }}>
-              🏆
+              📈
             </div>
             <div>
-              <h1 style={{ fontSize: '1.9rem', fontWeight: 800, margin: 0 }}>{t('Рейтинг')}</h1>
-              <p style={{ color: '#888', margin: 0, fontSize: 14 }}>{t('Кто набрал больше всего XP')}</p>
+              <h1 style={{ fontSize: '1.9rem', fontWeight: 800, margin: 0 }}>{t('Прогресс')}</h1>
+              <p style={{ color: '#888', margin: 0, fontSize: 14 }}>{t('Твой XP и успехи классов')}</p>
             </div>
           </div>
 
@@ -92,59 +88,15 @@ export default function ProgressPage() {
                     <div style={{ fontSize: '1.6rem', fontWeight: 800 }}>🔥{currentUser.streak}</div>
                     <div style={{ fontSize: 11, opacity: 0.8 }}>{t('дней')}</div>
                   </div>
-                  <div style={{ textAlign: 'center' }}>
-                    <div style={{ fontSize: '1.6rem', fontWeight: 800 }}>#{profiles.findIndex(p => p.id === currentUser.id) + 1}</div>
-                    <div style={{ fontSize: 11, opacity: 0.8 }}>{t('место')}</div>
-                  </div>
                 </div>
               </div>
             </div>
           )}
-
-          <div style={{ display: 'flex', gap: 8 }}>
-            <button onClick={() => setTab('leaderboard')} style={{ padding: '8px 18px', borderRadius: 999, border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 600, background: tab === 'leaderboard' ? '#667eea' : '#1a1a2e', color: '#fff', transition: 'all 0.2s' }}>
-              {t('👤 Ученики')}
-            </button>
-            <button onClick={() => setTab('classes')} style={{ padding: '8px 18px', borderRadius: 999, border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 600, background: tab === 'classes' ? '#667eea' : '#1a1a2e', color: '#fff', transition: 'all 0.2s' }}>
-              {t('📚 Классы')}
-            </button>
-          </div>
         </div>
       </div>
 
       <div style={{ maxWidth: 800, margin: '0 auto', padding: '1.5rem 2rem' }}>
-        {tab === 'leaderboard' && (
-          <div style={{ background: '#1a1a2e', borderRadius: 20, border: '1px solid #2a2a3e', overflow: 'hidden' }}>
-            {profiles.length === 0 && (
-              <div style={{ padding: 40, textAlign: 'center', color: '#888' }}>{t('Пока нет данных!')}</div>
-            )}
-            {profiles.map((profile, index) => {
-              const isMe = profile.id === currentUser?.id
-              const medal = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : `${index + 1}.`
-              const barWidth = maxXp > 0 ? (profile.total_xp / maxXp) * 100 : 0
-              return (
-                <div key={profile.id} style={{ padding: '16px 24px', borderBottom: '1px solid #2a2a3e', background: isMe ? 'rgba(102,126,234,0.1)' : 'transparent', borderLeft: isMe ? '3px solid #667eea' : '3px solid transparent' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                      <span style={{ fontSize: 18, minWidth: 32 }}>{medal}</span>
-                      <div>
-                        <div style={{ fontWeight: 600 }}>{profile.full_name || t('Без имени')}</div>
-                        <div style={{ color: '#888', fontSize: 12 }}>{gradeLabel(profile.grade, t)} {profile.streak > 0 && t('🔥 {streak} дней', { streak: profile.streak })}</div>
-                      </div>
-                    </div>
-                    <div style={{ fontWeight: 800, color: '#a78bfa', fontSize: 18 }}>{profile.total_xp} XP</div>
-                  </div>
-                  <div style={{ background: '#0f0f1a', borderRadius: 999, height: 6, overflow: 'hidden' }}>
-                    <div style={{ height: '100%', width: `${barWidth}%`, background: isMe ? 'linear-gradient(90deg, #667eea, #764ba2)' : 'linear-gradient(90deg, #2a2a3e, #3a3a5e)', borderRadius: 999, transition: 'width 0.5s ease' }} />
-                  </div>
-                </div>
-              )
-            })}
-          </div>
-        )}
-
-        {tab === 'classes' && (
-          <div style={{ display: 'grid', gap: 12 }}>
+        <div style={{ display: 'grid', gap: 12 }}>
             {classStats.map((cls) => {
               const percent = cls.total_topics > 0 ? Math.round((cls.completed_topics / cls.total_topics) * 100) : 0
               const barColor = percent >= 75 ? 'linear-gradient(90deg, #10b981, #059669)' : percent >= 40 ? 'linear-gradient(90deg, #f59e0b, #d97706)' : 'linear-gradient(90deg, #667eea, #764ba2)'
@@ -178,8 +130,7 @@ export default function ProgressPage() {
                 </div>
               )
             })}
-          </div>
-        )}
+        </div>
       </div>
     </div>
   )

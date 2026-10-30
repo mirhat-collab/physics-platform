@@ -2,20 +2,18 @@
 import { useEffect, useState } from 'react'
 import { useT } from '@/app/components/LanguageProvider'
 
-// Живые блоки главной: мини-рейтинг (стикер у листа с решением) и строка
-// с честными цифрами. Данные — /api/landing, один запрос на оба блока.
-// Пока данных нет или база недоступна, блоки просто не показываются.
+// Строка с честными цифрами на главной (данные — /api/landing).
+// Пока данных нет или база недоступна, блок просто не показывается.
 
 type LandingData = {
-  top: { name: string; grade: string; xp: number }[]
   stats: { students: number; mockExams: number; answers: number } | null
 }
 
 let request: Promise<LandingData> | null = null
 function loadLanding(): Promise<LandingData> {
   request ??= fetch('/api/landing')
-    .then(r => (r.ok ? r.json() : { top: [], stats: null }))
-    .catch(() => ({ top: [], stats: null }))
+    .then(r => (r.ok ? r.json() : { stats: null }))
+    .catch(() => ({ stats: null }))
   return request
 }
 
@@ -27,26 +25,6 @@ function useLanding() {
     return () => { alive = false }
   }, [])
   return data
-}
-
-export function RatingSticker() {
-  const { t } = useT()
-  const data = useLanding()
-  if (!data?.top.length) return null
-  return (
-    <aside className="rate" aria-label={t('Рейтинг учеников')}>
-      <p className="rate-title"><span>{t('Рейтинг')}</span><span>XP</span></p>
-      <ol className="rate-list" role="list">
-        {data.top.map((p, i) => (
-          <li key={i}>
-            <span className={`rate-medal rate-m${i + 1}`} aria-label={t('{n} место', { n: i + 1 })}>{i + 1}</span>
-            <span className="rate-name">{p.name}{p.grade && <small>{t(p.grade)}</small>}</span>
-            <span className="rate-xp">{p.xp}</span>
-          </li>
-        ))}
-      </ol>
-    </aside>
-  )
 }
 
 // Русские окончания после числа: 1 ученик, 2 ученика, 5 учеников
