@@ -387,6 +387,7 @@ body:has(.app-tabbar) .app-main { padding-bottom: calc(var(--tabbar-h) + env(saf
   *, *::before, *::after {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
+    animation-delay: 0s !important;
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
   }
@@ -406,3 +407,300 @@ body:has(.app-tabbar) .app-main { padding-bottom: calc(var(--tabbar-h) + env(saf
 .print-sheet { background: #fff; color: #111; border-radius: 12px; padding: 28px 26px; }
 .print-sheet .katex { color: #111; }
 @media print { .print-sheet { border-radius: 0; padding: 0; } }
+
+/* =====================================================================
+   Дизайн-система «Тетрадь»
+   Светлая тема — бумага в клетку, тёмная — школьная доска.
+   Новые страницы берут цвета только из этих переменных (--nb-*)
+   ===================================================================== */
+:root {
+  --nb-paper: #f6f4ee;
+  --nb-paper-2: #efece4;
+  --nb-grid: rgba(43, 76, 160, 0.075);
+  --nb-margin: rgba(214, 69, 65, 0.5);
+  --nb-text: #191b22;
+  --nb-text-2: #464a56;
+  --nb-muted: #5c606c;
+  --nb-line: rgba(25, 27, 34, 0.12);
+  --nb-ink: #1f3fae;
+  --nb-ink-hover: #18338f;
+  --nb-on-ink: #ffffff;
+  --nb-marker: #f29a2e;
+  --nb-marker-soft: rgba(242, 154, 46, 0.3);
+  --nb-marker-text: #b45f06;
+  --nb-pencil: rgba(25, 27, 34, 0.34);
+  --nb-shadow: 0 1px 0 rgba(25, 27, 34, 0.04), 0 10px 30px -12px rgba(31, 63, 174, 0.35);
+  --nb-radius: 12px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not(.light-theme) {
+    --nb-paper: #15181b;
+    --nb-paper-2: #1b1f23;
+    --nb-grid: rgba(237, 235, 227, 0.045);
+    --nb-margin: rgba(240, 120, 110, 0.42);
+    --nb-text: #edebe3;
+    --nb-text-2: #bdbbb2;
+    --nb-muted: #93918a;
+    --nb-line: rgba(237, 235, 227, 0.12);
+    --nb-ink: #9db4ff;
+    --nb-ink-hover: #b9cbff;
+    --nb-on-ink: #0d1430;
+    --nb-marker: #ffb45c;
+    --nb-marker-soft: rgba(255, 180, 92, 0.22);
+    --nb-marker-text: #ffb45c;
+    --nb-pencil: rgba(237, 235, 227, 0.36);
+    --nb-shadow: 0 1px 0 rgba(0, 0, 0, 0.2), 0 12px 32px -14px rgba(157, 180, 255, 0.35);
+  }
+  /* Тёмно-синий логотип на доске — чуть светлее */
+  :root:not(.light-theme) .nb-root img, :root:not(.light-theme) .nb-footer img { filter: brightness(1.7) saturate(1.1); }
+}
+
+/* Страницы в стиле «Тетрадь» рисуют светлую тему сами — без переворота цветов */
+html.light-theme:has(.nb-root),
+html.light-theme:has(.nb-root) img { filter: none; }
+body:has(.nb-root) { background: var(--nb-paper) !important; }
+body:has(.nb-root) .aurora-blob { display: none; }
+
+/* ===== Главная страница ===== */
+.nb-root {
+  --nb-gutter: 20px;
+  --nb-start: 40px;
+  position: relative;
+  min-height: 100vh;
+  color: var(--nb-text);
+  background-color: var(--nb-paper);
+  background-image:
+    linear-gradient(var(--nb-grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--nb-grid) 1px, transparent 1px);
+  background-size: 24px 24px;
+  background-position: -1px -1px;
+  font-family: var(--font-body), system-ui, sans-serif;
+  overflow-x: clip;
+}
+/* Красная линия полей, как в школьной тетради */
+.nb-root::before {
+  content: "";
+  position: absolute; top: 0; bottom: 0; left: calc(var(--nb-start) - 16px);
+  width: 1px; background: var(--nb-margin);
+  pointer-events: none;
+}
+.nb-wrap {
+  position: relative;
+  max-width: 1240px; margin: 0 auto;
+  padding: 0 var(--nb-gutter) 0 var(--nb-start);
+  box-sizing: border-box;
+}
+.nb-root a { color: inherit; text-decoration: none; }
+:is(.nb-root, .nb-footer) :focus-visible { outline: 2px solid var(--nb-ink); outline-offset: 3px; }
+
+.nb-top {
+  position: relative; z-index: 3;
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  height: 72px;
+}
+.nb-brand {
+  display: inline-flex; align-items: center; gap: 10px;
+  min-height: 44px;
+  font-family: var(--font-display), Georgia, serif; font-weight: 600; font-size: 19px; letter-spacing: -0.01em;
+}
+.nb-brand img { width: 30px; height: 30px; object-fit: contain; }
+.nb-top-actions { display: flex; align-items: center; gap: 8px; }
+.nb-top-login {
+  display: inline-flex; align-items: center; min-height: 44px; padding: 0 12px;
+  font-size: 15px; font-weight: 600; color: var(--nb-ink) !important;
+}
+.nb-top-login:hover { text-decoration: underline; text-underline-offset: 4px; }
+
+/* Первый экран */
+.nb-hero {
+  position: relative;
+  min-height: calc(100svh - 72px);
+  display: flex; flex-direction: column;
+}
+.nb-hero-text {
+  position: relative; z-index: 2;
+  padding: 28px 0 0;
+  max-width: 640px;
+}
+/* Мягкое «чистое» пятно под текстом: клетка не мешает читать */
+.nb-hero-text::before {
+  content: ""; position: absolute; z-index: -1;
+  inset: -40px -60px -40px -40px;
+  background: radial-gradient(closest-side, var(--nb-paper) 55%, transparent);
+  pointer-events: none;
+}
+.nb-eyebrow {
+  display: inline-flex; align-items: center; gap: 10px;
+  margin: 0 0 20px;
+  font-size: 12px; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase;
+  color: var(--nb-text-2);
+}
+.nb-eyebrow::before { content: ""; width: 22px; height: 2px; border-radius: 2px; background: var(--nb-marker); }
+.nb-h1 {
+  margin: 0;
+  font-family: var(--font-display), Georgia, serif;
+  font-weight: 500; font-size: clamp(2.75rem, 6.2vw + 1rem, 6rem);
+  line-height: 1.02; letter-spacing: -0.03em;
+  text-wrap: balance;
+}
+.nb-underline { display: block; width: min(78%, 420px); height: 18px; margin: 6px 0 0 -4px; color: var(--nb-marker); overflow: visible; }
+.nb-underline path {
+  stroke-dasharray: 1; stroke-dashoffset: 1;
+  animation: nbDraw 1.1s 0.5s cubic-bezier(0.65, 0, 0.35, 1) forwards;
+}
+.nb-lead {
+  margin: 22px 0 0; max-width: 34ch;
+  font-size: 17px; line-height: 1.6; color: var(--nb-text-2);
+}
+.nb-cta { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 20px; margin-top: 32px; }
+.nb-btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 10px;
+  min-height: 54px; padding: 0 26px;
+  border-radius: var(--nb-radius);
+  background: var(--nb-ink); color: var(--nb-on-ink) !important;
+  font-size: 16px; font-weight: 650; letter-spacing: -0.005em;
+  box-shadow: var(--nb-shadow);
+}
+.nb-btn:hover { background: var(--nb-ink-hover); transform: translateY(-1px); }
+.nb-btn svg { transition: transform 0.2s ease; }
+.nb-btn:hover svg { transform: translateX(3px); }
+.nb-link {
+  display: inline-flex; align-items: center; min-height: 44px;
+  font-size: 15px; font-weight: 600; color: var(--nb-text) !important;
+  background: linear-gradient(var(--nb-marker-soft), var(--nb-marker-soft)) 0 88% / 100% 0.45em no-repeat;
+}
+.nb-link:hover { background-size: 100% 0.9em; }
+.nb-note { margin: 18px 0 0; font-size: 13px; color: var(--nb-muted); }
+
+/* Слой с формулами «от руки» */
+.nb-hero-art { position: relative; flex: 1; min-height: 300px; margin-top: 12px; }
+
+/* Разделы */
+.nb-section { position: relative; padding: 72px 0 8px; }
+.nb-h2 {
+  margin: 0 0 28px;
+  font-family: var(--font-display), Georgia, serif;
+  font-weight: 500; font-size: clamp(1.9rem, 2.4vw + 1.2rem, 3rem);
+  line-height: 1.1; letter-spacing: -0.02em; text-wrap: balance;
+}
+.nb-features { list-style: none; margin: 0; padding: 0; display: grid; gap: 0; }
+.nb-feature {
+  display: grid; grid-template-columns: 44px 1fr; gap: 4px 14px;
+  padding: 22px 0; border-top: 1px solid var(--nb-line);
+}
+.nb-feature-num {
+  grid-row: span 2;
+  font-family: var(--font-hand), cursive; font-size: 40px; line-height: 0.9; color: var(--nb-marker-text);
+}
+.nb-feature h3 { margin: 0; font-size: 19px; font-weight: 650; letter-spacing: -0.01em; }
+.nb-feature p { margin: 0; font-size: 15px; line-height: 1.6; color: var(--nb-text-2); }
+
+/* Оглавление открытых страниц */
+.nb-toc { list-style: none; margin: 0; padding: 0; max-width: 760px; }
+.nb-toc a {
+  display: flex; align-items: baseline; gap: 10px;
+  min-height: 56px; padding: 16px 0; box-sizing: border-box;
+  font-size: 17px; font-weight: 550;
+}
+.nb-toc a::after {
+  content: "→"; order: 3; color: var(--nb-ink); font-weight: 600;
+  transition: transform 0.2s ease;
+}
+.nb-toc-dots { order: 2; flex: 1; border-bottom: 2px dotted var(--nb-pencil); transform: translateY(-4px); }
+.nb-toc a:hover { color: var(--nb-ink); }
+.nb-toc a:hover::after { transform: translateX(4px); }
+
+.nb-final { padding: 88px 0 96px; }
+.nb-final-hand {
+  display: inline-block; margin: 0 0 8px;
+  font-family: var(--font-hand), cursive; font-size: clamp(2.6rem, 4vw + 1.4rem, 4rem);
+  color: var(--nb-ink); transform: rotate(-2deg); transform-origin: left center;
+}
+.nb-final p:not(.nb-final-hand) { margin: 0 0 28px; font-size: 18px; color: var(--nb-text-2); }
+
+/* Подвал главной */
+.nb-footer { background: var(--nb-paper-2); border-top: 1px solid var(--nb-line); color: var(--nb-text-2); }
+.nb-footer-in {
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px 24px;
+  max-width: 1240px; margin: 0 auto; padding: 28px 20px 28px 40px; box-sizing: border-box;
+  font-size: 14px;
+}
+.nb-footer a { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; color: var(--nb-text); text-decoration: none; }
+.nb-footer a:hover { color: var(--nb-ink); }
+.nb-footer-links { display: flex; flex-wrap: wrap; gap: 0 22px; }
+.nb-footer small { width: 100%; color: var(--nb-muted); font-size: 12px; }
+
+@keyframes nbDraw { to { stroke-dashoffset: 0; } }
+
+@media (min-width: 900px) {
+  .nb-root { --nb-gutter: 48px; --nb-start: 120px; background-size: 28px 28px; }
+  .nb-hero { min-height: min(calc(100vh - 72px), 860px); display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); align-items: center; }
+  .nb-hero-text { padding: 0 0 48px; }
+  .nb-lead { font-size: 19px; }
+  .nb-hero-art { position: absolute; inset: 0 0 0 46%; margin: 0; min-height: 0; }
+  .nb-features { grid-template-columns: 1fr 1fr; column-gap: 56px; }
+  .nb-feature { padding: 28px 0; }
+  .nb-section { padding-top: 104px; }
+  .nb-footer-in { padding-left: 120px; padding-right: 48px; }
+}
+
+/* ===== Формулы «от руки» ===== */
+.hw-layer { position: absolute; inset: 0; pointer-events: none; user-select: none; }
+.hw-item {
+  position: absolute;
+  color: var(--nb-ink);
+  font-family: var(--font-hand), var(--font-display), cursive;
+  font-weight: 500; line-height: 1;
+  white-space: nowrap;
+  transform: rotate(var(--rot, 0deg));
+  transform-origin: left center;
+  transition: opacity 0.9s ease, transform 0.9s ease, filter 0.9s ease;
+}
+.hw-item.hw-out { opacity: 0; filter: blur(1.5px); transform: rotate(var(--rot, 0deg)) translateY(-6px); }
+.hw-item.hw-marker { color: var(--nb-marker); }
+.hw-row { display: inline-flex; align-items: center; }
+.hw-ink {
+  display: inline-block;
+  -webkit-mask-image: linear-gradient(90deg, #000 42%, transparent 58%);
+          mask-image: linear-gradient(90deg, #000 42%, transparent 58%);
+  -webkit-mask-size: 260% 100%; mask-size: 260% 100%;
+  -webkit-mask-repeat: no-repeat; mask-repeat: no-repeat;
+  -webkit-mask-position: 100% 0; mask-position: 100% 0;
+  animation: hwWrite var(--t, 1s) var(--d, 0s) cubic-bezier(0.45, 0.05, 0.55, 0.95) forwards;
+}
+.hw-sup { font-size: 0.62em; position: relative; top: -0.55em; }
+.hw-sub { font-size: 0.62em; position: relative; top: 0.4em; }
+.hw-frac { display: inline-flex; flex-direction: column; align-items: center; gap: 0.12em; margin: 0 0.15em; font-size: 0.82em; }
+.hw-bar {
+  align-self: stretch; height: 2px; margin: 0 -0.1em; border-radius: 2px; background: currentColor;
+  transform: scaleX(0) rotate(-0.6deg); transform-origin: left center;
+  animation: hwBar var(--t, 0.35s) var(--d, 0s) cubic-bezier(0.65, 0, 0.35, 1) forwards;
+}
+.hw-path {
+  fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round;
+  stroke-dasharray: 1; stroke-dashoffset: 1;
+  animation: nbDraw var(--t, 1s) var(--d, 0s) cubic-bezier(0.65, 0, 0.35, 1) forwards;
+}
+.hw-pencil { stroke: var(--nb-pencil); stroke-width: 1.6; }
+.hw-marker-stroke { stroke: var(--nb-marker); }
+.hw-label {
+  fill: currentColor; font-family: var(--font-hand), var(--font-display), cursive; font-size: 22px;
+  opacity: 0; animation: hwFade 0.5s var(--d, 0s) ease forwards;
+}
+.hw-toggle {
+  position: absolute; right: 0; bottom: 8px; z-index: 2; pointer-events: auto;
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 44px; height: 44px; border-radius: 50%;
+  border: 1px solid var(--nb-line); background: color-mix(in srgb, var(--nb-paper) 85%, transparent);
+  color: var(--nb-text-2); cursor: pointer;
+}
+.hw-toggle:hover { color: var(--nb-ink); border-color: var(--nb-ink); }
+.hw-graph { display: block; overflow: visible; width: auto; height: 3.6em; }
+.hw-static .hw-ink { -webkit-mask: none; mask: none; animation: none; }
+.hw-static .hw-path { stroke-dashoffset: 0; animation: none; }
+.hw-static .hw-label { opacity: 1; animation: none; }
+.hw-static .hw-bar { transform: none; animation: none; }
+@keyframes hwWrite { to { -webkit-mask-position: 0 0; mask-position: 0 0; } }
+@keyframes hwFade { to { opacity: 1; } }
+@keyframes hwBar { to { transform: scaleX(1) rotate(-0.6deg); } }

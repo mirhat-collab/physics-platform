@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Manrope } from "next/font/google";
+import { Caveat, Golos_Text, Literata } from "next/font/google";
 import "./globals.css";
 import AppNav from "./components/AppNav";
 import LandingFooter from "./components/LandingFooter";
@@ -12,10 +12,25 @@ import { Analytics } from "@vercel/analytics/next";
 import { getLocale } from "@/lib/i18n/server";
 import { SITE_URL } from "@/lib/seo";
 
-const manrope = Manrope({
+// Шрифты дизайна «Тетрадь»: текст, заголовки и «рукописные» формулы.
+// subsets — только то, что грузится заранее; казахские буквы (cyrillic-ext)
+// подгружаются автоматически, когда встречаются на странице
+const golos = Golos_Text({
   subsets: ["latin", "cyrillic"],
-  weight: ["400", "500", "600", "700", "800"],
   variable: "--font-body",
+  display: "swap",
+});
+const literata = Literata({
+  subsets: ["latin", "cyrillic"],
+  style: ["normal", "italic"],
+  variable: "--font-display",
+  display: "swap",
+});
+const caveat = Caveat({
+  subsets: ["latin", "cyrillic"],
+  variable: "--font-hand",
+  display: "swap",
+  preload: false,
 });
 
 export const metadata: Metadata = {
@@ -73,7 +88,7 @@ export default async function RootLayout({
         <link rel="icon" href="/icon-192.png" type="image/png" />
         <link rel="apple-touch-icon" href="/icon-192.png" />
       </head>
-      <body className={manrope.variable} style={{ margin: 0, fontFamily: 'var(--font-body), sans-serif', background: '#0f0f1a' }}>
+      <body className={`${golos.variable} ${literata.variable} ${caveat.variable}`}style={{ margin: 0, fontFamily: 'var(--font-body), sans-serif', background: '#0f0f1a' }}>
         <div aria-hidden style={{ position: 'fixed', inset: 0, zIndex: -1, overflow: 'hidden', background: '#0f0f1a' }}>
           <div className="aurora-blob aurora-blob-1" />
           <div className="aurora-blob aurora-blob-2" />
