@@ -83,10 +83,10 @@ export default function PrintPage() {
     setLoading(false)
   }
 
-  if (allowed === null) return <div className="page" style={{ color: 'var(--muted)' }}>{t('Загрузка…')}</div>
+  if (allowed === null) return <div className="nb-root page" style={{ color: 'var(--muted)' }}>{t('Загрузка…')}</div>
   if (!allowed) {
     return (
-      <div className="page">
+      <div className="nb-root page">
         <h1 className="page-title">{t('Варианты для печати')}</h1>
         <div className="card">{t('Эта страница для учителей. Войди под аккаунтом учителя.')}</div>
       </div>
@@ -96,7 +96,7 @@ export default function PrintPage() {
   const heading = title.trim() || t('Проверочная работа · {subject}', { subject: t(ENT_SUBJECTS[subject].label) })
 
   return (
-    <div className="page animate-fade-in-up print-root">
+    <div className="nb-root page animate-fade-in-up print-root">
       <div className="no-print">
         <Link href="/teacher" style={{ color: 'var(--muted)', fontSize: 14, textDecoration: 'none' }}>← {t('Панель учителя')}</Link>
         <h1 className="page-title" style={{ marginTop: 8 }}>{t('Варианты для печати')}</h1>

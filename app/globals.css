@@ -16,6 +16,8 @@
   --accent: #8b7cf6;
   --accent-soft: rgba(139,124,246,0.14);
   --good: #34d399;
+  --warn: #f59e0b;
+  --on-accent: #ffffff;
   --bad: #f87171;
   --sidebar-w: 248px;
   --tabbar-h: 64px;
@@ -428,6 +430,7 @@ body:has(.app-tabbar) .app-main { padding-bottom: calc(var(--tabbar-h) + env(saf
   --nb-accent: #c0392b;
   --nb-accent-soft: rgba(192, 57, 43, 0.12);
   --nb-good: #1f7a4d;
+  --nb-warn: #9a6400;
   --nb-pencil: rgba(22, 22, 26, 0.34);
   --nb-sheet-shadow:
     0 1px 1px rgba(40, 30, 15, 0.04),
@@ -456,6 +459,7 @@ body:has(.app-tabbar) .app-main { padding-bottom: calc(var(--tabbar-h) + env(saf
     --nb-accent: #f08a7e;
     --nb-accent-soft: rgba(240, 138, 126, 0.16);
     --nb-good: #6fcf9c;
+    --nb-warn: #e8b54d;
     --nb-pencil: rgba(238, 236, 230, 0.34);
     --nb-sheet-shadow:
       0 1px 0 rgba(255, 255, 255, 0.04) inset,
@@ -483,6 +487,7 @@ body:has(.app-tabbar) .app-main { padding-bottom: calc(var(--tabbar-h) + env(saf
     --nb-accent: #f08a7e;
     --nb-accent-soft: rgba(240, 138, 126, 0.16);
     --nb-good: #6fcf9c;
+    --nb-warn: #e8b54d;
     --nb-pencil: rgba(238, 236, 230, 0.34);
     --nb-sheet-shadow:
       0 1px 0 rgba(255, 255, 255, 0.04) inset,
@@ -496,7 +501,7 @@ body:has(.app-tabbar) .app-main { padding-bottom: calc(var(--tabbar-h) + env(saf
 html.light-theme:has(.nb-root),
 html.light-theme:has(.nb-root) img { filter: none; }
 body:has(.nb-root) { background: var(--nb-paper) !important; }
-body:has(.nb-root) .aurora-blob { display: none; }
+body:has(.nb-root) .aurora-blob, body:has(.nb-root) .app-backdrop { display: none; }
 
 /* ===== Главная страница ===== */
 .nb-root {
@@ -893,6 +898,8 @@ body:has(.nb-root) .aurora-blob { display: none; }
   --accent-soft: color-mix(in srgb, var(--nb-ink) 12%, transparent);
   --good: var(--nb-good);
   --bad: var(--nb-accent);
+  --warn: var(--nb-warn);
+  --on-accent: var(--nb-on-ink);
   --shadow-sm: 0 1px 2px rgba(40, 30, 15, 0.08);
   --shadow-md: var(--nb-sheet-shadow);
   --shadow-lg: var(--nb-sheet-shadow);
@@ -1089,3 +1096,21 @@ body:has(.nb-root) .lang-switch button[aria-pressed="true"] { background: var(--
   .ls-sheet { padding: 12px 40px; }
   .ls-card { padding: 30px 34px; }
 }
+
+/* Печать вариантов: без фактуры и фона бумаги на экране */
+@media print {
+  .nb-root::after { display: none !important; }
+  .nb-root { background: #fff !important; min-height: 0; }
+}
+
+/* Открытые страницы /podgotovka: кнопка в шапке поменьше */
+.pg-cta { min-height: 44px; padding: 0 18px; font-size: 14px; white-space: nowrap; }
+@media (max-width: 420px) {
+  .pg-cta { padding: 0 14px; font-size: 13px; }
+  .nb-root .nb-top .nb-brand { font-size: 17px; gap: 8px; }
+  .nb-root .nb-top .nb-top-login { padding: 0 6px; }
+}
+
+/* Старые страницы с .page и анимацией появления: transform ограничивает
+   фактуру колонкой — там её не рисуем, чтобы колонка не темнела */
+.nb-root.page::after { display: none; }
