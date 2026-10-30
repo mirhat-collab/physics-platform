@@ -2,10 +2,10 @@
 import { useEffect, useState } from 'react'
 import { useT } from './LanguageProvider'
 
-// Переводы ДЗ, турниров и справочника ЕНТ (название, описание, приз) на язык интерфейса
+// Переводы ДЗ и справочника ЕНТ (название, описание, приз) на язык интерфейса
 const cache = new Map<string, Record<string, Record<string, string>>>()
 
-export function useTranslatedItems(kind: 'homework' | 'tournament' | 'material', ids: number[]): (id: number, field: string, fallback: string | undefined) => string | undefined {
+export function useTranslatedItems(kind: 'homework' | 'material', ids: number[]): (id: number, field: string, fallback: string | undefined) => string | undefined {
   const { locale } = useT()
   const key = `${locale}:${kind}`
   const [, setVersion] = useState(0)

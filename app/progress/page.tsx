@@ -18,7 +18,8 @@ export default function ProgressPage() {
   async function loadData() {
     const { data: { user } } = await supabase.auth.getUser()
     // Только для средних цифр по классам — без имён учеников
-    const { data: profilesData } = await supabase.from('profiles').select('id, grade, total_xp, role').eq('role', 'student')
+    const { data: statsRows } = await supabase.rpc('student_class_stats')
+    const profilesData = (statsRows || []) as { id: string; grade: string; total_xp: number }[]
     if (user) {
       const { data: me } = await supabase.from('profiles').select('id, full_name, grade, total_xp, streak').eq('id', user.id).maybeSingle()
       if (me) setCurrentUser(me)
