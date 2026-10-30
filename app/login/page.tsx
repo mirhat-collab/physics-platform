@@ -1,5 +1,5 @@
 'use client'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { getActualGrade } from '@/lib/grade-match'
 import { supabase } from '@/lib/supabase'
 import { kzDate, nextStreak } from '@/lib/streak'
@@ -8,6 +8,7 @@ import Link from 'next/link'
 import { useT } from '@/app/components/LanguageProvider'
 import LanguageSwitcher from '@/app/components/LanguageSwitcher'
 import { PENDING_JOIN, joinPath } from '@/lib/groups'
+import { OAUTH_PROVIDERS, PASSWORD_RULES, authErrorText, passwordOk, type OAuthProvider } from '@/lib/auth-ui'
 
 const GRADES = ['7', '8', '9', '10', '11']
 
@@ -36,6 +37,26 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false)
   const [forgot, setForgot] = useState(false) // «Забыли пароль?»: отправляем ссылку на почту
   const [sent, setSent] = useState(false)
+  const [showPw, setShowPw] = useState(false)
+  const [existing, setExisting] = useState(false) // почта уже зарегистрирована — предложим войти
+
+  // Ошибка, с которой вернул вход через Google / Apple
+  useEffect(() => {
+    const e = new URLSearchParams(window.location.search).get('oauth_error')
+    if (e) setError(t(authErrorText(e))) // eslint-disable-line react-hooks/set-state-in-effect
+  }, [t])
+
+  function fail(message: string) {
+    setExisting(/already (been )?registered/i.test(message))
+    setError(t(authErrorText(message)))
+    setLoading(false)
+  }
+
+  async function oauth(provider: OAuthProvider) {
+    setError('')
+    const { error } = await supabase.auth.signInWithOAuth({ provider, options: { redirectTo: `${window.location.origin}/auth/callback` } })
+    if (error) fail(error.message)
+  }
 
   // Код учителя, сохранённый при регистрации с подтверждением почты
   async function applyPendingTeacherCode() {
@@ -59,17 +80,19 @@ export default function LoginPage() {
     setLoading(true)
     const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), { redirectTo: `${window.location.origin}/reset-password` })
     setLoading(false)
-    if (error) { setError(error.message); return }
+    if (error) { fail(error.message); return }
     setSent(true)
   }
 
   async function handleSubmit() {
     setLoading(true)
     setError('')
+    setExisting(false)
 
     if (isSignUp) {
       if (!fullName) { setError(t('Введи своё имя!')); setLoading(false); return }
       if (role === 'student' && !grade) { setError(t('Выбери класс!')); setLoading(false); return }
+      if (!passwordOk(password)) { setError(t('Пароль слишком простой: нужны маленькая и большая латинские буквы, цифра и спецсимвол.')); setLoading(false); return }
       if (role === 'teacher') {
         const res = await fetch('/api/check-teacher-code', {
           method: 'POST',
@@ -87,7 +110,7 @@ export default function LoginPage() {
         email, password,
         options: { data: { full_name: fullName, grade: profileGrade, role: role === 'parent' ? 'parent' : 'student' } },
       })
-      if (error) { setError(error.message); setLoading(false); return }
+      if (error) { fail(error.message); return }
 
       if (data.user && data.session) {
         await supabase.from('profiles').update({
@@ -124,8 +147,8 @@ export default function LoginPage() {
       router.push(afterLogin(role === 'teacher' ? '/teacher' : role === 'parent' ? '/parent' : '/dashboard'))
 
     } else {
-      const { error } = await supabase.auth.signInWithPassword({ email, password })
-      if (error) { setError(error.message); setLoading(false); return }
+      const { error } = await supabase.auth.signInWithPassword({ email: email.trim(), password })
+      if (error) { fail(error.message); return }
 
       const { data: { user } } = await supabase.auth.getUser()
       if (user) {
@@ -196,7 +219,7 @@ export default function LoginPage() {
                   <button
                     key={String(up)} type="button" role="tab" aria-selected={isSignUp === up}
                     className={isSignUp === up ? 'on' : ''}
-                    onClick={() => { setIsSignUp(up); setRole('student'); setTeacherCode(''); setError('') }}
+                    onClick={() => { setIsSignUp(up); setRole('student'); setTeacherCode(''); setError(''); setExisting(false) }}
                   >
                     {up ? t('Регистрация') : t('Вход')}
                   </button>
@@ -266,12 +289,37 @@ export default function LoginPage() {
                     {t('Пароль')}
                     {!isSignUp && <button type="button" className="auth-text-btn" onClick={() => { setForgot(true); setError('') }}>{t('Забыли пароль?')}</button>}
                   </span>
-                  <input className="auth-input" type="password" autoComplete={isSignUp ? 'new-password' : 'current-password'} value={password} onChange={e => setPassword(e.target.value)} />
-                  {isSignUp && <small>{t('Минимум 6 символов')}</small>}
+                  <span className="auth-pw">
+                    <input className="auth-input" type={showPw ? 'text' : 'password'} autoComplete={isSignUp ? 'new-password' : 'current-password'} value={password} onChange={e => setPassword(e.target.value)} aria-describedby={isSignUp ? 'pw-rules' : undefined} />
+                    <button type="button" className="auth-pw-eye" onClick={() => setShowPw(v => !v)} aria-pressed={showPw} aria-label={showPw ? t('Скрыть пароль') : t('Показать пароль')}>
+                      <svg viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z" /><circle cx="12" cy="12" r="3" />
+                        {showPw && <path d="M4 4l16 16" />}
+                      </svg>
+                    </button>
+                  </span>
                 </label>
               )}
+              {!forgot && isSignUp && (
+                <ul id="pw-rules" className="auth-rules" aria-label={t('Требования к паролю')}>
+                  {PASSWORD_RULES.map(r => {
+                    const ok = r.ok(password)
+                    return <li key={r.label} className={ok ? 'ok' : ''}><span aria-hidden="true">{ok ? '✓' : '·'}</span>{t(r.label)}<span className="sr-only">{ok ? ` — ${t('есть')}` : ''}</span></li>
+                  })}
+                </ul>
+              )}
 
-              {error && <p className="auth-error" role="alert">{error}</p>}
+              {error && (
+                <p className="auth-error" role="alert">
+                  {error}
+                  {existing && (
+                    <>
+                      {' '}
+                      <button type="button" className="auth-text-btn" onClick={() => { setIsSignUp(false); setError(''); setExisting(false) }}>{t('Войти с этой почтой')}</button>
+                    </>
+                  )}
+                </p>
+              )}
 
               {!(forgot && sent) && (
                 <button type="submit" className="nb-btn auth-submit" disabled={loading}>
@@ -283,6 +331,24 @@ export default function LoginPage() {
                 </button>
               )}
             </form>
+
+            {!forgot && OAUTH_PROVIDERS.length > 0 && (
+              <div className="auth-oauth">
+                <p className="auth-or"><span>{t('или')}</span></p>
+                {OAUTH_PROVIDERS.includes('google') && (
+                  <button type="button" className="auth-oauth-btn" onClick={() => oauth('google')}>
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="#4285F4" d="M22.5 12.3c0-.8-.1-1.5-.2-2.2H12v4.2h5.9a5 5 0 0 1-2.2 3.3v2.7h3.5c2.1-1.9 3.3-4.7 3.3-8z"/><path fill="#34A853" d="M12 23c3 0 5.5-1 7.2-2.7l-3.5-2.7c-1 .7-2.2 1-3.7 1-2.9 0-5.3-1.9-6.2-4.5H2.2v2.8A11 11 0 0 0 12 23z"/><path fill="#FBBC05" d="M5.8 14.1a6.6 6.6 0 0 1 0-4.2V7.1H2.2a11 11 0 0 0 0 9.8l3.6-2.8z"/><path fill="#EA4335" d="M12 5.4c1.6 0 3.1.6 4.2 1.7l3.2-3.2A11 11 0 0 0 2.2 7.1l3.6 2.8C6.7 7.3 9.1 5.4 12 5.4z"/></svg>
+                    {t('Продолжить с Google')}
+                  </button>
+                )}
+                {OAUTH_PROVIDERS.includes('apple') && (
+                  <button type="button" className="auth-oauth-btn" onClick={() => oauth('apple')}>
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M16.4 12.6c0-2.4 2-3.6 2.1-3.7a4.6 4.6 0 0 0-3.6-2c-1.5-.2-3 .9-3.7.9-.8 0-2-.9-3.3-.9a4.9 4.9 0 0 0-4.1 2.5c-1.8 3-.5 7.5 1.2 10 .8 1.2 1.8 2.6 3.1 2.5 1.2 0 1.7-.8 3.2-.8s1.9.8 3.2.8c1.3 0 2.2-1.2 3-2.4a10 10 0 0 0 1.4-2.8 4.3 4.3 0 0 1-2.5-4.1zM14 5.4A4.3 4.3 0 0 0 15 2a4.4 4.4 0 0 0-2.9 1.5 4.1 4.1 0 0 0-1 3.2c1.1 0 2.2-.5 2.9-1.3z"/></svg>
+                    {t('Продолжить с Apple')}
+                  </button>
+                )}
+              </div>
+            )}
 
             {forgot && (
               <button type="button" className="auth-text-btn auth-back" onClick={() => { setForgot(false); setSent(false); setError('') }}>{t('← Назад ко входу')}</button>

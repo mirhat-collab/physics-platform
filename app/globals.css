@@ -1259,3 +1259,21 @@ body:has(.nb-root) .app-doodles { display: block; }
 .tc-tabs button.on { background: var(--nb-sheet); color: var(--nb-ink); box-shadow: 0 1px 2px rgba(40, 30, 15, 0.12), 0 2px 8px -4px rgba(40, 30, 15, 0.2); }
 .tc-links { display: flex; flex-wrap: wrap; gap: 4px 24px; margin-bottom: 22px; }
 .tc-links a { display: inline-flex; align-items: center; min-height: 44px; font-size: 15px; font-weight: 600; }
+
+/* ===== Пароль: «глазик» и правила; вход через Google / Apple ===== */
+.auth-pw { position: relative; display: block; }
+.auth-pw .auth-input { padding-right: 52px; }
+.auth-pw-eye { position: absolute; top: 50%; right: 3px; transform: translateY(-50%); width: 44px; height: 44px; display: grid; place-items: center; border: 0; border-radius: 8px; background: transparent; color: var(--nb-muted); cursor: pointer; }
+.auth-pw-eye:hover, .auth-pw-eye[aria-pressed="true"] { color: var(--nb-ink); }
+.auth-pw-eye svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.auth-rules { list-style: none; margin: -6px 0 0; padding: 0; display: grid; gap: 4px; font-size: 13px; color: var(--nb-muted); }
+.auth-rules li { display: flex; align-items: center; gap: 8px; }
+.auth-rules li > span:first-child { width: 14px; text-align: center; font-weight: 700; }
+.auth-rules li.ok { color: var(--nb-good); }
+.auth-error .auth-text-btn { font-weight: 600; }
+.auth-oauth { display: grid; gap: 10px; margin-top: 20px; }
+.auth-or { display: flex; align-items: center; gap: 12px; margin: 0 0 4px; font-size: 13px; color: var(--nb-muted); }
+.auth-or::before, .auth-or::after { content: ""; flex: 1; height: 1px; background: var(--nb-line); }
+.auth-oauth-btn { display: flex; align-items: center; justify-content: center; gap: 10px; min-height: 50px; border-radius: 999px; border: 1px solid var(--nb-line); background: var(--nb-sheet); color: var(--nb-text); font: inherit; font-size: 15.5px; font-weight: 600; cursor: pointer; }
+.auth-oauth-btn:hover { border-color: var(--nb-ink); }
+.auth-oauth-btn svg { width: 20px; height: 20px; }
