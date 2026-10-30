@@ -7,6 +7,7 @@ import { useT } from '@/app/components/LanguageProvider'
 import LanguageSwitcher from '@/app/components/LanguageSwitcher'
 import PenSheet from '@/app/components/PenSheet'
 import HeroTry from '@/app/components/HeroTry'
+import { RatingSticker, StatsStrip } from '@/app/components/LandingLive'
 
 // Короткие слова (с, и, к…) не остаются висеть в конце строки
 const glue = (text: string) => text.replace(/(^|\s)(\S{1,2})\s/g, '$1$2\u00a0')
@@ -40,13 +41,30 @@ export default function LobbyPage() {
     { title: t('Для учителей'), text: t('Группы по ссылке и QR-коду, домашние задания и отчёты по каждому ученику.') },
   ]
 
+  const steps = [
+    { title: t('Выбери предмет и тему'), text: t('Физика или математика — все темы по спецификации НЦТ, от простого к сложному.') },
+    { title: t('Решай и разбирай ошибки'), text: t('К каждой задаче — подробное решение, а ИИ объяснит непонятный шаг.') },
+    { title: t('Проверь себя на пробном ЕНТ'), text: t('Узнай прогноз балла, зарабатывай XP и поднимайся в рейтинге.') },
+  ]
+
   // Открытые страницы без входа — и для гостей, и для поисковиков
-  const open = [
-    { href: `${pre}/podgotovka/fizika`, label: t('Задачи ЕНТ по физике') },
-    { href: `${pre}/podgotovka/matematika`, label: t('Задачи ЕНТ по математике') },
-    { href: `${pre}/podgotovka/fizika/formuly`, label: t('Формулы по физике') },
-    { href: `${pre}/podgotovka/matematika/formuly`, label: t('Формулы по математике') },
-    { href: `${pre}/podgotovka/stati`, label: t('Всё про ЕНТ: статьи и советы') },
+  const subjects = [
+    {
+      key: 'phys', title: t('Физика'),
+      text: t('Механика, термодинамика, электричество, оптика и атомная физика.'),
+      links: [
+        { href: `${pre}/podgotovka/fizika`, label: t('Задачи ЕНТ по физике') },
+        { href: `${pre}/podgotovka/fizika/formuly`, label: t('Формулы по физике') },
+      ],
+    },
+    {
+      key: 'math', title: t('Математика'),
+      text: t('Алгебра, уравнения, функции, геометрия и начала анализа.'),
+      links: [
+        { href: `${pre}/podgotovka/matematika`, label: t('Задачи ЕНТ по математике') },
+        { href: `${pre}/podgotovka/matematika/formuly`, label: t('Формулы по математике') },
+      ],
+    },
   ]
 
   return (
@@ -80,8 +98,45 @@ export default function LobbyPage() {
             </div>
             <p className="nb-note"><span className="nb-badge">{t('Бесплатно')}</span> {t('на русском и казахском')}</p>
           </div>
-          <PenSheet />
+          <div className="nb-art">
+            <PenSheet />
+            <RatingSticker />
+          </div>
         </section>
+
+        <StatsStrip />
+
+        <section className="nb-section" aria-labelledby="nb-how">
+          <p className="nb-kicker">{t('Как это работает')}</p>
+          <h2 id="nb-how" className="nb-h2">{t('Три шага до уверенного балла')}</h2>
+          <ol className="nb-steps" role="list">
+            {steps.map((st, i) => (
+              <li key={st.title}>
+                <span className="nb-step-n" aria-hidden>{i + 1}</span>
+                <h3>{st.title}</h3>
+                <p>{st.text}</p>
+              </li>
+            ))}
+          </ol>
+        </section>
+
+        <nav className="nb-section" aria-labelledby="nb-open">
+          <p className="nb-kicker">{t('Открыто без регистрации')}</p>
+          <h2 id="nb-open" className="nb-h2">{t('Выбери предмет')}</h2>
+          <div className="nb-books">
+            {subjects.map(sub => (
+              <div key={sub.key} className={`nb-book nb-book-${sub.key}`}>
+                <span className="nb-book-ribbon" aria-hidden />
+                <h3>{sub.title}</h3>
+                <p>{sub.text}</p>
+                <ul role="list">
+                  {sub.links.map(l => <li key={l.href}><Link href={l.href}>{l.label}</Link></li>)}
+                </ul>
+              </div>
+            ))}
+          </div>
+          <Link href={`${pre}/podgotovka/stati`} className="nb-link nb-more">{t('Всё про ЕНТ: статьи и советы')}</Link>
+        </nav>
 
         <section className="nb-section" aria-labelledby="nb-inside">
           <p className="nb-kicker">{t('Что внутри')}</p>
@@ -97,16 +152,6 @@ export default function LobbyPage() {
           </ol>
         </section>
 
-        <nav className="nb-section" aria-labelledby="nb-open">
-          <h2 id="nb-open" className="nb-h2">{t('Открыто без регистрации')}</h2>
-          <ul className="nb-toc" role="list">
-            {open.map(o => (
-              <li key={o.href}>
-                <Link href={o.href}>{o.label}<span className="nb-toc-dots" aria-hidden /></Link>
-              </li>
-            ))}
-          </ul>
-        </nav>
 
         <section className="nb-final">
           <p className="nb-final-title">{t('Удачи на ЕНТ!')}</p>

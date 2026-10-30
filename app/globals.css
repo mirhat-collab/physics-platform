@@ -565,7 +565,8 @@ body:has(.nb-root) .aurora-blob { display: none; }
 .nb-cta .try { flex-basis: 100%; margin-top: 4px; }
 
 /* ===== Лист с решением ===== */
-.pen { position: relative; width: 100%; max-width: 500px; justify-self: center; }
+.nb-art { position: relative; width: 100%; max-width: 500px; justify-self: center; }
+.pen { position: relative; width: 100%; }
 .pen-back, .pen-sheet {
   border-radius: 3px;
   background: var(--nb-sheet);
@@ -628,21 +629,6 @@ body:has(.nb-root) .aurora-blob { display: none; }
 .nb-feature h3 { margin: 0; font-size: 18px; font-weight: 600; letter-spacing: -0.01em; }
 .nb-feature p { margin: 0; font-size: 15px; line-height: 1.65; color: var(--nb-text-2); }
 
-/* Оглавление открытых страниц */
-.nb-toc { list-style: none; margin: 0; padding: 0; max-width: 760px; }
-.nb-toc a {
-  display: flex; align-items: baseline; gap: 12px;
-  min-height: 60px; padding: 18px 0; box-sizing: border-box;
-  font-family: var(--font-display), Georgia, serif; font-size: 20px; letter-spacing: -0.01em;
-}
-.nb-toc a::after {
-  content: "→"; order: 3; font-family: var(--font-body), sans-serif; color: var(--nb-ink);
-  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-}
-.nb-toc-dots { order: 2; flex: 1; border-bottom: 1px dotted var(--nb-pencil); transform: translateY(-5px); }
-.nb-toc a:hover { color: var(--nb-ink); }
-.nb-toc a:hover::after { transform: translateX(4px); }
-
 .nb-final { padding: 104px 0 112px; text-align: center; }
 .nb-final::before { content: ""; position: absolute; top: 0; left: 0; right: 0; height: 1px; background: var(--nb-line); }
 .nb-final { position: relative; }
@@ -675,7 +661,7 @@ body:has(.nb-root) .aurora-blob { display: none; }
     padding: 0 0 40px;
   }
   .nb-lead { font-size: 19px; }
-  .pen { justify-self: end; }
+  .nb-art { justify-self: end; }
   .pen-sheet { min-height: 470px; padding: 32px 34px 36px; }
   .nb-features { grid-template-columns: 1fr 1fr; column-gap: 64px; }
   .nb-feature { padding: 30px 0; }
@@ -723,3 +709,119 @@ body:has(.nb-root) .aurora-blob { display: none; }
 .try-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 20px; }
 .try-actions .nb-btn { min-height: 48px; padding: 0 22px; font-size: 15px; }
 @keyframes nbDraw { to { stroke-dashoffset: 0; } }
+
+/* ===== Мини-рейтинг: стикер у листа с решением ===== */
+.rate {
+  --rate-paper: #fbf3d6;
+  position: relative; z-index: 3;
+  width: min(270px, 86%); margin: 22px 0 0 auto; padding: 16px 18px 12px;
+  background: var(--rate-paper); border-radius: 2px;
+  box-shadow: 0 1px 1px rgba(40, 30, 15, 0.06), 0 14px 26px -14px rgba(40, 30, 15, 0.35);
+  transform: rotate(1.6deg);
+}
+.rate::before { /* полоска скотча */
+  content: ""; position: absolute; top: -10px; left: 50%; width: 76px; height: 20px; margin-left: -38px;
+  background: rgba(255, 255, 255, 0.55); border: 1px solid rgba(40, 30, 15, 0.06);
+  transform: rotate(-3deg);
+}
+.rate-title {
+  display: flex; justify-content: space-between; margin: 0 0 8px;
+  font-size: 11px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: #6b5d3a;
+}
+.rate-list { list-style: none; margin: 0; padding: 0; }
+.rate-list li {
+  display: grid; grid-template-columns: 34px 1fr auto; align-items: center; gap: 10px;
+  padding: 8px 0; border-top: 1px dashed rgba(107, 93, 58, 0.25); color: #1c1a14;
+}
+.rate-list li:first-child { border-top: 0; }
+/* Медали — как штампы: двойной ободок и цифра курсивом */
+.rate-medal {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 30px; height: 30px; border-radius: 50%;
+  border: 1.5px solid currentColor; box-shadow: inset 0 0 0 2.5px var(--rate-paper), inset 0 0 0 3.5px currentColor;
+  font-family: var(--font-display), Georgia, serif; font-style: italic; font-weight: 600; font-size: 14px;
+  transform: rotate(-8deg);
+}
+.rate-m1 { color: #a8740a; }
+.rate-m2 { color: #6c737c; }
+.rate-m3 { color: #9a4f26; }
+.rate-name { display: flex; flex-direction: column; font-size: 15px; font-weight: 600; line-height: 1.25; }
+.rate-name small { font-size: 12px; font-weight: 500; color: #6b5d3a; }
+.rate-xp { font-family: var(--font-display), Georgia, serif; font-size: 18px; font-variant-numeric: tabular-nums; }
+
+/* ===== Честные цифры ===== */
+.nb-stats {
+  list-style: none; margin: 8px 0 0; padding: 26px 0;
+  display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px;
+  border-top: 1px solid var(--nb-line);
+}
+.nb-stats li { display: flex; flex-direction: column; gap: 4px; }
+.nb-stat-n {
+  font-family: var(--font-display), Georgia, serif; font-weight: 400;
+  font-size: clamp(1.9rem, 2.6vw + 1rem, 3rem); line-height: 1; letter-spacing: -0.03em; color: var(--nb-ink);
+  font-variant-numeric: tabular-nums;
+}
+.nb-stat-l { font-size: 13px; line-height: 1.35; color: var(--nb-text-2); }
+
+/* ===== Как это работает ===== */
+.nb-steps { list-style: none; margin: 0; padding: 0; display: grid; gap: 30px; counter-reset: none; }
+.nb-steps li { position: relative; padding-left: 60px; }
+.nb-step-n {
+  position: absolute; left: 0; top: -4px;
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 42px; height: 42px; border-radius: 50%;
+  border: 1.5px solid var(--nb-accent); color: var(--nb-accent);
+  font-family: var(--font-display), Georgia, serif; font-style: italic; font-size: 20px;
+}
+.nb-steps h3 { margin: 0 0 6px; font-family: var(--font-display), Georgia, serif; font-weight: 500; font-size: 22px; letter-spacing: -0.015em; }
+.nb-steps p { margin: 0; font-size: 15px; line-height: 1.65; color: var(--nb-text-2); max-width: 38ch; }
+
+/* ===== Предметы — обложки тетрадей с закладкой ===== */
+.nb-books { display: grid; gap: 22px; }
+.nb-book {
+  --book: var(--nb-ink);
+  position: relative; padding: 28px 24px 18px 34px;
+  background: var(--nb-sheet); border-radius: 4px 10px 10px 4px;
+  box-shadow: var(--nb-sheet-shadow);
+}
+.nb-book::before { /* корешок */
+  content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 10px;
+  border-radius: 4px 0 0 4px; background: var(--book); opacity: 0.9;
+}
+.nb-book-math { --book: var(--nb-accent); }
+.nb-book-ribbon { /* закладка-ленточка */
+  position: absolute; top: -4px; right: 28px; width: 14px; height: 54px; background: var(--book);
+  clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 80%, 0 100%);
+}
+.nb-book h3 { margin: 0 0 8px; font-family: var(--font-display), Georgia, serif; font-weight: 400; font-size: 34px; letter-spacing: -0.025em; }
+.nb-book p { margin: 0 0 14px; max-width: 34ch; font-size: 15px; line-height: 1.6; color: var(--nb-text-2); }
+.nb-book ul { list-style: none; margin: 0; padding: 0; }
+.nb-book a {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  min-height: 52px; border-top: 1px solid var(--nb-line);
+  font-size: 16px; font-weight: 600;
+}
+.nb-book a::after { content: "→"; color: var(--book); transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1); }
+.nb-book a:hover { color: var(--book); }
+.nb-book a:hover::after { transform: translateX(4px); }
+.nb-more { margin-top: 26px; }
+
+@media (prefers-color-scheme: dark) {
+  :root:not(.light-theme) .rate { --rate-paper: #2a2619; }
+  :root:not(.light-theme) .rate-list li { color: #f1ead2; }
+  :root:not(.light-theme) .rate-title, :root:not(.light-theme) .rate-name small { color: #c9bb92; }
+  :root:not(.light-theme) .rate::before { background: rgba(255, 255, 255, 0.12); }
+  :root:not(.light-theme) .rate-m1 { color: #e2b34a; }
+  :root:not(.light-theme) .rate-m2 { color: #b7bec8; }
+  :root:not(.light-theme) .rate-m3 { color: #d98a5c; }
+}
+
+@media (min-width: 900px) {
+  .rate { position: absolute; left: -72px; bottom: -150px; margin: 0; width: 260px; transform: rotate(-2.4deg); }
+  .nb-hero { padding-bottom: 150px; }
+  .nb-stats { padding: 34px 0; gap: 32px; }
+  .nb-steps { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 40px; }
+  .nb-steps li { padding-left: 0; padding-top: 62px; }
+  .nb-books { grid-template-columns: 1fr 1fr; gap: 32px; }
+  .nb-book { padding: 36px 34px 22px 44px; }
+}
