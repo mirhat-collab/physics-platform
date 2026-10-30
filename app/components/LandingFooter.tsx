@@ -9,8 +9,8 @@ export default function LandingFooter() {
   const path = usePathname()
   if (path !== '/' && path !== '/login') return null
 
-  // На главной — подвал в стиле «Тетрадь»
-  if (path === '/') return (
+  // На главной и странице входа — подвал в стиле «Тетрадь»
+  if (path === '/' || path === '/login') return (
     <footer className="nb-footer">
       <div className="nb-footer-in">
         <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8, fontWeight: 600, color: 'var(--nb-text)' }}>
