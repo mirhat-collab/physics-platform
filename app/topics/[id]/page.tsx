@@ -34,16 +34,16 @@ type Topic = {
 function FormulaBlock({ text }: { text: string }) {
   const lines = text.split('\n').filter(l => l.trim() !== '')
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+    <div className="ls-formulas">
       {lines.map((line, i) => {
         let html = ''
         try {
           html = katex.renderToString(line.trim(), { throwOnError: false, displayMode: true })
         } catch {
-          html = `<span style="color:#fcd34d;font-family:monospace">${line}</span>`
+          html = `<span style="font-family:monospace">${line}</span>`
         }
         return (
-          <div key={i} style={{ background: '#0a0a14', borderRadius: 12, padding: '16px 24px', border: '1px solid rgba(245,158,11,0.2)', overflowX: 'auto' }}
+          <div key={i} className="ls-formula"
             dangerouslySetInnerHTML={{ __html: html }}
           />
         )
@@ -241,106 +241,78 @@ export default function TopicPage() {
   const quizScore = quiz ? quiz.filter((q, i) => quizAnswers[i] === q.correct).length : 0
 
   if (loading) return (
-    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-      <div style={{ color: '#fff', fontSize: 18 }}>{t('Загрузка...')}</div>
+    <div className="nb-root" aria-busy="true">
+      <div className="app-page"><span className="sr-only">{t('Загрузка...')}</span></div>
     </div>
   )
 
   const view = topic && locale !== 'ru' && translated?.locale === locale ? { ...topic, ...translated.fields } : topic
 
   if (!topic) return (
-    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-      <div style={{ color: '#fff' }}>{t('Тема не найдена')}</div>
+    <div className="nb-root">
+      <div className="app-page">
+        <Link href="/topics" className="ls-back">← {t('Все темы')}</Link>
+        <p className="tp-empty">{t('Тема не найдена')}</p>
+      </div>
     </div>
   )
 
-  return (
-    <div style={{ minHeight: '100vh', color: '#fff', padding: '2rem' }}>
-      <div style={{ maxWidth: 800, margin: '0 auto' }}>
-
-        <Link href="/topics" style={{ color: '#666', textDecoration: 'none', fontSize: 14, display: 'inline-flex', alignItems: 'center', gap: 6, marginBottom: 32 }}>
-          {t('← Все темы')}
-        </Link>
-
-        <div style={{ background: 'linear-gradient(135deg, #1a1a2e, #16213e)', border: '1px solid #2a2a3e', borderRadius: 24, padding: '32px 36px', marginBottom: 24 }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 16 }}>
-            <div style={{ flex: 1 }}>
-              {topic.grade && (
-                <span style={{ background: 'rgba(167,139,250,0.15)', color: '#a78bfa', fontSize: 12, fontWeight: 600, padding: '4px 14px', borderRadius: 999, border: '1px solid rgba(167,139,250,0.3)', display: 'inline-block', marginBottom: 16 }}>
-                  {topic.grade}
-                </span>
-              )}
-              <h1 style={{ fontSize: '1.9rem', fontWeight: 800, margin: 0, lineHeight: 1.2 }}>{view?.name}</h1>
-              {locale !== 'ru' && (
-                <div style={{ color: '#888', fontSize: 12, marginTop: 8 }}>
-                  {translating ? t('⏳ Переводим тему…') : translated?.locale === locale ? t('🌐 Переведено ИИ — возможны неточности') : null}
-                </div>
-              )}
-            </div>
-            <button onClick={toggleBookmark} style={{
-              background: bookmarked ? 'rgba(245,158,11,0.15)' : 'rgba(255,255,255,0.05)',
-              border: bookmarked ? '1px solid rgba(245,158,11,0.4)' : '1px solid #2a2a3e',
-              borderRadius: 12, padding: '10px 14px', cursor: 'pointer',
-              fontSize: 20, transition: 'all 0.2s', flexShrink: 0
-            }} title={bookmarked ? t('Убрать из закладок') : t('Добавить в закладки')}>
-              {bookmarked ? '🔖' : '📌'}
+  // Разделы конспекта — нумеруются только те, что есть у темы
+  const sections = [
+    topic.theory && { key: 'theory', title: t('Теория'), body: <p className="ls-text">{view?.theory}</p> },
+    topic.formulas && { key: 'formulas', title: t('Формулы'), body: <FormulaBlock text={topic.formulas} /> },
+    topic.examples && { key: 'examples', title: t('Примеры'), body: <p className="ls-text">{view?.examples}</p> },
+    topic.tasks && { key: 'tasks', title: t('Практика'), body: <p className="ls-text">{view?.tasks}</p> },
+    topic.resource && {
+      key: 'resource', title: t('Образовательный ресурс'),
+      body: <a href={topic.resource} target="_blank" rel="noopener noreferrer" className="nb-link">{t('Открыть ресурс')} ↗</a>,
+    },
+    topic.media && topic.media.length > 0 && {
+      key: 'media', title: t('Материалы'),
+      body: (
+        <div className="ls-media">
+          {topic.media.map((item, i) => (
+            <button key={i} type="button" className="ls-file"
+              onClick={() => item.type === 'link' ? window.open(item.url, '_blank', 'noopener,noreferrer') : setViewerItem(item)}>
+              <span aria-hidden>{item.type === 'image' ? '🖼' : item.type === 'video' ? '🎬' : item.type === 'link' ? '🔗' : fileIcon(item.name)}</span>
+              <span className="ls-file-name">{item.name}</span>
+              <span className="ls-file-open">{t('Открыть')} ↗</span>
             </button>
-          </div>
+          ))}
         </div>
+      ),
+    },
+  ].filter(Boolean) as { key: string; title: string; body: React.ReactNode }[]
 
-        {topic.theory && (
-          <Section icon="📖" title={t('Теория')} color="#667eea" bg="rgba(102,126,234,0.08)">
-            <p style={{ lineHeight: 1.9, color: '#ccc', whiteSpace: 'pre-wrap', margin: 0, fontSize: 15 }}>{view?.theory}</p>
-          </Section>
-        )}
+  return (
+    <div className="nb-root">
+      <div className="app-page ls-page">
+        <Link href="/topics" className="ls-back">← {t('Все темы')}</Link>
 
-        {topic.formulas && (
-          <Section icon="🔢" title={t('Формулы')} color="#f59e0b" bg="rgba(245,158,11,0.08)">
-            <FormulaBlock text={topic.formulas} />
-          </Section>
-        )}
+        <header className="ls-head">
+          <div>
+            {topic.grade && <p className="nb-eyebrow">{t(topic.grade)}</p>}
+            <h1 className="dash-name">{view?.name}</h1>
+            {locale !== 'ru' && (translating || translated?.locale === locale) && (
+              <p className="dash-meta">{translating ? t('Переводим тему…') : t('Переведено ИИ — возможны неточности')}</p>
+            )}
+          </div>
+          <button type="button" onClick={toggleBookmark} aria-pressed={bookmarked}
+            className={`ls-bookmark${bookmarked ? ' on' : ''}`}
+            title={bookmarked ? t('Убрать из закладок') : t('Добавить в закладки')}
+            aria-label={bookmarked ? t('Убрать из закладок') : t('Добавить в закладки')}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill={bookmarked ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2" strokeLinejoin="round" aria-hidden><path d="M6 3h12v18l-6-4-6 4z" /></svg>
+          </button>
+        </header>
 
-        {topic.examples && (
-          <Section icon="💡" title={t('Примеры')} color="#10b981" bg="rgba(16,185,129,0.08)">
-            <p style={{ lineHeight: 1.9, color: '#ccc', whiteSpace: 'pre-wrap', margin: 0, fontSize: 15 }}>{view?.examples}</p>
-          </Section>
-        )}
-
-        {topic.tasks && (
-          <Section icon="🧪" title={t('Практика')} color="#ec4899" bg="rgba(236,72,153,0.08)">
-            <p style={{ lineHeight: 1.9, color: '#ccc', whiteSpace: 'pre-wrap', margin: 0, fontSize: 15 }}>{view?.tasks}</p>
-          </Section>
-        )}
-
-        {topic.resource && (
-          <Section icon="🌐" title={t('Образовательный ресурс')} color="#06b6d4" bg="rgba(6,182,212,0.08)">
-            <a href={topic.resource} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: 10, padding: '12px 20px', background: 'rgba(6,182,212,0.12)', border: '1px solid rgba(6,182,212,0.35)', borderRadius: 12, color: '#67e8f9', textDecoration: 'none', fontSize: 14, fontWeight: 600 }}>
-              {t('🔗 Открыть ресурс')} <span style={{ fontSize: 12, opacity: 0.7 }}>↗</span>
-            </a>
-          </Section>
-        )}
-
-        {topic.media && topic.media.length > 0 && (
-          <Section icon="🖼" title={t('Материалы')} color="#a78bfa" bg="rgba(167,139,250,0.08)">
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 12 }}>
-              {topic.media.map((item, i) => (
-                <button
-                  key={i}
-                  onClick={() => item.type === 'link' ? window.open(item.url, '_blank', 'noopener,noreferrer') : setViewerItem(item)}
-                  style={{
-                    borderRadius: 12, overflow: 'hidden', border: '1px solid #2a2a3e', background: '#0a0a14',
-                    display: 'flex', alignItems: 'center', gap: 10, padding: '14px 16px',
-                    color: '#e5e5f0', fontSize: 13, cursor: 'pointer', textAlign: 'left', width: '100%',
-                  }}
-                >
-                  <span style={{ fontSize: 22 }}>{item.type === 'image' ? '🖼' : item.type === 'video' ? '🎬' : item.type === 'link' ? '🔗' : fileIcon(item.name)}</span>
-                  <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.name}</span>
-                  <span style={{ marginLeft: 'auto', color: '#888', fontSize: 12 }}>{t('Открыть ↗')}</span>
-                </button>
-              ))}
-            </div>
-          </Section>
-        )}
+        <article className="ls-sheet">
+          {sections.map((sec, n) => (
+            <section key={sec.key} className="ls-section" aria-labelledby={`ls-${sec.key}`}>
+              <h2 id={`ls-${sec.key}`} className="ls-h"><span className="ls-n">§{n + 1}</span>{sec.title}</h2>
+              {sec.body}
+            </section>
+          ))}
+        </article>
 
         {viewerItem && (
           <ProtectedFileViewer
@@ -351,102 +323,55 @@ export default function TopicPage() {
           />
         )}
 
-        <div style={{ marginTop: 40, textAlign: 'center', position: 'relative', paddingBottom: 60 }}>
-          {showXP && (
-            <div style={{
-              position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              background: 'rgba(0,0,0,0.6)', zIndex: 1000,
-              animation: 'fadeIn 0.3s ease'
-            }}>
-              <div style={{
-                background: 'linear-gradient(135deg, #1a1a2e, #16213e)',
-                border: '1px solid #667eea55', borderRadius: 24,
-                padding: '40px 48px', textAlign: 'center',
-                animation: 'popIn 0.4s ease'
-              }}>
-                <div style={{ fontSize: 56, marginBottom: 12 }}>🎉</div>
-                <div style={{ fontSize: 22, fontWeight: 800, color: '#fff', marginBottom: 6 }}>{t('Тема завершена!')}</div>
-                <div style={{ fontSize: 36, fontWeight: 800, color: '#4ade80', marginBottom: 8 }}>+10 XP ⭐</div>
-                <div style={{ color: '#888', fontSize: 14 }}>{t('Продолжай в том же духе!')}</div>
-              </div>
+        {showXP && (
+          <div className="ls-xp-backdrop" role="status">
+            <div className="ls-xp">
+              <svg viewBox="0 0 30 30" aria-hidden><path d="M4 15 C 7 18, 9 21, 11 25 C 15 15, 20 8, 27 3" /></svg>
+              <p className="ls-xp-t">{t('Тема завершена!')}</p>
+              <p className="ls-xp-n">+10 XP</p>
+              <p className="ls-xp-s">{t('Продолжай в том же духе!')}</p>
             </div>
-          )}
-          <button
-            onClick={markCompleted}
-            disabled={completed || marking}
-            style={{
-              padding: '18px 56px', borderRadius: 18, border: 'none', fontSize: 17, fontWeight: 700,
-              cursor: completed ? 'default' : 'pointer',
-              background: completed ? 'linear-gradient(135deg, #10b981, #059669)' : marking ? '#2a2a3e' : 'linear-gradient(135deg, #667eea, #764ba2)',
-              color: '#fff', transition: 'all 0.3s ease',
-              boxShadow: completed ? '0 8px 32px rgba(16,185,129,0.35)' : '0 8px 32px rgba(102,126,234,0.35)',
-            }}
-          >
-            {completed ? t('✅ Тема завершена!') : marking ? t('⏳ Сохраняем...') : t('🎯 Завершить тему (+10 XP)')}
-          </button>
-          {completed && (
-            <p style={{ color: '#666', fontSize: 13, marginTop: 14 }}>{t('Отличная работа! Ты уже прошёл эту тему.')}</p>
-          )}
-        </div>
+          </div>
+        )}
 
-        {/* Кнопка квиза */}
-        <div style={{ textAlign: 'center', marginTop: 16, paddingBottom: 60 }}>
-          <button onClick={startQuiz} style={{
-            padding: '14px 40px', borderRadius: 14, border: 'none', fontSize: 15, fontWeight: 700,
-            cursor: 'pointer',
-            background: quizLoading
-              ? '#2a2a3e'
-              : 'linear-gradient(135deg, #f59e0b, #d97706)',
-            color: '#fff', boxShadow: quizLoading ? 'none' : '0 8px 24px rgba(245,158,11,0.3)',
-            transition: 'all 0.3s'
-          }}>
-            {quizLoading ? t('⏳ Готовим вопросы...') : quiz ? t('🧠 Проверить знания (квиз готов!)') : t('🧠 Проверить знания (квиз)')}
+        <div className="ls-actions">
+          {completed ? (
+            <p className="ls-done">
+              <svg viewBox="0 0 30 30" aria-hidden><path d="M4 15 C 7 18, 9 21, 11 25 C 15 15, 20 8, 27 3" /></svg>
+              <span><b>{t('Тема пройдена')}</b><br />{t('Отличная работа! Ты уже прошёл эту тему.')}</span>
+            </p>
+          ) : (
+            <button type="button" className="nb-btn ls-btn" onClick={markCompleted} disabled={marking}>
+              {marking ? t('Сохраняем…') : t('Завершить тему · +10 XP')}
+            </button>
+          )}
+          <button type="button" className="try-open ls-btn" onClick={startQuiz}>
+            {quizLoading ? t('Готовим вопросы…') : t('Проверить знания')}
           </button>
         </div>
 
-        {/* Квиз */}
         {showQuiz && (
-          <div style={{ background: '#1a1a2e', borderRadius: 20, padding: '28px', border: '1px solid #2a2a3e', marginBottom: 40 }}>
-            <h2 style={{ margin: '0 0 20px', fontSize: '1.2rem', fontWeight: 800 }}>{t('🧠 Мини-тест по теме')}</h2>
-            {quizLoading && (
-              <div style={{ textAlign: 'center', color: '#888', padding: '40px 0' }}>
-                <div style={{ fontSize: 32, marginBottom: 12 }}>⏳</div>
-                {t('AI генерирует вопросы...')}
-              </div>
-            )}
+          <section className="ls-card" aria-labelledby="ls-quiz">
+            <h2 id="ls-quiz" className="app-h2">{t('Мини-тест по теме')}</h2>
+            {quizLoading && <p className="ls-muted">{t('ИИ готовит вопросы…')}</p>}
             {!quizLoading && quizError && (
-              <div style={{ textAlign: 'center', padding: '30px 0' }}>
-                <div style={{ fontSize: 32, marginBottom: 12 }}>😕</div>
-                <div style={{ color: '#888', marginBottom: 16, fontSize: 14 }}>{t('Не удалось загрузить вопросы')}</div>
-                <button onClick={loadQuiz} style={{ padding: '10px 24px', borderRadius: 10, border: 'none', background: 'linear-gradient(135deg,#667eea,#764ba2)', color: '#fff', fontWeight: 700, cursor: 'pointer', fontSize: 14 }}>
-                  {t('🔄 Попробовать снова')}
-                </button>
+              <div className="ls-muted">
+                <p>{t('Не удалось загрузить вопросы')}</p>
+                <button type="button" className="btn btn-ghost" onClick={loadQuiz}>{t('Попробовать снова')}</button>
               </div>
             )}
             {!quizLoading && quiz && quiz.map((q, qi) => (
-              <div key={qi} style={{ marginBottom: 24, padding: '20px', background: '#0f0f1a', borderRadius: 14, border: '1px solid #2a2a3e' }}>
-                <MathText text={`${qi + 1}. ${q.question}`} style={{ fontWeight: 700, marginBottom: 14, fontSize: 15 }} />
-                <div style={{ display: 'grid', gap: 8 }}>
+              <div key={qi} className="ls-q">
+                <MathText text={`${qi + 1}. ${q.question}`} style={{ fontWeight: 600, fontSize: 16, marginBottom: 12 }} />
+                <div className="ls-opts">
                   {q.options.map((opt, ai) => {
                     const isSelected = quizAnswers[qi] === ai
                     const isCorrect = q.correct === ai
-                    let bg = '#1a1a2e'
-                    let border = '1px solid #2a2a3e'
-                    let color = '#ccc'
-                    if (quizDone) {
-                      if (isCorrect) { bg = 'rgba(16,185,129,0.15)'; border = '1px solid #10b981'; color = '#10b981' }
-                      else if (isSelected && !isCorrect) { bg = 'rgba(245,87,108,0.15)'; border = '1px solid #f5576c'; color = '#f5576c' }
-                    } else if (isSelected) {
-                      bg = 'rgba(102,126,234,0.2)'; border = '1px solid #667eea'; color = '#a78bfa'
-                    }
+                    const state = quizDone ? (isCorrect ? ' is-right' : isSelected ? ' is-wrong' : '') : isSelected ? ' is-picked' : ''
                     return (
-                      <button key={ai} onClick={() => answerQuestion(qi, ai)} style={{
-                        padding: '12px 16px', borderRadius: 10, border, background: bg, color,
-                        textAlign: 'left', cursor: quizDone ? 'default' : 'pointer', fontSize: 14,
-                        fontWeight: isSelected || (quizDone && isCorrect) ? 600 : 400, transition: 'all 0.2s'
-                      }}>
-                        <MathText text={`${quizDone && isCorrect ? '✅ ' : ''}${quizDone && isSelected && !isCorrect ? '❌ ' : ''}${opt}`} />
+                      <button key={ai} type="button" aria-pressed={isSelected} disabled={quizDone}
+                        className={`try-opt ls-opt${state}`} onClick={() => answerQuestion(qi, ai)}>
+                        <MathText text={opt} />
                       </button>
                     )
                   })}
@@ -454,111 +379,51 @@ export default function TopicPage() {
               </div>
             ))}
             {!quizLoading && quiz && !quizDone && (
-              <button onClick={submitQuiz}
-                disabled={quizAnswers.some(a => a === null)}
-                style={{
-                  width: '100%', padding: '14px', borderRadius: 12, border: 'none',
-                  background: quizAnswers.some(a => a === null) ? '#2a2a3e' : 'linear-gradient(135deg, #667eea, #764ba2)',
-                  color: '#fff', fontSize: 15, fontWeight: 700, cursor: quizAnswers.some(a => a === null) ? 'not-allowed' : 'pointer'
-                }}>
+              <button type="button" className="nb-btn ls-btn" onClick={submitQuiz} disabled={quizAnswers.some(a => a === null)}>
                 {t('Проверить ответы')}
               </button>
             )}
             {quizDone && (
-              <div style={{ textAlign: 'center', padding: '20px', background: quizScore >= 3 ? 'rgba(16,185,129,0.1)' : 'rgba(245,158,11,0.1)', borderRadius: 14, border: `1px solid ${quizScore >= 3 ? '#10b98155' : '#f59e0b55'}` }}>
-                <div style={{ fontSize: 40, marginBottom: 8 }}>{quizScore === 4 ? '🏆' : quizScore >= 3 ? '🎉' : quizScore >= 2 ? '😊' : '📚'}</div>
-                <div style={{ fontSize: 22, fontWeight: 800, color: quizScore >= 3 ? '#10b981' : '#f59e0b' }}>
-                  {t('{a} из {b} правильно', { a: quizScore, b: quiz?.length ?? 0 })}
-                </div>
-                <div style={{ color: '#888', marginTop: 6, fontSize: 14 }}>
+              <div className="ls-result" aria-live="polite">
+                <p className="try-verdict">{t('{a} из {b} правильно', { a: quizScore, b: quiz?.length ?? 0 })}</p>
+                <p className="ls-muted">
                   {quizScore === 4 ? t('Отлично! Ты отлично знаешь тему!') : quizScore >= 3 ? t('Хорошо! Почти всё правильно!') : quizScore >= 2 ? t('Неплохо, но стоит повторить материал') : t('Советуем перечитать теорию ещё раз')}
-                </div>
-                <button onClick={() => { setQuizAnswers(new Array(quiz?.length ?? 0).fill(null)); setQuizDone(false) }}
-                  style={{ marginTop: 16, padding: '10px 28px', borderRadius: 10, border: 'none', background: '#2a2a3e', color: '#fff', cursor: 'pointer', fontSize: 14, fontWeight: 600 }}>
+                </p>
+                <button type="button" className="btn btn-ghost" onClick={() => { setQuizAnswers(new Array(quiz?.length ?? 0).fill(null)); setQuizDone(false) }}>
                   {t('Пройти снова')}
                 </button>
               </div>
             )}
-          </div>
+          </section>
         )}
 
-        {/* Комментарии */}
-        <div style={{ background: '#1a1a2e', borderRadius: 20, padding: '24px', border: '1px solid #2a2a3e', marginBottom: 40 }}>
-          <h2 style={{ margin: '0 0 20px', fontSize: '1.1rem', fontWeight: 800 }}>{t('💬 Вопросы и комментарии')}</h2>
-
-          {/* Форма отправки */}
-          <div style={{ marginBottom: 24 }}>
-            <textarea
-              value={commentText}
-              onChange={e => setCommentText(e.target.value)}
-              placeholder={t('Задай вопрос или оставь комментарий...')}
-              rows={3}
-              style={{
-                width: '100%', padding: '12px 16px', borderRadius: 12,
-                border: '1px solid #2a2a3e', background: '#0f0f1a',
-                color: '#fff', fontSize: 14, resize: 'vertical',
-                boxSizing: 'border-box', outline: 'none', fontFamily: 'sans-serif'
-              }}
-            />
-            <button
-              onClick={sendComment}
-              disabled={sendingComment || !commentText.trim()}
-              style={{
-                marginTop: 8, padding: '10px 24px', borderRadius: 10, border: 'none',
-                background: commentText.trim() ? 'linear-gradient(135deg, #667eea, #764ba2)' : '#2a2a3e',
-                color: '#fff', fontWeight: 700, cursor: commentText.trim() ? 'pointer' : 'not-allowed',
-                fontSize: 14, transition: 'all 0.2s'
-              }}>
-              {sendingComment ? t('Отправляем...') : t('📨 Отправить')}
-            </button>
-          </div>
-
-          {/* Список комментариев */}
-          {comments.length === 0 && (
-            <div style={{ color: '#555', textAlign: 'center', padding: '20px 0', fontSize: 14 }}>
-              {t('Пока нет комментариев. Будь первым!')}
-            </div>
+        <section className="ls-card" aria-labelledby="ls-comments">
+          <h2 id="ls-comments" className="app-h2">{t('Вопросы и комментарии')}</h2>
+          <label className="auth-field">
+            <span className="sr-only">{t('Задай вопрос или оставь комментарий...')}</span>
+            <textarea className="auth-input ls-textarea" rows={3} value={commentText} onChange={e => setCommentText(e.target.value)}
+              placeholder={t('Задай вопрос или оставь комментарий...')} />
+          </label>
+          <button type="button" className="nb-btn ls-send" onClick={sendComment} disabled={sendingComment || !commentText.trim()}>
+            {sendingComment ? t('Отправляем...') : t('Отправить')}
+          </button>
+          {comments.length === 0 ? (
+            <p className="ls-muted">{t('Пока нет комментариев. Будь первым!')}</p>
+          ) : (
+            <ul className="ls-comments" role="list">
+              {comments.map(c => (
+                <li key={c.id}>
+                  <div className="ls-c-head">
+                    <b>{c.user_name || t('Аноним')}</b>
+                    <span>{new Date(c.created_at).toLocaleDateString(dateLocale, { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}</span>
+                  </div>
+                  <p>{c.text}</p>
+                </li>
+              ))}
+            </ul>
           )}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-            {comments.map(c => (
-              <div key={c.id} style={{ background: '#0f0f1a', borderRadius: 12, padding: '14px 16px', border: '1px solid #2a2a3e' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
-                  <span style={{ fontWeight: 700, fontSize: 13, color: '#a78bfa' }}>{c.user_name || t('Аноним')}</span>
-                  <span style={{ color: '#555', fontSize: 12 }}>
-                    {new Date(c.created_at).toLocaleDateString(dateLocale, { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
-                  </span>
-                </div>
-                <div style={{ color: '#ccc', fontSize: 14, lineHeight: 1.6 }}>{c.text}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-
+        </section>
       </div>
-      <style>{`
-        @keyframes fadeIn { from { opacity: 0 } to { opacity: 1 } }
-        @keyframes popIn { from { transform: scale(0.8); opacity: 0 } to { transform: scale(1); opacity: 1 } }
-        .katex { color: #fcd34d !important; font-size: 1.2em !important; }
-        .katex-display { margin: 0 !important; }
-      `}</style>
-    </div>
-  )
-}
-
-function Section({ icon, title, color, bg, children }: {
-  icon: string
-  title: string
-  color: string
-  bg: string
-  children: React.ReactNode
-}) {
-  return (
-    <div style={{ background: bg, border: '1px solid #2a2a3e', borderLeft: `4px solid ${color}`, borderRadius: 20, padding: '24px 28px', marginBottom: 18 }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
-        <span style={{ fontSize: 22 }}>{icon}</span>
-        <h2 style={{ margin: 0, fontSize: '1rem', fontWeight: 700, color: color }}>{title}</h2>
-      </div>
-      {children}
     </div>
   )
 }

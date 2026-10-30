@@ -984,3 +984,108 @@ body:has(.nb-root) .drawer { background: var(--nb-sheet); border-top-color: var(
 body:has(.nb-root) .lang-switch { background: var(--nb-paper) !important; border: 1px solid var(--nb-line); }
 body:has(.nb-root) .lang-switch button { color: var(--nb-text-2) !important; }
 body:has(.nb-root) .lang-switch button[aria-pressed="true"] { background: var(--nb-text) !important; color: var(--nb-paper) !important; }
+
+/* ===== Темы — оглавление тетради ===== */
+.tp-tools { display: grid; gap: 14px; margin: 0 0 26px; }
+.tp-search {
+  display: flex; align-items: center; gap: 10px; min-height: 50px; padding: 0 16px;
+  border-radius: 999px; border: 1px solid var(--nb-line); background: var(--nb-sheet); color: var(--nb-muted);
+}
+.tp-search:focus-within { border-color: var(--nb-ink); box-shadow: 0 0 0 3px color-mix(in srgb, var(--nb-ink) 16%, transparent); }
+.tp-search input { flex: 1; min-width: 0; border: 0; outline: none; background: transparent; color: var(--nb-text); font: inherit; font-size: 16px; }
+.tp-search input::placeholder { color: var(--nb-muted); }
+.tp-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.tp-status { margin: 0; background: var(--nb-paper-2); grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.tp-status button { font-size: 14px; padding: 0 6px; }
+.tp-empty { margin: 0; padding: 48px 0; text-align: center; color: var(--nb-text-2); font-size: 15px; }
+.tp-list { list-style: none; margin: 0; padding: 6px 22px; border-radius: 6px; background: var(--nb-sheet); box-shadow: var(--nb-sheet-shadow); }
+.tp-list li + li { border-top: 1px solid var(--nb-line); }
+.tp-row {
+  display: grid; grid-template-columns: 40px 1fr auto; align-items: center; gap: 14px;
+  min-height: 72px; padding: 16px 0; color: var(--nb-text); text-decoration: none;
+}
+.tp-row:hover .tp-title { color: var(--nb-ink); }
+.tp-grade {
+  display: inline-flex; align-items: center; justify-content: center; width: 38px; height: 38px; border-radius: 50%;
+  border: 1.5px solid var(--nb-line); font-family: var(--font-display), Georgia, serif; font-style: italic; font-size: 15px; color: var(--nb-text-2);
+}
+.tp-body { display: grid; gap: 4px; min-width: 0; }
+.tp-title { font-family: var(--font-display), Georgia, serif; font-size: 19px; line-height: 1.25; letter-spacing: -0.01em; transition: color 0.2s ease; }
+.tp-snippet { font-size: 13.5px; line-height: 1.45; color: var(--nb-text-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tp-done svg { display: block; width: 26px; height: 26px; overflow: visible; }
+.tp-done path { fill: none; stroke: var(--nb-accent); stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
+.tp-row.done .tp-grade { border-color: var(--nb-accent); color: var(--nb-accent); }
+@media (min-width: 900px) {
+  .tp-tools { grid-template-columns: minmax(0, 1fr) auto; align-items: center; }
+  .tp-chips { grid-column: 1 / -1; order: 3; }
+  .tp-status { grid-template-columns: repeat(4, auto); }
+  .tp-status button { padding: 0 16px; }
+  .tp-list { padding: 6px 32px; }
+}
+
+/* ===== Страница темы — конспект на листе ===== */
+.ls-page { max-width: 860px; }
+.ls-back { display: inline-flex; align-items: center; min-height: 44px; margin-bottom: 18px; font-size: 14px; font-weight: 600; color: var(--nb-text-2); text-decoration: none; }
+.ls-back:hover { color: var(--nb-ink); }
+.ls-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; margin-bottom: 26px; }
+.ls-bookmark {
+  flex: none; display: inline-flex; align-items: center; justify-content: center; width: 48px; height: 48px; border-radius: 50%;
+  border: 1px solid var(--nb-line); background: var(--nb-sheet); color: var(--nb-text-2); cursor: pointer;
+}
+.ls-bookmark:hover { border-color: var(--nb-ink); color: var(--nb-ink); }
+.ls-bookmark.on { color: var(--nb-accent); border-color: var(--nb-accent); }
+.ls-sheet {
+  padding: 8px 22px; border-radius: 4px; background: var(--nb-sheet); box-shadow: var(--nb-sheet-shadow);
+}
+.ls-section { padding: 24px 0; }
+.ls-section + .ls-section { border-top: 1px solid var(--nb-line); }
+.ls-h { display: flex; align-items: baseline; gap: 12px; margin: 0 0 14px; font-family: var(--font-display), Georgia, serif; font-weight: 400; font-size: 24px; letter-spacing: -0.02em; }
+.ls-n { font-style: italic; font-size: 18px; color: var(--nb-accent); }
+.ls-text { margin: 0; white-space: pre-wrap; font-size: 16px; line-height: 1.8; color: var(--nb-text); }
+.ls-formulas { display: grid; gap: 12px; }
+.ls-formula { padding: 14px 18px; border-radius: 8px; background: var(--nb-paper); overflow-x: auto; color: var(--nb-ink); }
+.ls-formula .katex { font-size: 1.2em; }
+.ls-formula .katex-display { margin: 0; }
+.ls-media { display: grid; gap: 10px; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); }
+.ls-file {
+  display: flex; align-items: center; gap: 10px; min-height: 52px; padding: 0 14px; border-radius: 10px;
+  border: 1px solid var(--nb-line); background: var(--nb-paper); color: var(--nb-text); font: inherit; font-size: 14px; cursor: pointer; text-align: left;
+}
+.ls-file:hover { border-color: var(--nb-ink); }
+.ls-file-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ls-file-open { margin-left: auto; flex: none; font-size: 12.5px; color: var(--nb-ink); font-weight: 600; }
+.ls-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 16px; margin: 28px 0; }
+.ls-btn { min-height: 54px; }
+.ls-btn:disabled { opacity: 0.6; cursor: default; transform: none; }
+.ls-done { display: flex; align-items: center; gap: 14px; margin: 0; font-size: 14.5px; color: var(--nb-text-2); }
+.ls-done b { color: var(--nb-text); font-size: 16px; }
+.ls-done svg, .ls-xp svg { flex: none; width: 38px; height: 38px; overflow: visible; }
+.ls-done path, .ls-xp path { fill: none; stroke: var(--nb-accent); stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
+.ls-xp-backdrop { position: fixed; inset: 0; z-index: 1000; display: flex; align-items: center; justify-content: center; padding: 20px; background: rgba(20, 16, 10, 0.45); animation: fadeIn 0.3s ease both; }
+.ls-xp { display: grid; justify-items: center; gap: 4px; padding: 34px 44px; border-radius: 6px; background: var(--nb-sheet); box-shadow: var(--nb-sheet-shadow); text-align: center; animation: scaleIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) both; }
+.ls-xp svg { width: 54px; height: 54px; margin-bottom: 6px; }
+.ls-xp-t { margin: 0; font-size: 17px; font-weight: 600; color: var(--nb-text); }
+.ls-xp-n { margin: 0; font-family: var(--font-display), Georgia, serif; font-size: 46px; line-height: 1.1; color: var(--nb-ink); }
+.ls-xp-s { margin: 0; font-size: 14px; color: var(--nb-text-2); }
+.ls-card { margin: 0 0 28px; padding: 24px 22px; border-radius: 6px; background: var(--nb-sheet); box-shadow: var(--nb-sheet-shadow); }
+.ls-muted { color: var(--nb-text-2); font-size: 14.5px; }
+.ls-muted p { margin: 0 0 12px; }
+.ls-q { padding: 18px 0; border-top: 1px solid var(--nb-line); }
+.ls-q:first-of-type { border-top: 0; padding-top: 4px; }
+.ls-opts { display: grid; gap: 8px; }
+.ls-opt { min-height: 50px; padding: 10px 14px; font-weight: 500; }
+.try-opt.is-picked { border-color: var(--nb-ink); background: color-mix(in srgb, var(--nb-ink) 8%, var(--nb-paper)); }
+.ls-result { padding-top: 16px; border-top: 1px solid var(--nb-line); }
+.ls-textarea { min-height: 96px; padding: 12px 14px; resize: vertical; line-height: 1.5; }
+.ls-send { margin: 12px 0 18px; min-height: 46px; padding: 0 22px; font-size: 15px; border: 0; font-family: inherit; cursor: pointer; }
+.ls-send:disabled { opacity: 0.55; cursor: default; transform: none; }
+.ls-comments { list-style: none; margin: 0; padding: 0; display: grid; gap: 0; }
+.ls-comments li { padding: 14px 0; border-top: 1px solid var(--nb-line); }
+.ls-c-head { display: flex; justify-content: space-between; gap: 12px; margin-bottom: 6px; font-size: 13px; }
+.ls-c-head b { color: var(--nb-ink); }
+.ls-c-head span { color: var(--nb-muted); }
+.ls-comments p { margin: 0; font-size: 14.5px; line-height: 1.6; color: var(--nb-text); }
+@media (min-width: 900px) {
+  .ls-sheet { padding: 12px 40px; }
+  .ls-card { padding: 30px 34px; }
+}
