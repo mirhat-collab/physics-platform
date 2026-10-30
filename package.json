@@ -10,7 +10,6 @@
     "test": "node tests/run.mjs"
   },
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.89.0",
     "@supabase/ssr": "^0.10.2",
     "@supabase/supabase-js": "^2.103.0",
     "@types/jszip": "^3.4.0",
@@ -20,7 +19,7 @@
     "jszip": "^3.10.1",
     "katex": "^0.16.45",
     "mammoth": "^1.12.2",
-    "next": "16.2.3",
+    "next": "^16.4.3",
     "pdf-parse": "^1.1.1",
     "pdfjs-dist": "^6.2.108",
     "qrcode": "^1.5.4",
@@ -34,9 +33,9 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
-    "eslint-config-next": "16.2.3",
+    "eslint-config-next": "^16.4.3",
     "jiti": "^2.6.1",
-    "sharp": "^0.34.5",
+    "sharp": "^0.35.5",
     "tailwindcss": "^4",
     "typescript": "^5"
   }
