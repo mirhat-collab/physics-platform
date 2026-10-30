@@ -90,8 +90,8 @@ export default async function RootLayout({
         <link rel="icon" href="/icon-192.png" type="image/png" />
         <link rel="apple-touch-icon" href="/icon-192.png" />
       </head>
-      <body className={`${golos.variable} ${literata.variable} ${caveat.variable}`}style={{ margin: 0, fontFamily: 'var(--font-body), sans-serif', background: '#0f0f1a' }}>
-        <div aria-hidden className="app-backdrop" style={{ position: 'fixed', inset: 0, zIndex: -1, overflow: 'hidden', background: '#0f0f1a' }}>
+      <body className={`${golos.variable} ${literata.variable} ${caveat.variable}`}style={{ margin: 0, fontFamily: 'var(--font-body), sans-serif', background: 'var(--nb-paper)' }}>
+        <div aria-hidden className="app-backdrop" style={{ position: 'fixed', inset: 0, zIndex: -1, overflow: 'hidden', background: 'var(--nb-paper)' }}>
           <div className="aurora-blob aurora-blob-1" />
           <div className="aurora-blob aurora-blob-2" />
           <div className="aurora-blob aurora-blob-3" />

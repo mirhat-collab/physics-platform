@@ -94,7 +94,6 @@ export default function AppNav() {
         document.documentElement.classList.toggle('light-theme', !isDark)
         // Явно выбранная тёмная тема — «бумажные» страницы тоже тёмные
         document.documentElement.classList.toggle('dark-theme', saved === 'dark')
-        document.body.style.background = isDark ? '#0f0f1a' : '#f0f2f8'
       } catch { /* нет доступа к storage */ }
       if (!user) return
       const { data: p } = await supabase.from('profiles').select('role, full_name, email, avatar_url').eq('id', user.id).single()
@@ -117,7 +116,6 @@ export default function AppNav() {
     try { localStorage.setItem('theme', next ? 'dark' : 'light') } catch { /* нет доступа к storage */ }
     document.documentElement.classList.toggle('light-theme', !next)
     document.documentElement.classList.toggle('dark-theme', next)
-    document.body.style.background = next ? '#0f0f1a' : '#f0f2f8'
   }
 
   async function logout() {

@@ -1250,3 +1250,12 @@ body:has(.nb-root) .app-doodles { display: block; }
   .pg-sheet { padding: 40px 48px; }
   .pg-faq { padding-top: 14px; padding-bottom: 14px; }
 }
+
+/* ===== Кабинет учителя: вкладки ===== */
+.tc-tabs { display: flex; gap: 4px; padding: 4px; margin: 4px 0 16px; border-radius: 999px; background: var(--nb-paper-2); overflow-x: auto; scrollbar-width: none; }
+.tc-tabs::-webkit-scrollbar { display: none; }
+.tc-tabs button { flex: 1 0 auto; min-height: 44px; padding: 0 16px; border: 0; border-radius: 999px; background: transparent; font: inherit; font-size: 14.5px; font-weight: 600; color: var(--nb-text-2); cursor: pointer; white-space: nowrap; }
+.tc-tabs button:hover { color: var(--nb-text); }
+.tc-tabs button.on { background: var(--nb-sheet); color: var(--nb-ink); box-shadow: 0 1px 2px rgba(40, 30, 15, 0.12), 0 2px 8px -4px rgba(40, 30, 15, 0.2); }
+.tc-links { display: flex; flex-wrap: wrap; gap: 4px 24px; margin-bottom: 22px; }
+.tc-links a { display: inline-flex; align-items: center; min-height: 44px; font-size: 15px; font-weight: 600; }

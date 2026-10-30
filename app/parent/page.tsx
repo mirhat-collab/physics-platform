@@ -109,14 +109,14 @@ export default function ParentPage() {
         {/* Привязать ученика */}
         <div style={{ background: 'var(--surface)', borderRadius: 16, padding: '20px', border: '1px solid var(--line)', marginBottom: 24 }}>
           <h3 style={{ margin: '0 0 14px', fontWeight: 700 }}>{t('🔗 Привязать ученика')}</h3>
-          <div style={{ display: 'flex', gap: 10 }}>
+          <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
             <input
               value={linkEmail} onChange={e => setLinkEmail(e.target.value)}
               placeholder={t('Email ученика')}
-              style={{ flex: 1, padding: '10px 14px', borderRadius: 10, border: '1px solid var(--line)', background: 'var(--bg)', color: 'var(--text)', fontSize: 14, outline: 'none' }}
+              style={{ flex: '1 1 200px', minWidth: 0, minHeight: 44, boxSizing: 'border-box', padding: '10px 14px', borderRadius: 10, border: '1px solid var(--line)', background: 'var(--bg)', color: 'var(--text)', fontSize: 14, outline: 'none' }}
             />
             <button onClick={linkStudent} disabled={linking || !linkEmail.trim()}
-              style={{ padding: '10px 20px', borderRadius: 10, border: 'none', background: 'var(--accent)', color: 'var(--on-accent)', fontWeight: 700, cursor: 'pointer', fontSize: 14, whiteSpace: 'nowrap' }}>
+              style={{ flex: '1 0 auto', minHeight: 44, padding: '10px 20px', borderRadius: 999, border: 'none', background: 'var(--accent)', color: 'var(--on-accent)', fontWeight: 700, cursor: 'pointer', fontSize: 14, whiteSpace: 'nowrap' }}>
               {linking ? '...' : t('Привязать')}
             </button>
           </div>

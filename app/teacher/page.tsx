@@ -190,58 +190,33 @@ export default function TeacherPage() {
   }
 
   return (
-    <div className="nb-root" style={{ minHeight: '100vh', color: 'var(--text)' }}>
-      {/* Шапка */}
-      <div style={{ background: 'linear-gradient(135deg, #0a2a1a, var(--bg))', borderBottom: '1px solid var(--line)', padding: '1.5rem 2rem' }}>
-        <div style={{ maxWidth: 900, margin: '0 auto' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-              <div style={{ width: 48, height: 48, borderRadius: 14, background: 'var(--good)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24 }}>👨‍🏫</div>
-              <div>
-                <h1 style={{ fontSize: '1.5rem', fontWeight: 800, margin: 0 }}>{t('Панель учителя')}</h1>
-                <p style={{ color: 'var(--muted)', margin: 0, fontSize: 13 }}>{teacher?.full_name || teacher?.email}</p>
-              </div>
-            </div>
-            <button onClick={async () => { await supabase.auth.signOut(); router.push('/login') }}
-              style={{ padding: '8px 16px', borderRadius: 10, border: '1px solid var(--line)', background: 'var(--surface)', color: 'var(--muted)', cursor: 'pointer', fontSize: 13 }}>
-              {t('🚪 Выйти')}
-            </button>
-          </div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12 }}>
-            {[
-              { val: students.length, label: t('учеников'), color: 'var(--good)' },
-              { val: classStats.length, label: t('классов'), color: 'var(--accent)' },
-              { val: students.length > 0 ? Math.round(students.reduce((s, p) => s + p.total_xp, 0) / students.length) : 0, label: t('средний XP'), color: 'var(--warn)' },
-            ].map(({ val, label, color }) => (
-              <div key={label} style={{ background: `color-mix(in srgb, ${color} 10%, transparent)`, border: `1px solid color-mix(in srgb, ${color} 20%, transparent)`, borderRadius: 14, padding: '14px 18px' }}>
-                <div style={{ fontSize: 24, fontWeight: 800, color }}>{val}</div>
-                <div style={{ color: 'var(--muted)', fontSize: 12, marginTop: 2 }}>{label}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      <div style={{ maxWidth: 900, margin: '0 auto', padding: '1.5rem 2rem' }}>
+    <div className="nb-root">
+      <div className="app-page">
+        <header className="dash-head">
+          <p className="nb-eyebrow">{t('Панель учителя')}</p>
+          <h1 className="dash-name">{teacher?.full_name || teacher?.email}</h1>
+        </header>
+        <ul className="nb-stats dash-stats" role="list">
+          <li><span className="nb-stat-n">{students.length}</span><span className="nb-stat-l">{t('учеников')}</span></li>
+          <li><span className="nb-stat-n">{classStats.length}</span><span className="nb-stat-l">{t('классов')}</span></li>
+          <li><span className="nb-stat-n">{students.length > 0 ? Math.round(students.reduce((s, p) => s + p.total_xp, 0) / students.length) : 0}</span><span className="nb-stat-l">{t('средний XP')}</span></li>
+        </ul>
         {/* Табы */}
-        <div style={{ display: 'flex', gap: 8, marginBottom: 24, flexWrap: 'wrap' }}>
+        <div className="tc-tabs" role="tablist" aria-label={t('Разделы')}>
           {[
-            { key: 'overview', label: t('📊 Обзор') },
-            { key: 'classes', label: t('📚 Классы') },
-            { key: 'groups', label: t('👥 Мои группы') },
-            { key: 'students', label: t('👤 Ученики') },
-            { key: 'homework', label: t('📝 Домашние задания') },
-          ].map(t => (
-            <button key={t.key} onClick={() => setTab(t.key as any)} style={{
-              padding: '8px 16px', borderRadius: 999, border: 'none', cursor: 'pointer',
-              fontSize: 13, fontWeight: 600, transition: 'all 0.2s',
-              background: tab === t.key ? 'var(--good)' : 'var(--surface)', color: 'var(--on-accent)',
-            }}>{t.label}</button>
+            { key: 'overview', label: t('Обзор') },
+            { key: 'classes', label: t('Классы') },
+            { key: 'groups', label: t('Мои группы') },
+            { key: 'students', label: t('Ученики') },
+            { key: 'homework', label: t('Домашние задания') },
+          ].map(item => (
+            <button key={item.key} role="tab" aria-selected={tab === item.key} className={tab === item.key ? 'on' : ''}
+              onClick={() => setTab(item.key as typeof tab)}>{item.label}</button>
           ))}
         </div>
-        <div style={{ display: 'flex', gap: 8, marginBottom: 20, flexWrap: 'wrap' }}>
-          <Link href="/teacher/report" style={{ padding: '8px 16px', borderRadius: 10, border: '1px solid var(--line)', background: 'var(--surface)', color: 'var(--text)', fontSize: 13, fontWeight: 600, textDecoration: 'none' }}>{t('📈 Отчёт по классу (ЕНТ)')}</Link>
-          <Link href="/ent/print" style={{ padding: '8px 16px', borderRadius: 10, border: '1px solid var(--line)', background: 'var(--surface)', color: 'var(--text)', fontSize: 13, fontWeight: 600, textDecoration: 'none' }}>{t('🖨 Варианты для печати')}</Link>
+        <div className="tc-links">
+          <Link href="/teacher/report" className="nb-link">{t('Отчёт по классу (ЕНТ)')} →</Link>
+          <Link href="/ent/print" className="nb-link">{t('Варианты для печати')} →</Link>
         </div>
 
         {/* ОБЗОР */}
@@ -454,7 +429,7 @@ export default function TeacherPage() {
           </div>
         )}
 
-        {/* ТУРНИРЫ */}
+        {/* ГРУППЫ */}
         {tab === 'groups' && teacher && <TeacherGroups teacherId={teacher.id} onGroups={setGroups} />}
       </div>
     </div>
