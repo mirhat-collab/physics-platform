@@ -19,7 +19,7 @@ export default function ThemeToggle() {
     if (isDark) {
       document.documentElement.classList.remove('light-theme')
       document.documentElement.classList.add('dark-theme')
-      document.body.style.background = '#0f0f1a'
+      document.body.style.background = 'var(--bg)'
     } else {
       document.documentElement.classList.add('light-theme')
       document.documentElement.classList.remove('dark-theme')
@@ -36,13 +36,13 @@ export default function ThemeToggle() {
 
   return (
     <button onClick={toggle} style={{
-      background: dark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)',
-      border: dark ? '1px solid rgba(255,255,255,0.15)' : '1px solid rgba(0,0,0,0.15)',
+      background: dark ? 'color-mix(in srgb, var(--text) 8%, transparent)' : 'rgba(0,0,0,0.08)',
+      border: dark ? '1px solid color-mix(in srgb, var(--text) 15%, transparent)' : '1px solid rgba(0,0,0,0.15)',
       borderRadius: 10, padding: '8px 14px', cursor: 'pointer',
       fontSize: 18, transition: 'all 0.2s', display: 'flex', alignItems: 'center', gap: 6
     }} title={dark ? t('Светлая тема') : t('Тёмная тема')}>
       {dark ? '☀️' : '🌙'}
-      <span style={{ fontSize: 12, fontWeight: 600, color: dark ? '#888' : '#555' }}>
+      <span style={{ fontSize: 12, fontWeight: 600, color: dark ? 'var(--muted)' : 'var(--muted)' }}>
         {dark ? t('Светлая') : t('Тёмная')}
       </span>
     </button>

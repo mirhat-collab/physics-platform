@@ -207,7 +207,7 @@ export default function FormulasPage() {
   // ---------- Экран выбора ----------
   if (mode === 'setup' || mode === 'reference') {
     return (
-      <div className="page animate-fade-in-up">
+      <div className="nb-root page animate-fade-in-up">
         <h1 className="page-title">{t('Тренажёр формул')}</h1>
         <p className="page-sub">{t('Тебе показывают формулу с пропусками — вставь нужные буквы. Так формулы запоминаются намного быстрее, чем зубрёжкой.')}</p>
 
@@ -271,15 +271,15 @@ export default function FormulasPage() {
   if (mode === 'done') {
     const pct = Math.round((score / queue.length) * 100)
     return (
-      <div className="page animate-fade-in-up">
+      <div className="nb-root page animate-fade-in-up">
         <div className="card" style={{ textAlign: 'center', padding: '32px 20px', marginBottom: 16 }}>
-          <div style={{ fontSize: 48, fontWeight: 800, color: pct >= 70 ? 'var(--good)' : pct >= 40 ? '#f59e0b' : 'var(--bad)' }}>
+          <div style={{ fontSize: 48, fontWeight: 800, color: pct >= 70 ? 'var(--good)' : pct >= 40 ? 'var(--warn)' : 'var(--bad)' }}>
             {score} / {queue.length}
           </div>
           <div style={{ color: 'var(--muted)', marginTop: 6 }}>
             {pct === 100 ? t('Идеально! Все формулы собраны верно.') : pct >= 70 ? t('Отличный результат!') : pct >= 40 ? t('Неплохо, но есть что повторить.') : t('Стоит повторить эти формулы.')}
           </div>
-          {xpMsg && <div style={{ marginTop: 10, color: '#c4bbff', fontWeight: 700 }}>{xpMsg}</div>}
+          {xpMsg && <div style={{ marginTop: 10, color: 'var(--accent)', fontWeight: 700 }}>{xpMsg}</div>}
           <div style={{ display: 'flex', gap: 10, justifyContent: 'center', marginTop: 22, flexWrap: 'wrap' }}>
             <button className="btn" onClick={() => start()}><Icon name="refresh" size={18} /> {t('Ещё раунд')}</button>
             {mistakes.length > 0 && (
@@ -309,11 +309,11 @@ export default function FormulasPage() {
   // ---------- Игра ----------
   if (!q) return null
   return (
-    <div className="page animate-fade-in">
+    <div className="nb-root page animate-fade-in">
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 18 }}>
         <button className="nav-icon-btn" onClick={() => setMode('setup')} aria-label={t('Назад')}><Icon name="arrowLeft" /></button>
         <div style={{ flex: 1, background: 'var(--surface-2)', borderRadius: 999, height: 8, overflow: 'hidden' }}>
-          <div style={{ width: `${((index + (checked ? 1 : 0)) / queue.length) * 100}%`, height: '100%', background: 'linear-gradient(90deg,#667eea,#a78bfa)', transition: 'width 0.4s ease' }} />
+          <div style={{ width: `${((index + (checked ? 1 : 0)) / queue.length) * 100}%`, height: '100%', background: 'var(--accent)', transition: 'width 0.4s ease' }} />
         </div>
         <span style={{ color: 'var(--muted)', fontSize: 13, fontWeight: 600 }}>{index + 1} / {queue.length}</span>
       </div>
@@ -326,7 +326,7 @@ export default function FormulasPage() {
         </div>
 
         {checked && (
-          <div className="animate-fade-in" style={{ marginTop: 22, padding: '14px 16px', borderRadius: 12, textAlign: 'left', background: answeredRight ? 'rgba(52,211,153,0.08)' : 'rgba(248,113,113,0.08)', border: `1px solid ${answeredRight ? 'rgba(52,211,153,0.3)' : 'rgba(248,113,113,0.3)'}` }}>
+          <div className="animate-fade-in" style={{ marginTop: 22, padding: '14px 16px', borderRadius: 12, textAlign: 'left', background: answeredRight ? 'color-mix(in srgb, var(--good) 8%, transparent)' : 'color-mix(in srgb, var(--bad) 8%, transparent)', border: `1px solid ${answeredRight ? 'color-mix(in srgb, var(--good) 30%, transparent)' : 'color-mix(in srgb, var(--bad) 30%, transparent)'}` }}>
             <div style={{ fontWeight: 700, marginBottom: 8, color: answeredRight ? 'var(--good)' : 'var(--bad)', display: 'flex', alignItems: 'center', gap: 6 }}>
               <Icon name={answeredRight ? 'check' : 'x'} size={18} />
               {answeredRight ? (altForm ? t('Верно! Это равносильная запись. В учебнике обычно так:') : t('Верно!')) : t('Есть ошибка. Правильно так:')}

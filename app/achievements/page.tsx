@@ -30,10 +30,10 @@ const ACHIEVEMENTS = [
 ]
 
 const CATEGORY_COLORS: Record<string, string> = {
-  'Учёба': '#667eea',
-  'XP': '#f59e0b',
-  'Стрик': '#ef4444',
-  'Домашка': '#8b5cf6',
+  'Учёба': 'var(--accent)',
+  'XP': 'var(--warn)',
+  'Стрик': 'var(--bad)',
+  'Домашка': 'var(--accent)',
 }
 
 export default function AchievementsPage() {
@@ -64,8 +64,8 @@ export default function AchievementsPage() {
   }
 
   if (loading) return (
-    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-      <div style={{ color: '#fff', fontSize: 18 }}>{t('Загрузка...')}</div>
+    <div className="nb-root" style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <div style={{ color: 'var(--text)', fontSize: 18 }}>{t('Загрузка...')}</div>
     </div>
   )
 
@@ -74,32 +74,32 @@ export default function AchievementsPage() {
   const categories = [...new Set(ACHIEVEMENTS.map(a => a.category))]
 
   return (
-    <div style={{ minHeight: '100vh', color: '#fff', padding: '1.5rem', paddingBottom: 80 }}>
+    <div className="nb-root" style={{ minHeight: '100vh', color: 'var(--text)', padding: '1.5rem', paddingBottom: 80 }}>
       <div style={{ maxWidth: 500, margin: '0 auto' }}>
 
         <h1 style={{ fontSize: '1.8rem', fontWeight: 800, marginBottom: 4 }}>{t('🏅 Достижения')}</h1>
-        <p style={{ color: '#888', marginBottom: 20, fontSize: 14 }}>{t('{a} из {b} получено', { a: unlocked.length, b: ACHIEVEMENTS.length })}</p>
+        <p style={{ color: 'var(--muted)', marginBottom: 20, fontSize: 14 }}>{t('{a} из {b} получено', { a: unlocked.length, b: ACHIEVEMENTS.length })}</p>
 
         {/* Прогресс */}
-        <div style={{ background: '#1a1a2e', borderRadius: 16, padding: '16px 20px', marginBottom: 20, border: '1px solid #2a2a3e' }}>
+        <div style={{ background: 'var(--surface)', borderRadius: 16, padding: '16px 20px', marginBottom: 20, border: '1px solid var(--line)' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, marginBottom: 8 }}>
-            <span style={{ color: '#888' }}>{t('Общий прогресс')}</span>
-            <span style={{ color: '#a78bfa', fontWeight: 600 }}>{unlocked.length} / {ACHIEVEMENTS.length}</span>
+            <span style={{ color: 'var(--muted)' }}>{t('Общий прогресс')}</span>
+            <span style={{ color: 'var(--accent)', fontWeight: 600 }}>{unlocked.length} / {ACHIEVEMENTS.length}</span>
           </div>
-          <div style={{ background: '#0f0f1a', borderRadius: 999, height: 8 }}>
-            <div style={{ height: '100%', width: `${(unlocked.length / ACHIEVEMENTS.length) * 100}%`, background: 'linear-gradient(90deg, #667eea, #764ba2)', borderRadius: 999, transition: 'width 0.6s ease' }} />
+          <div style={{ background: 'var(--bg)', borderRadius: 999, height: 8 }}>
+            <div style={{ height: '100%', width: `${(unlocked.length / ACHIEVEMENTS.length) * 100}%`, background: 'var(--accent)', borderRadius: 999, transition: 'width 0.6s ease' }} />
           </div>
         </div>
 
         {/* Статистика */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 8, marginBottom: 24 }}>
           {[
-            { val: stats.topics, label: t('тем'), color: '#667eea' },
-            { val: stats.homeworkDone, label: t('домашек'), color: '#8b5cf6' },
+            { val: stats.topics, label: t('тем'), color: 'var(--accent)' },
+            { val: stats.homeworkDone, label: t('домашек'), color: 'var(--accent)' },
           ].map(({ val, label, color }) => (
-            <div key={label} style={{ background: '#1a1a2e', borderRadius: 12, padding: '12px 8px', border: '1px solid #2a2a3e', textAlign: 'center' }}>
+            <div key={label} style={{ background: 'var(--surface)', borderRadius: 12, padding: '12px 8px', border: '1px solid var(--line)', textAlign: 'center' }}>
               <div style={{ fontSize: 20, fontWeight: 800, color }}>{val}</div>
-              <div style={{ color: '#888', fontSize: 11, marginTop: 2 }}>{label}</div>
+              <div style={{ color: 'var(--muted)', fontSize: 11, marginTop: 2 }}>{label}</div>
             </div>
           ))}
         </div>
@@ -108,28 +108,28 @@ export default function AchievementsPage() {
         {categories.map(cat => {
           const catAchievements = ACHIEVEMENTS.filter(a => a.category === cat)
           const catUnlocked = catAchievements.filter(a => profile && a.check(profile, stats))
-          const color = CATEGORY_COLORS[cat] || '#667eea'
+          const color = CATEGORY_COLORS[cat] || 'var(--accent)'
           return (
             <div key={cat} style={{ marginBottom: 24 }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
                 <h2 style={{ fontSize: '0.95rem', fontWeight: 700, color, margin: 0 }}>{t(cat).toUpperCase()}</h2>
-                <span style={{ color: '#555', fontSize: 12 }}>{catUnlocked.length}/{catAchievements.length}</span>
+                <span style={{ color: 'var(--muted)', fontSize: 12 }}>{catUnlocked.length}/{catAchievements.length}</span>
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                 {catAchievements.map(a => {
                   const done = profile && a.check(profile, stats)
                   return (
                     <div key={a.id} style={{
-                      background: done ? `linear-gradient(135deg, ${color}18, ${color}08)` : '#1a1a2e',
-                      border: `1px solid ${done ? color + '44' : '#2a2a3e'}`,
+                      background: done ? `color-mix(in srgb, ${color} 8%, var(--surface))` : 'var(--surface)',
+                      border: `1px solid ${done ? `color-mix(in srgb, ${color} 40%, transparent)` : 'var(--line)'}`,
                       borderRadius: 14, padding: '14px 18px',
                       display: 'flex', alignItems: 'center', gap: 14,
                       opacity: done ? 1 : 0.45,
                     }}>
                       <div style={{ fontSize: 32, flexShrink: 0, filter: done ? 'none' : 'grayscale(1)' }}>{a.icon}</div>
                       <div style={{ flex: 1 }}>
-                        <div style={{ fontWeight: 700, fontSize: 14, color: done ? '#fff' : '#aaa' }}>{t(a.title)}</div>
-                        <div style={{ color: '#888', fontSize: 12, marginTop: 2 }}>{t(a.desc)}</div>
+                        <div style={{ fontWeight: 700, fontSize: 14, color: done ? 'var(--text)' : 'var(--muted)' }}>{t(a.title)}</div>
+                        <div style={{ color: 'var(--muted)', fontSize: 12, marginTop: 2 }}>{t(a.desc)}</div>
                       </div>
                       <div style={{ fontSize: 18 }}>{done ? '✅' : '🔒'}</div>
                     </div>

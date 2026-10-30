@@ -127,22 +127,22 @@ export default function HomeworkPage() {
   }
 
   if (loading) return (
-    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-      <div style={{ color: '#fff' }}>{t('Загрузка...')}</div>
+    <div className="nb-root" style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <div style={{ color: 'var(--text)' }}>{t('Загрузка...')}</div>
     </div>
   )
 
   return (
-    <div style={{ minHeight: '100vh', color: '#fff', padding: '2rem' }}>
+    <div className="nb-root" style={{ minHeight: '100vh', color: 'var(--text)', padding: '2rem' }}>
       <div style={{ maxWidth: 700, margin: '0 auto' }}>
-        <div style={{ background: 'linear-gradient(135deg, #1a1a3e, #0f0f1a)', borderBottom: '1px solid #2a2a3e', borderRadius: 20, padding: '24px', marginBottom: 24 }}>
+        <div style={{ background: 'var(--surface)', borderBottom: '1px solid var(--line)', borderRadius: 20, padding: '24px', marginBottom: 24 }}>
           <h1 style={{ fontSize: '1.8rem', fontWeight: 800, margin: '0 0 4px' }}>{t('📝 Домашние задания')}</h1>
-          <p style={{ color: '#888', margin: 0, fontSize: 14 }}>{preview ? userGrade : gradeLabel(userGrade, t)}</p>
+          <p style={{ color: 'var(--muted)', margin: 0, fontSize: 14 }}>{preview ? userGrade : gradeLabel(userGrade, t)}</p>
         </div>
 
         {preview && (
-          <div style={{ background: 'rgba(139,124,246,0.08)', border: '1px solid rgba(139,124,246,0.3)', borderRadius: 14, padding: '14px 16px', marginBottom: 20 }}>
-            <div style={{ fontSize: 14, color: '#c4bbff', fontWeight: 600, marginBottom: 10 }}>{t('Так эту страницу видят ученики. Выбери класс:')}</div>
+          <div style={{ background: 'color-mix(in srgb, var(--accent) 8%, transparent)', border: '1px solid color-mix(in srgb, var(--accent) 30%, transparent)', borderRadius: 14, padding: '14px 16px', marginBottom: 20 }}>
+            <div style={{ fontSize: 14, color: 'var(--accent)', fontWeight: 600, marginBottom: 10 }}>{t('Так эту страницу видят ученики. Выбери класс:')}</div>
             <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
               {previewClasses.map(name => (
                 <button key={name} className={`chip${userGrade === name ? ' on' : ''}`} onClick={() => switchPreviewClass(name)}>{name}</button>
@@ -152,7 +152,7 @@ export default function HomeworkPage() {
         )}
 
         {homeworks.length === 0 && (
-          <div style={{ textAlign: 'center', color: '#555', padding: '60px 0' }}>
+          <div style={{ textAlign: 'center', color: 'var(--muted)', padding: '60px 0' }}>
             <div style={{ fontSize: 40, marginBottom: 12 }}>📭</div>
             {t('Заданий пока нет')}
           </div>
@@ -167,24 +167,24 @@ export default function HomeworkPage() {
             const file = mediaFiles[hw.id]
 
             return (
-              <div key={hw.id} style={{ background: '#1a1a2e', borderRadius: 16, padding: '20px', border: `1px solid ${isSent ? '#10b98144' : isOverdue ? '#f5576c33' : '#2a2a3e'}` }}>
+              <div key={hw.id} style={{ background: 'var(--surface)', borderRadius: 16, padding: '20px', border: `1px solid ${isSent ? 'color-mix(in srgb, var(--good) 27%, transparent)' : isOverdue ? 'color-mix(in srgb, var(--bad) 20%, transparent)' : 'var(--line)'}` }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
                   <div>
                     <div style={{ fontWeight: 700, fontSize: 16 }}>{tri(hw.id, 'title', hw.title)}</div>
-                    {groupIdOf(hw.class_name) !== null && <div style={{ color: '#a78bfa', fontSize: 12, marginTop: 2 }}>👥 {groupNames[groupIdOf(hw.class_name)!] || t('Группа')}</div>}
-                    <div style={{ color: '#888', fontSize: 12, marginTop: 4 }}>
+                    {groupIdOf(hw.class_name) !== null && <div style={{ color: 'var(--accent)', fontSize: 12, marginTop: 2 }}>👥 {groupNames[groupIdOf(hw.class_name)!] || t('Группа')}</div>}
+                    <div style={{ color: 'var(--muted)', fontSize: 12, marginTop: 4 }}>
                       {hw.due_date ? t('До {date}', { date: new Date(hw.due_date).toLocaleDateString(dateLocale) }) : t('Без срока')}
-                      {isOverdue && !isSent && <span style={{ color: '#f5576c', marginLeft: 8 }}>{t('⚠️ Просрочено')}</span>}
+                      {isOverdue && !isSent && <span style={{ color: 'var(--bad)', marginLeft: 8 }}>{t('⚠️ Просрочено')}</span>}
                     </div>
                   </div>
                   {isSent && (
-                    <span style={{ background: 'rgba(16,185,129,0.15)', color: '#10b981', padding: '4px 12px', borderRadius: 999, fontSize: 12, fontWeight: 600 }}>
+                    <span style={{ background: 'color-mix(in srgb, var(--good) 15%, transparent)', color: 'var(--good)', padding: '4px 12px', borderRadius: 999, fontSize: 12, fontWeight: 600 }}>
                       {mySub?.grade ? t('Оценка: {grade}', { grade: mySub.grade }) : t('✅ Сдано')}
                     </span>
                   )}
                 </div>
 
-                {hw.description && <p style={{ color: '#ccc', fontSize: 14, lineHeight: 1.7, marginBottom: 12 }}>{tri(hw.id, 'description', hw.description)}</p>}
+                {hw.description && <p style={{ color: 'var(--text)', fontSize: 14, lineHeight: 1.7, marginBottom: 12 }}>{tri(hw.id, 'description', hw.description)}</p>}
 
                 {/* Медиа от учителя */}
                 {hw.media_urls && hw.media_urls.length > 0 && (
@@ -192,9 +192,9 @@ export default function HomeworkPage() {
                     {hw.media_urls.map((url, i) => {
                       const isVideo = url.match(/\.(mp4|webm|mov)$/i)
                       return isVideo ? (
-                        <video key={i} src={url} controls style={{ maxWidth: '100%', maxHeight: 200, borderRadius: 10, border: '1px solid #2a2a3e' }} />
+                        <video key={i} src={url} controls style={{ maxWidth: '100%', maxHeight: 200, borderRadius: 10, border: '1px solid var(--line)' }} />
                       ) : (
-                        <img key={i} src={url} alt="" style={{ maxWidth: '100%', maxHeight: 200, borderRadius: 10, border: '1px solid #2a2a3e', objectFit: 'cover' }} />
+                        <img key={i} src={url} alt="" style={{ maxWidth: '100%', maxHeight: 200, borderRadius: 10, border: '1px solid var(--line)', objectFit: 'cover' }} />
                       )
                     })}
                   </div>
@@ -203,13 +203,13 @@ export default function HomeworkPage() {
                 {hw.ent ? (
                   <EntHomeworkStudent hw={hw.ent} since={hw.created_at} userId={preview ? undefined : userId} />
                 ) : preview ? (
-                  <div style={{ color: '#888', fontSize: 13, background: '#0f0f1a', borderRadius: 10, padding: '10px 14px', border: '1px dashed #2a2a3e' }}>
+                  <div style={{ color: 'var(--muted)', fontSize: 13, background: 'var(--bg)', borderRadius: 10, padding: '10px 14px', border: '1px dashed var(--line)' }}>
                     {t('Здесь ученик пишет ответ и прикрепляет фото или видео.')}
                   </div>
                 ) : isSent ? (
-                  <div style={{ background: '#0f0f1a', borderRadius: 10, padding: '12px 16px', border: '1px solid #2a2a3e' }}>
-                    <div style={{ color: '#888', fontSize: 12, marginBottom: 6 }}>{t('Твой ответ:')}</div>
-                    {mySub?.answer && <div style={{ color: '#ccc', fontSize: 14, marginBottom: mySub.media_url ? 10 : 0 }}>{mySub.answer}</div>}
+                  <div style={{ background: 'var(--bg)', borderRadius: 10, padding: '12px 16px', border: '1px solid var(--line)' }}>
+                    <div style={{ color: 'var(--muted)', fontSize: 12, marginBottom: 6 }}>{t('Твой ответ:')}</div>
+                    {mySub?.answer && <div style={{ color: 'var(--text)', fontSize: 14, marginBottom: mySub.media_url ? 10 : 0 }}>{mySub.answer}</div>}
                     {mySub?.media_url && (
                       mySub.media_url.match(/\.(mp4|webm|mov)$/i)
                         ? <video src={mySub.media_url} controls style={{ maxWidth: '100%', borderRadius: 8, marginTop: 8 }} />
@@ -222,7 +222,7 @@ export default function HomeworkPage() {
                       rows={3} value={answers[hw.id] || ''}
                       onChange={e => setAnswers({ ...answers, [hw.id]: e.target.value })}
                       placeholder={t('Напиши свой ответ...')}
-                      style={{ width: '100%', padding: '12px', borderRadius: 10, border: '1px solid #2a2a3e', background: '#0f0f1a', color: '#fff', fontSize: 14, resize: 'vertical', boxSizing: 'border-box', outline: 'none', fontFamily: 'sans-serif', marginBottom: 10 }}
+                      style={{ width: '100%', padding: '12px', borderRadius: 10, border: '1px solid var(--line)', background: 'var(--bg)', color: 'var(--text)', fontSize: 14, resize: 'vertical', boxSizing: 'border-box', outline: 'none', fontFamily: 'sans-serif', marginBottom: 10 }}
                     />
 
                     {/* Прикрепить фото/видео */}
@@ -235,22 +235,22 @@ export default function HomeworkPage() {
                     {preview ? (
                       <div style={{ position: 'relative', marginBottom: 10, display: 'inline-block' }}>
                         {file?.type?.startsWith('video')
-                          ? <video src={preview} style={{ maxWidth: '100%', maxHeight: 180, borderRadius: 10, border: '1px solid #2a2a3e' }} muted />
-                          : <img src={preview} alt="" style={{ maxWidth: '100%', maxHeight: 180, borderRadius: 10, border: '1px solid #2a2a3e', objectFit: 'cover' }} />
+                          ? <video src={preview} style={{ maxWidth: '100%', maxHeight: 180, borderRadius: 10, border: '1px solid var(--line)' }} muted />
+                          : <img src={preview} alt="" style={{ maxWidth: '100%', maxHeight: 180, borderRadius: 10, border: '1px solid var(--line)', objectFit: 'cover' }} />
                         }
                         <button onClick={() => { setMediaFiles(p => ({ ...p, [hw.id]: null })); setMediaPreviews(p => ({ ...p, [hw.id]: '' })) }}
-                          style={{ position: 'absolute', top: 6, right: 6, width: 24, height: 24, borderRadius: '50%', background: '#f5576c', border: 'none', color: '#fff', fontSize: 14, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>×</button>
+                          style={{ position: 'absolute', top: 6, right: 6, width: 24, height: 24, borderRadius: '50%', background: 'var(--bad)', border: 'none', color: 'var(--on-accent)', fontSize: 14, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>×</button>
                       </div>
                     ) : (
                       <button onClick={() => fileRefs.current[hw.id]?.click()}
-                        style={{ width: '100%', padding: '10px', borderRadius: 10, border: '2px dashed #2a2a3e', background: 'transparent', color: '#888', fontSize: 13, cursor: 'pointer', marginBottom: 10 }}>
+                        style={{ width: '100%', padding: '10px', borderRadius: 10, border: '2px dashed var(--line)', background: 'transparent', color: 'var(--muted)', fontSize: 13, cursor: 'pointer', marginBottom: 10 }}>
                         {t('📎 Прикрепить фото или видео')}
                       </button>
                     )}
 
                     <button onClick={() => submitAnswer(hw.id)}
                       disabled={sending === hw.id || uploading === hw.id || (!answers[hw.id]?.trim() && !mediaFiles[hw.id])}
-                      style={{ padding: '10px 24px', borderRadius: 10, border: 'none', background: (answers[hw.id]?.trim() || mediaFiles[hw.id]) ? 'linear-gradient(135deg,#667eea,#764ba2)' : '#2a2a3e', color: '#fff', fontWeight: 700, cursor: 'pointer', fontSize: 14 }}>
+                      style={{ padding: '10px 24px', borderRadius: 10, border: 'none', background: (answers[hw.id]?.trim() || mediaFiles[hw.id]) ? 'var(--accent)' : 'var(--line)', color: 'var(--on-accent)', fontWeight: 700, cursor: 'pointer', fontSize: 14 }}>
                       {uploading === hw.id ? t('⏳ Загружаю файл...') : sending === hw.id ? t('Отправляем...') : t('📨 Сдать')}
                     </button>
                   </div>

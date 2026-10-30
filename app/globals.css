@@ -1114,3 +1114,6 @@ body:has(.nb-root) .lang-switch button[aria-pressed="true"] { background: var(--
 /* Старые страницы с .page и анимацией появления: transform ограничивает
    фактуру колонкой — там её не рисуем, чтобы колонка не темнела */
 .nb-root.page::after { display: none; }
+
+/* Заголовки страниц в стиле «Тетрадь» — книжный шрифт (у старых страниц вес задан в разметке) */
+.nb-root h1 { font-family: var(--font-display), Georgia, serif !important; font-weight: 400 !important; letter-spacing: -0.025em; }

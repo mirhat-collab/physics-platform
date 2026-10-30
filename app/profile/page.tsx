@@ -140,8 +140,8 @@ export default function ProfilePage() {
   }
 
   if (loading) return (
-    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-      <div style={{ color: '#fff', fontSize: 18 }}>{t('Загрузка...')}</div>
+    <div className="nb-root" style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <div style={{ color: 'var(--text)', fontSize: 18 }}>{t('Загрузка...')}</div>
     </div>
   )
 
@@ -151,12 +151,12 @@ export default function ProfilePage() {
 
   const input: React.CSSProperties = {
     width: '100%', padding: '12px 16px', borderRadius: 10,
-    border: '1px solid #2a2a3e', background: '#0f0f1a',
-    color: '#fff', fontSize: 15, boxSizing: 'border-box', outline: 'none'
+    border: '1px solid var(--line)', background: 'var(--bg)',
+    color: 'var(--text)', fontSize: 15, boxSizing: 'border-box', outline: 'none'
   }
 
   return (
-    <div style={{ minHeight: '100vh', color: '#fff', padding: '1.5rem' }}>
+    <div className="nb-root" style={{ minHeight: '100vh', color: 'var(--text)', padding: '1.5rem' }}>
       <div style={{ maxWidth: 500, margin: '0 auto' }}>
 
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
@@ -164,13 +164,13 @@ export default function ProfilePage() {
           <ThemeToggle />
         </div>
 
-        <div style={{ background: '#1a1a2e', borderRadius: 16, padding: '14px 18px', marginBottom: 20, border: '1px solid #2a2a3e', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
+        <div style={{ background: 'var(--surface)', borderRadius: 16, padding: '14px 18px', marginBottom: 20, border: '1px solid var(--line)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
           <span style={{ fontWeight: 600 }}>🌐 {t('Язык')}</span>
           <LanguageSwitcher compact />
         </div>
 
         {/* Аватар и имя */}
-        <div style={{ background: 'linear-gradient(135deg, #667eea, #764ba2)', borderRadius: 24, padding: '32px', marginBottom: 20, textAlign: 'center' }}>
+        <div style={{ background: 'var(--surface)', boxShadow: 'var(--shadow-md)', borderRadius: 24, padding: '32px', marginBottom: 20, textAlign: 'center' }}>
 
           {/* Hidden file input */}
           <input
@@ -191,7 +191,7 @@ export default function ProfilePage() {
               width: 80,
               height: 80,
               borderRadius: '50%',
-              background: 'rgba(255,255,255,0.2)',
+              background: 'color-mix(in srgb, var(--text) 20%, transparent)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
@@ -238,11 +238,11 @@ export default function ProfilePage() {
         </div>
 
         {profile?.role === 'student' && !GRADES.includes(profile.grade) && (
-          <div style={{ background: '#2a1a0e', borderRadius: 16, padding: '16px 20px', marginBottom: 20, border: '1px solid #f59e0b55' }}>
+          <div style={{ background: 'color-mix(in srgb, var(--warn) 10%, var(--surface))', borderRadius: 16, padding: '16px 20px', marginBottom: 20, border: '1px solid color-mix(in srgb, var(--warn) 33%, transparent)' }}>
             <div style={{ fontWeight: 600, marginBottom: 10 }}>{t('Выбери свой класс')}</div>
             <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
               {GRADES.map(g => (
-                <button key={g} onClick={() => saveGrade(g)} style={{ padding: '8px 16px', borderRadius: 10, border: '1px solid #2a2a3e', background: '#0f0f1a', color: '#fff', cursor: 'pointer', fontSize: 14 }}>
+                <button key={g} onClick={() => saveGrade(g)} style={{ padding: '8px 16px', borderRadius: 10, border: '1px solid var(--line)', background: 'var(--bg)', color: 'var(--text)', cursor: 'pointer', fontSize: 14 }}>
                   {t('{g} класс', { g: g })}
                 </button>
               ))}
@@ -251,114 +251,114 @@ export default function ProfilePage() {
         )}
 
         {profile?.role === 'student' && (
-          <details style={{ background: '#1a1a2e', borderRadius: 16, padding: '14px 18px', marginBottom: 20, border: '1px solid #2a2a3e' }}>
+          <details style={{ background: 'var(--surface)', borderRadius: 16, padding: '14px 18px', marginBottom: 20, border: '1px solid var(--line)' }}>
             <summary style={{ cursor: 'pointer', fontWeight: 600 }}>👨‍🏫 {t('Я учитель')}</summary>
-            <div style={{ color: '#888', fontSize: 13, margin: '10px 0' }}>{t('Если ты регистрировался как учитель, но попал в кабинет ученика, введи код учителя.')}</div>
+            <div style={{ color: 'var(--muted)', fontSize: 13, margin: '10px 0' }}>{t('Если ты регистрировался как учитель, но попал в кабинет ученика, введи код учителя.')}</div>
             <div style={{ display: 'flex', gap: 8 }}>
               <input type="password" value={teacherCode} onChange={e => setTeacherCode(e.target.value)} placeholder={t('Введи секретный код учителя')}
-                style={{ flex: 1, padding: '10px 14px', borderRadius: 10, border: '1px solid #2a2a3e', background: '#0f0f1a', color: '#fff', fontSize: 14 }} />
-              <button onClick={becomeTeacher} style={{ padding: '10px 16px', borderRadius: 10, border: 'none', background: '#10b981', color: '#fff', fontWeight: 600, cursor: 'pointer' }}>{t('Подтвердить')}</button>
+                style={{ flex: 1, padding: '10px 14px', borderRadius: 10, border: '1px solid var(--line)', background: 'var(--bg)', color: 'var(--text)', fontSize: 14 }} />
+              <button onClick={becomeTeacher} style={{ padding: '10px 16px', borderRadius: 10, border: 'none', background: 'var(--good)', color: 'var(--on-accent)', fontWeight: 600, cursor: 'pointer' }}>{t('Подтвердить')}</button>
             </div>
-            {teacherMsg && <div style={{ color: '#f5576c', fontSize: 13, marginTop: 8 }}>{teacherMsg}</div>}
+            {teacherMsg && <div style={{ color: 'var(--bad)', fontSize: 13, marginTop: 8 }}>{teacherMsg}</div>}
           </details>
         )}
 
         {/* Статистика */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12, marginBottom: 20 }}>
-          <div style={{ background: '#1a1a2e', borderRadius: 16, padding: 16, border: '1px solid #2a2a3e', textAlign: 'center' }}>
-            <div style={{ fontSize: 26, fontWeight: 800, color: '#a78bfa' }}>{profile?.total_xp}</div>
-            <div style={{ color: '#888', fontSize: 12, marginTop: 4 }}>{t('Всего XP')}</div>
+          <div style={{ background: 'var(--surface)', borderRadius: 16, padding: 16, border: '1px solid var(--line)', textAlign: 'center' }}>
+            <div style={{ fontSize: 26, fontWeight: 800, color: 'var(--accent)' }}>{profile?.total_xp}</div>
+            <div style={{ color: 'var(--muted)', fontSize: 12, marginTop: 4 }}>{t('Всего XP')}</div>
           </div>
-          <div style={{ background: '#1a1a2e', borderRadius: 16, padding: 16, border: '1px solid #2a2a3e', textAlign: 'center' }}>
-            <div style={{ fontSize: 26, fontWeight: 800, color: '#f59e0b' }}>🔥{profile?.streak}</div>
-            <div style={{ color: '#888', fontSize: 12, marginTop: 4 }}>{t('Дней подряд')}</div>
+          <div style={{ background: 'var(--surface)', borderRadius: 16, padding: 16, border: '1px solid var(--line)', textAlign: 'center' }}>
+            <div style={{ fontSize: 26, fontWeight: 800, color: 'var(--warn)' }}>🔥{profile?.streak}</div>
+            <div style={{ color: 'var(--muted)', fontSize: 12, marginTop: 4 }}>{t('Дней подряд')}</div>
           </div>
-          <div style={{ background: '#1a1a2e', borderRadius: 16, padding: 16, border: '1px solid #2a2a3e', textAlign: 'center' }}>
-            <div style={{ fontSize: 26, fontWeight: 800, color: '#10b981' }}>{level}</div>
-            <div style={{ color: '#888', fontSize: 12, marginTop: 4 }}>{t('Уровень')}</div>
+          <div style={{ background: 'var(--surface)', borderRadius: 16, padding: 16, border: '1px solid var(--line)', textAlign: 'center' }}>
+            <div style={{ fontSize: 26, fontWeight: 800, color: 'var(--good)' }}>{level}</div>
+            <div style={{ color: 'var(--muted)', fontSize: 12, marginTop: 4 }}>{t('Уровень')}</div>
           </div>
         </div>
 
         {/* XP прогресс */}
-        <div style={{ background: '#1a1a2e', borderRadius: 16, padding: '16px 20px', marginBottom: 20, border: '1px solid #2a2a3e' }}>
+        <div style={{ background: 'var(--surface)', borderRadius: 16, padding: '16px 20px', marginBottom: 20, border: '1px solid var(--line)' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, marginBottom: 8 }}>
-            <span style={{ color: '#888' }}>{t('До уровня')} {level + 1}</span>
-            <span style={{ color: '#a78bfa', fontWeight: 600 }}>{xpInLevel} / 100 XP</span>
+            <span style={{ color: 'var(--muted)' }}>{t('До уровня')} {level + 1}</span>
+            <span style={{ color: 'var(--accent)', fontWeight: 600 }}>{xpInLevel} / 100 XP</span>
           </div>
-          <div style={{ background: '#0f0f1a', borderRadius: 999, height: 8 }}>
-            <div style={{ height: '100%', width: `${xpInLevel}%`, background: 'linear-gradient(90deg, #667eea, #764ba2)', borderRadius: 999 }} />
+          <div style={{ background: 'var(--bg)', borderRadius: 999, height: 8 }}>
+            <div style={{ height: '100%', width: `${xpInLevel}%`, background: 'var(--accent)', borderRadius: 999 }} />
           </div>
         </div>
 
         {/* Статистика */}
         <Link href="/stats" style={{ textDecoration: 'none', display: 'block', marginBottom: 12 }}>
-          <div style={{ background: '#1a1a2e', border: '1px solid #2a2a3e', borderRadius: 16, padding: '18px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer' }}>
+          <div style={{ background: 'var(--surface)', border: '1px solid var(--line)', borderRadius: 16, padding: '18px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
               <span style={{ fontSize: 24 }}>📊</span>
               <div>
                 <div style={{ fontWeight: 600, fontSize: 15 }}>{t('Моя статистика')}</div>
-                <div style={{ color: '#888', fontSize: 12, marginTop: 2 }}>{t('Сильные и слабые темы, работа над ошибками')}</div>
+                <div style={{ color: 'var(--muted)', fontSize: 12, marginTop: 2 }}>{t('Сильные и слабые темы, работа над ошибками')}</div>
               </div>
             </div>
-            <span style={{ color: '#555', fontSize: 20 }}>→</span>
+            <span style={{ color: 'var(--muted)', fontSize: 20 }}>→</span>
           </div>
         </Link>
 
         {/* Достижения */}
         <Link href="/achievements" style={{ textDecoration: 'none', display: 'block', marginBottom: 12 }}>
-          <div style={{ background: '#1a1a2e', border: '1px solid #2a2a3e', borderRadius: 16, padding: '18px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer' }}>
+          <div style={{ background: 'var(--surface)', border: '1px solid var(--line)', borderRadius: 16, padding: '18px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
               <span style={{ fontSize: 24 }}>🏅</span>
               <div>
                 <div style={{ fontWeight: 600, fontSize: 15 }}>{t('Достижения')}</div>
-                <div style={{ color: '#888', fontSize: 12, marginTop: 2 }}>{t('Твои награды и значки')}</div>
+                <div style={{ color: 'var(--muted)', fontSize: 12, marginTop: 2 }}>{t('Твои награды и значки')}</div>
               </div>
             </div>
-            <span style={{ color: '#555', fontSize: 20 }}>→</span>
+            <span style={{ color: 'var(--muted)', fontSize: 20 }}>→</span>
           </div>
         </Link>
 
         {/* Редактировать имя */}
-        <div style={{ background: '#1a1a2e', borderRadius: 16, padding: '20px', marginBottom: 20, border: '1px solid #2a2a3e' }}>
+        <div style={{ background: 'var(--surface)', borderRadius: 16, padding: '20px', marginBottom: 20, border: '1px solid var(--line)' }}>
           <div style={{ fontWeight: 600, marginBottom: 12 }}>{t('✏️ Изменить имя')}</div>
           {editing ? (
             <div>
               <input style={input} value={newName} onChange={e => setNewName(e.target.value)} placeholder={t('Твоё имя')} />
               <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
-                <button onClick={saveName} disabled={saving} style={{ flex: 1, padding: '10px', borderRadius: 10, border: 'none', background: '#43e97b', color: '#fff', fontWeight: 700, cursor: 'pointer', fontSize: 14 }}>
+                <button onClick={saveName} disabled={saving} style={{ flex: 1, padding: '10px', borderRadius: 10, border: 'none', background: 'var(--good)', color: 'var(--on-accent)', fontWeight: 700, cursor: 'pointer', fontSize: 14 }}>
                   {saving ? t('Сохраняю...') : t('💾 Сохранить')}
                 </button>
-                <button onClick={() => setEditing(false)} style={{ padding: '10px 16px', borderRadius: 10, border: 'none', background: '#2a2a3e', color: '#fff', cursor: 'pointer', fontSize: 14 }}>
+                <button onClick={() => setEditing(false)} style={{ padding: '10px 16px', borderRadius: 10, border: 'none', background: 'var(--line)', color: 'var(--text)', cursor: 'pointer', fontSize: 14 }}>
                   {t('Отмена')}
                 </button>
               </div>
             </div>
           ) : (
-            <button onClick={() => setEditing(true)} style={{ width: '100%', padding: '10px', borderRadius: 10, border: '1px solid #2a2a3e', background: '#0f0f1a', color: '#a78bfa', fontWeight: 600, cursor: 'pointer', fontSize: 14 }}>
+            <button onClick={() => setEditing(true)} style={{ width: '100%', padding: '10px', borderRadius: 10, border: '1px solid var(--line)', background: 'var(--bg)', color: 'var(--accent)', fontWeight: 600, cursor: 'pointer', fontSize: 14 }}>
               {t('Изменить имя')}
             </button>
           )}
-          {msg && <div style={{ color: '#4ade80', fontSize: 13, marginTop: 8 }}>{msg}</div>}
+          {msg && <div style={{ color: 'var(--good)', fontSize: 13, marginTop: 8 }}>{msg}</div>}
         </div>
 
         {/* Установить приложение */}
         <Link href="/install" style={{ textDecoration: 'none', display: 'block', marginBottom: 12 }}>
-          <div style={{ background: 'linear-gradient(135deg, rgba(102,126,234,0.15), rgba(118,75,162,0.15))', border: '1px solid rgba(102,126,234,0.3)', borderRadius: 16, padding: '18px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer' }}>
+          <div style={{ background: 'linear-gradient(135deg, color-mix(in srgb, var(--accent) 15%, transparent), color-mix(in srgb, var(--accent) 15%, transparent))', border: '1px solid color-mix(in srgb, var(--accent) 30%, transparent)', borderRadius: 16, padding: '18px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
               <span style={{ fontSize: 24 }}>📲</span>
               <div>
                 <div style={{ fontWeight: 600, fontSize: 15 }}>{t('Установить приложение')}</div>
-                <div style={{ color: '#888', fontSize: 12, marginTop: 2 }}>{t('Добавь на экран телефона — бесплатно!')}</div>
+                <div style={{ color: 'var(--muted)', fontSize: 12, marginTop: 2 }}>{t('Добавь на экран телефона — бесплатно!')}</div>
               </div>
             </div>
-            <span style={{ color: '#667eea', fontSize: 20 }}>→</span>
+            <span style={{ color: 'var(--accent)', fontSize: 20 }}>→</span>
           </div>
         </Link>
 
         {/* Выйти */}
         <button
           onClick={handleLogout}
-          style={{ width: '100%', padding: '14px', borderRadius: 14, border: '1px solid #f5576c33', background: '#2d1a1a', color: '#f5576c', fontSize: 16, fontWeight: 700, cursor: 'pointer' }}
+          style={{ width: '100%', padding: '14px', borderRadius: 14, border: '1px solid color-mix(in srgb, var(--bad) 20%, transparent)', background: 'var(--surface)', color: 'var(--bad)', fontSize: 16, fontWeight: 700, cursor: 'pointer' }}
         >
           {t('🚪 Выйти из аккаунта')}
         </button>

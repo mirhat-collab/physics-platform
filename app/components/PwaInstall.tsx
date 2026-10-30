@@ -42,24 +42,24 @@ export default function PwaInstall() {
   return (
     <div style={{
       position: 'fixed', bottom: 80, left: '50%', transform: 'translateX(-50%)',
-      zIndex: 9999, background: 'linear-gradient(135deg, #667eea, #764ba2)',
+      zIndex: 9999, background: 'var(--accent)',
       borderRadius: 16, padding: '14px 20px', display: 'flex',
-      alignItems: 'center', gap: 12, boxShadow: '0 8px 32px rgba(102,126,234,0.5)',
+      alignItems: 'center', gap: 12, boxShadow: '0 8px 32px color-mix(in srgb, var(--accent) 50%, transparent)',
       maxWidth: 360, width: '90%', animation: 'slideUp 0.4s ease'
     }}>
       <span style={{ fontSize: 28 }}>📲</span>
       <div style={{ flex: 1 }}>
-        <div style={{ fontWeight: 800, color: '#fff', fontSize: 14 }}>{t('Установи как приложение')}</div>
-        <div style={{ color: 'rgba(255,255,255,0.8)', fontSize: 12 }}>{t('Работает без интернета!')}</div>
+        <div style={{ fontWeight: 800, color: 'var(--text)', fontSize: 14 }}>{t('Установи как приложение')}</div>
+        <div style={{ color: 'color-mix(in srgb, var(--text) 80%, transparent)', fontSize: 12 }}>{t('Работает без интернета!')}</div>
       </div>
       <button onClick={install} style={{
-        background: '#fff', border: 'none', borderRadius: 8,
-        color: '#667eea', cursor: 'pointer', padding: '6px 12px',
+        background: 'var(--text)', border: 'none', borderRadius: 8,
+        color: 'var(--accent)', cursor: 'pointer', padding: '6px 12px',
         fontSize: 12, fontWeight: 700
       }}>{t('Установить')}</button>
       <button onClick={dismiss} style={{
-        background: 'rgba(255,255,255,0.2)', border: 'none', borderRadius: 8,
-        color: '#fff', cursor: 'pointer', padding: '4px 8px', fontSize: 14
+        background: 'color-mix(in srgb, var(--text) 20%, transparent)', border: 'none', borderRadius: 8,
+        color: 'var(--text)', cursor: 'pointer', padding: '4px 8px', fontSize: 14
       }}>✕</button>
       <style>{`@keyframes slideUp { from { opacity:0; transform:translateX(-50%) translateY(20px) } to { opacity:1; transform:translateX(-50%) translateY(0) } }`}</style>
     </div>
