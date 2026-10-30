@@ -5,7 +5,7 @@ import { supabase } from '@/lib/supabase'
 import { useT } from '@/app/components/LanguageProvider'
 
 type Profile = { total_xp: number; streak: number }
-type Stats = { topics: number; wins: number; tourParticipations: number; homeworkDone: number }
+type Stats = { topics: number; homeworkDone: number }
 
 const ACHIEVEMENTS = [
   // Темы
@@ -24,15 +24,6 @@ const ACHIEVEMENTS = [
   { id: 'streak_7', icon: '⚡', title: 'Неделя подряд', desc: 'Заходи 7 дней подряд', category: 'Стрик', check: (p: Profile, _: Stats) => p.streak >= 7 },
   { id: 'streak_30', icon: '🌟', title: 'Легенда', desc: 'Заходи 30 дней подряд', category: 'Стрик', check: (p: Profile, _: Stats) => p.streak >= 30 },
 
-  // Турниры — участие
-  { id: 'tour_first', icon: '🏆', title: 'Дебют', desc: 'Прими участие в первом турнире', category: 'Турниры', check: (_: Profile, s: Stats) => s.tourParticipations >= 1 },
-  { id: 'tour_five', icon: '🎯', title: 'Турнирный боец', desc: 'Прими участие в 5 турнирах', category: 'Турниры', check: (_: Profile, s: Stats) => s.tourParticipations >= 5 },
-
-  // Турниры — победы
-  { id: 'win_first', icon: '🥇', title: 'Чемпион', desc: 'Займи 1 место в турнире', category: 'Турниры', check: (_: Profile, s: Stats) => s.wins >= 1 },
-  { id: 'win_three', icon: '🏅', title: 'Трёхкратный', desc: 'Займи 1 место в 3 турнирах', category: 'Турниры', check: (_: Profile, s: Stats) => s.wins >= 3 },
-  { id: 'win_five', icon: '👑', title: 'Непобедимый', desc: 'Победи в 5 турнирах', category: 'Турниры', check: (_: Profile, s: Stats) => s.wins >= 5 },
-
   // Домашние задания
   { id: 'hw_first', icon: '📝', title: 'Прилежный ученик', desc: 'Сдай первое домашнее задание', category: 'Домашка', check: (_: Profile, s: Stats) => s.homeworkDone >= 1 },
   { id: 'hw_ten', icon: '📋', title: 'Ответственный', desc: 'Сдай 10 домашних заданий', category: 'Домашка', check: (_: Profile, s: Stats) => s.homeworkDone >= 10 },
@@ -42,7 +33,6 @@ const CATEGORY_COLORS: Record<string, string> = {
   'Учёба': '#667eea',
   'XP': '#f59e0b',
   'Стрик': '#ef4444',
-  'Турниры': '#10b981',
   'Домашка': '#8b5cf6',
 }
 
@@ -50,7 +40,7 @@ export default function AchievementsPage() {
   const { t } = useT()
   const router = useRouter()
   const [profile, setProfile] = useState<Profile | null>(null)
-  const [stats, setStats] = useState<Stats>({ topics: 0, wins: 0, tourParticipations: 0, homeworkDone: 0 })
+  const [stats, setStats] = useState<Stats>({ topics: 0, homeworkDone: 0 })
   const [loading, setLoading] = useState(true)
 
   useEffect(() => { loadData() }, [])
@@ -63,13 +53,10 @@ export default function AchievementsPage() {
     if (p) setProfile(p)
 
     const { data: prog } = await supabase.from('progress').select('topic').eq('student', user.id).eq('status', 'completed')
-    const { data: tourSubs } = await supabase.from('tournament_submissions').select('place').eq('student_id', user.id)
     const { data: hwSubs } = await supabase.from('homework_submissions').select('id').eq('student_id', user.id)
 
     setStats({
       topics: prog?.length || 0,
-      wins: tourSubs?.filter(s => s.place === 1).length || 0,
-      tourParticipations: tourSubs?.length || 0,
       homeworkDone: hwSubs?.length || 0,
     })
 
@@ -105,11 +92,9 @@ export default function AchievementsPage() {
         </div>
 
         {/* Статистика */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8, marginBottom: 24 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 8, marginBottom: 24 }}>
           {[
             { val: stats.topics, label: t('тем'), color: '#667eea' },
-            { val: stats.wins, label: t('побед'), color: '#10b981' },
-            { val: stats.tourParticipations, label: t('турниров'), color: '#f59e0b' },
             { val: stats.homeworkDone, label: t('домашек'), color: '#8b5cf6' },
           ].map(({ val, label, color }) => (
             <div key={label} style={{ background: '#1a1a2e', borderRadius: 12, padding: '12px 8px', border: '1px solid #2a2a3e', textAlign: 'center' }}>

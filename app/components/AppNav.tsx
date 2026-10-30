@@ -51,8 +51,7 @@ function buildGroups(role: string | null): NavGroup[] {
     {
       title: 'Соревнования',
       items: [
-        { href: '/tournament', icon: 'trophy', label: 'Турниры' },
-        { href: '/progress', icon: 'chart', label: 'Рейтинг' },
+        { href: '/progress', icon: 'chart', label: 'Прогресс' },
         { href: '/achievements', icon: 'medal', label: 'Достижения' },
       ],
     },

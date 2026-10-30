@@ -65,7 +65,9 @@ export default function ParentPage() {
     if (!linkEmail.trim()) return
     setLinking(true)
     setLinkMsg('')
-    const { data: student } = await supabase.from('profiles').select('id, full_name, grade, total_xp, streak, role').eq('email', linkEmail.trim()).eq('role', 'student').maybeSingle()
+    // Чужие профили родителю не видны — ищем одного ученика по точной почте
+    const { data: found } = await supabase.rpc('find_student_by_email', { p_email: linkEmail.trim() })
+    const student = ((found || []) as Student[])[0] ?? null
     if (!student) { setLinkMsg(t('❌ Ученик с таким email не найден')); setLinking(false); return }
     const { data: existing } = await supabase.from('parent_links').select('id').eq('parent_id', userId).eq('student_id', student.id).maybeSingle()
     if (existing) { setLinkMsg(t('Этот ученик уже привязан')); setLinking(false); return }

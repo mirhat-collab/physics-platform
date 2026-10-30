@@ -5,6 +5,18 @@ import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
 import { useT } from '@/app/components/LanguageProvider'
 import LanguageSwitcher from '@/app/components/LanguageSwitcher'
+import PenSheet from '@/app/components/PenSheet'
+import HeroTry from '@/app/components/HeroTry'
+import { StatsStrip } from '@/app/components/LandingLive'
+
+// Короткие слова (с, и, к…) не остаются висеть в конце строки
+const glue = (text: string) => text.replace(/(^|\s)(\S{1,2})\s/g, '$1$2\u00a0')
+
+const Arrow = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+    <path d="M5 12h14M13 6l6 6-6 6" />
+  </svg>
+)
 
 export default function LobbyPage() {
   const { t, locale } = useT()
@@ -19,69 +31,134 @@ export default function LobbyPage() {
     })
   }, [router])
 
-  if (checking) return (
-    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-      <div style={{ color: '#fff', fontSize: 18 }}>{t('Загрузка...')}</div>
-    </div>
-  )
+  // Пока проверяем вход — чистый лист, без вспышки старого фона
+  if (checking) return <div className="nb-root" aria-busy="true"><span className="sr-only">{t('Загрузка...')}</span></div>
+
+  const features = [
+    { title: t('Все темы по спецификации НЦТ'), text: t('Теория, формулы и задачи с подробным решением по физике и математике.') },
+    { title: t('Пробный ЕНТ с прогнозом балла'), text: t('Решай варианты в формате настоящего экзамена и узнай, сколько баллов наберёшь.') },
+    { title: t('ИИ объяснит непонятный шаг'), text: t('Застрял в решении? Нажми на шаг — и получи объяснение простыми словами.') },
+    { title: t('Для учителей'), text: t('Группы по ссылке и QR-коду, домашние задания и отчёты по каждому ученику.') },
+  ]
+
+  const steps = [
+    { title: t('Выбери предмет и тему'), text: t('Физика или математика — все темы по спецификации НЦТ, от простого к сложному.') },
+    { title: t('Решай и разбирай ошибки'), text: t('К каждой задаче — подробное решение, а ИИ объяснит непонятный шаг.') },
+    { title: t('Проверь себя на пробном ЕНТ'), text: t('Узнай прогноз балла и зарабатывай XP за каждую задачу.') },
+  ]
+
+  // Открытые страницы без входа — и для гостей, и для поисковиков
+  const subjects = [
+    {
+      key: 'phys', title: t('Физика'),
+      text: t('Механика, термодинамика, электричество, оптика и атомная физика.'),
+      links: [
+        { href: `${pre}/podgotovka/fizika`, label: t('Задачи ЕНТ по физике') },
+        { href: `${pre}/podgotovka/fizika/formuly`, label: t('Формулы по физике') },
+      ],
+    },
+    {
+      key: 'math', title: t('Математика'),
+      text: t('Алгебра, уравнения, функции, геометрия и начала анализа.'),
+      links: [
+        { href: `${pre}/podgotovka/matematika`, label: t('Задачи ЕНТ по математике') },
+        { href: `${pre}/podgotovka/matematika/formuly`, label: t('Формулы по математике') },
+      ],
+    },
+  ]
 
   return (
-    <div style={{ minHeight: '100vh', color: '#fff', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '2rem', position: 'relative', overflow: 'hidden' }}>
-
-      <div style={{ position: 'absolute', top: 16, right: 16, zIndex: 2 }}><LanguageSwitcher compact /></div>
-
-      {/* Декоративное свечение на фоне */}
-      <div style={{ position: 'absolute', top: '-10%', left: '50%', transform: 'translateX(-50%)', width: 500, height: 500, borderRadius: '50%', background: 'radial-gradient(circle, rgba(102,126,234,0.18) 0%, transparent 70%)', pointerEvents: 'none' }} />
-
-      <img
-        src="/logo-mark.png"
-        alt="Mirha_Edu"
-        className="animate-float"
-        style={{ width: 96, height: 96, objectFit: 'contain', marginBottom: 20, filter: 'drop-shadow(0 8px 24px rgba(102,126,234,0.45))', position: 'relative' }}
-      />
-
-      <h1 className="animate-fade-in-up" style={{ fontSize: '2.6rem', fontWeight: 900, margin: '0 0 12px', textAlign: 'center', background: 'linear-gradient(135deg, #a78bfa, #667eea)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', position: 'relative' }}>
-        {t('Подготовка к ЕНТ')}
-      </h1>
-      <p className="animate-fade-in-up" style={{ color: '#888', fontSize: 16, textAlign: 'center', maxWidth: 380, marginBottom: 48, lineHeight: 1.6, animationDelay: '0.08s', position: 'relative' }}>
-        {t('Физика и математика: задачи ЕНТ с решением, пробный ЕНТ онлайн, рейтинг и XP. Бесплатно.')}
-      </p>
-
-      <div className="stagger-children" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12, maxWidth: 500, width: '100%', marginBottom: 40, position: 'relative' }}>
-        {[
-          { icon: '📚', label: t('Темы по классам') },
-          { icon: '🏆', label: t('Рейтинг и XP') },
-          { icon: '🔥', label: t('Стрики побед') },
-        ].map(f => (
-          <div key={f.label} className="hover-lift" style={{ background: '#1a1a2e', borderRadius: 14, padding: '16px 12px', textAlign: 'center', border: '1px solid #2a2a3e' }}>
-            <div style={{ fontSize: 26, marginBottom: 6 }}>{f.icon}</div>
-            <div style={{ fontSize: 12, color: '#888' }}>{f.label}</div>
+    <div className="nb-root">
+      <div className="nb-wrap">
+        <header className="nb-top">
+          <Link href="/" className="nb-brand">
+            <img src="/logo-mark.png" alt="" />
+            Mirha_Edu
+          </Link>
+          <div className="nb-top-actions">
+            <LanguageSwitcher compact tone="paper" />
+            <Link href="/login" className="nb-top-login">{t('Войти')}</Link>
           </div>
-        ))}
+        </header>
+
+        <main id="main">
+        <section className="nb-hero">
+          <div className="nb-hero-text">
+            <p className="nb-eyebrow">{t('ЕНТ · физика и математика')}</p>
+            {/* Вторая строка курсивом; порядок слов в казахском другой */}
+            <h1 className="nb-h1" aria-label={t('Подготовка к ЕНТ')}>
+              {locale === 'kk'
+                ? <><span>ҰБТ-ға</span><span><em>дайындық</em></span></>
+                : <><span>Подготовка</span><span><em>к&nbsp;ЕНТ</em></span></>}
+            </h1>
+            <p className="nb-lead">{glue(t('Физика и математика: задачи ЕНТ с решением, пробный ЕНТ онлайн и прогноз балла.'))}</p>
+            <div className="nb-cta">
+              <Link href="/login" className="nb-btn">{t('Начать бесплатно')}<Arrow /></Link>
+              <HeroTry pre={pre} />
+            </div>
+            <p className="nb-note"><span className="nb-badge">{t('Бесплатно')}</span> {t('на русском и казахском')}</p>
+          </div>
+          <div className="nb-art">
+            <PenSheet />
+          </div>
+        </section>
+
+        <StatsStrip />
+
+        <section className="nb-section" aria-labelledby="nb-how">
+          <p className="nb-kicker">{t('Как это работает')}</p>
+          <h2 id="nb-how" className="nb-h2">{t('Три шага до уверенного балла')}</h2>
+          <ol className="nb-steps" role="list">
+            {steps.map((st, i) => (
+              <li key={st.title}>
+                <span className="nb-step-n" aria-hidden>{i + 1}</span>
+                <h3>{st.title}</h3>
+                <p>{st.text}</p>
+              </li>
+            ))}
+          </ol>
+        </section>
+
+        <nav className="nb-section" aria-labelledby="nb-open">
+          <p className="nb-kicker">{t('Открыто без регистрации')}</p>
+          <h2 id="nb-open" className="nb-h2">{t('Выбери предмет')}</h2>
+          <div className="nb-books">
+            {subjects.map(sub => (
+              <div key={sub.key} className={`nb-book nb-book-${sub.key}`}>
+                <span className="nb-book-ribbon" aria-hidden />
+                <h3>{sub.title}</h3>
+                <p>{sub.text}</p>
+                <ul role="list">
+                  {sub.links.map(l => <li key={l.href}><Link href={l.href}>{l.label}</Link></li>)}
+                </ul>
+              </div>
+            ))}
+          </div>
+          <Link href={`${pre}/podgotovka/stati`} className="nb-link nb-more">{t('Всё про ЕНТ: статьи и советы')}</Link>
+        </nav>
+
+        <section className="nb-section" aria-labelledby="nb-inside">
+          <p className="nb-kicker">{t('Что внутри')}</p>
+          <h2 id="nb-inside" className="nb-h2">{t('Всё для ЕНТ — в одной тетради')}</h2>
+          <ol className="nb-features" role="list">
+            {features.map((f, i) => (
+              <li key={f.title} className="nb-feature">
+                <span className="nb-feature-num" aria-hidden>{i + 1}.</span>
+                <h3>{f.title}</h3>
+                <p>{f.text}</p>
+              </li>
+            ))}
+          </ol>
+        </section>
+
+
+        <section className="nb-final">
+          <p className="nb-final-title">{t('Удачи на ЕНТ!')}</p>
+          <p className="nb-final-sub">{t('Начни с одной задачи — сегодня.')}</p>
+          <Link href="/login" className="nb-btn">{t('Начать бесплатно')}<Arrow /></Link>
+        </section>
+        </main>
       </div>
-
-      <div className="animate-fade-in-up" style={{ display: 'flex', flexDirection: 'column', gap: 12, width: '100%', maxWidth: 320, animationDelay: '0.2s', position: 'relative' }}>
-        <Link href="/login" style={{ textDecoration: 'none' }}>
-          <button className="btn-glow" style={{ width: '100%', padding: '16px', borderRadius: 14, border: 'none', background: 'linear-gradient(135deg, #667eea, #764ba2)', color: '#fff', fontSize: 16, fontWeight: 700, cursor: 'pointer' }}>
-            {t('⚡ Войти')}
-          </button>
-        </Link>
-        <Link href="/login" style={{ textDecoration: 'none' }}>
-          <button className="btn-glow" style={{ width: '100%', padding: '16px', borderRadius: 14, border: '1px solid #2a2a3e', background: '#1a1a2e', color: '#a78bfa', fontSize: 16, fontWeight: 600, cursor: 'pointer' }}>
-            {t('🚀 Зарегистрироваться')}
-          </button>
-        </Link>
-      </div>
-
-      {/* Открытые страницы без входа — и для гостей, и для поисковиков */}
-      <nav aria-label={t('Подготовка к ЕНТ')} style={{ marginTop: 32, display: 'flex', gap: 8, flexWrap: 'wrap', justifyContent: 'center', maxWidth: 520, position: 'relative' }}>
-        <Link className="chip" href={`${pre}/podgotovka/fizika`} style={{ textDecoration: 'none' }}>{t('Задачи ЕНТ по физике')}</Link>
-        <Link className="chip" href={`${pre}/podgotovka/matematika`} style={{ textDecoration: 'none' }}>{t('Задачи ЕНТ по математике')}</Link>
-        <Link className="chip" href={`${pre}/podgotovka/fizika/formuly`} style={{ textDecoration: 'none' }}>{t('Формулы по физике')}</Link>
-        <Link className="chip" href={`${pre}/podgotovka/matematika/formuly`} style={{ textDecoration: 'none' }}>{t('Формулы по математике')}</Link>
-        <Link className="chip" href={`${pre}/podgotovka/stati`} style={{ textDecoration: 'none' }}>{t('Всё про ЕНТ: статьи и советы')}</Link>
-      </nav>
-
     </div>
   )
 }
