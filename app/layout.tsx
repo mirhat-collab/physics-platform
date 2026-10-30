@@ -80,7 +80,8 @@ export default async function RootLayout({
     <html lang={locale}>
       <head>
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <meta name="theme-color" content="#667eea" />
+        <meta name="theme-color" content="#f3efe7" media="(prefers-color-scheme: light)" />
+        <meta name="theme-color" content="#17171a" media="(prefers-color-scheme: dark)" />
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />

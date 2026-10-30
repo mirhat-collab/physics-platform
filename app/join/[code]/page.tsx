@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
 import { PENDING_JOIN } from '@/lib/groups'
 import { useT } from '@/app/components/LanguageProvider'
+import LanguageSwitcher from '@/app/components/LanguageSwitcher'
 
 // Приглашение в группу учителя: /join/<код> (ссылка или QR-код)
 export default function JoinPage({ params }: { params: Promise<{ code: string }> }) {
@@ -37,31 +38,42 @@ export default function JoinPage({ params }: { params: Promise<{ code: string }>
   }
 
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
-      <div className="card animate-scale-in" style={{ maxWidth: 440, width: '100%', padding: 32, textAlign: 'center', color: 'var(--text)' }}>
-        <div style={{ fontSize: 40, marginBottom: 8 }}>👥</div>
-        {group === undefined && <p style={{ color: 'var(--muted)' }}>{t('Загрузка…')}</p>}
-        {group === null && <p>{t('Группа не найдена — проверь ссылку у учителя.')}</p>}
-        {group && (
-          <>
-            <h1 style={{ fontSize: '1.5rem', fontWeight: 800, margin: '0 0 6px' }}>{group.group_name}</h1>
-            {group.teacher_name && <p style={{ color: 'var(--muted)', margin: '0 0 20px' }}>{t('Учитель: {name}', { name: group.teacher_name })}</p>}
-            {joined ? (
+    <div className="nb-root">
+      <div className="nb-wrap">
+        <header className="nb-top">
+          <Link href="/" className="nb-brand" aria-label={t('На главную')}>
+            <img src="/logo-mark.png" alt="" />
+            Mirha_Edu
+          </Link>
+          <LanguageSwitcher compact tone="paper" />
+        </header>
+        <main className="join">
+          <section className="auth-sheet join-sheet" aria-live="polite">
+            <p className="nb-kicker">{t('Приглашение в группу')}</p>
+            {group === undefined && <p className="auth-sub">{t('Загрузка…')}</p>}
+            {group === null && <p className="auth-sub">{t('Группа не найдена — проверь ссылку у учителя.')}</p>}
+            {group && (
               <>
-                <p style={{ color: 'var(--good)', fontWeight: 700 }}>✅ {t('Ты в группе! Учитель будет видеть твои задания и результаты.')}</p>
-                <Link href="/homework" className="btn" style={{ textDecoration: 'none', display: 'inline-flex', marginTop: 8 }}>{t('К домашним заданиям')}</Link>
+                <h1 className="auth-title">{group.group_name}</h1>
+                {group.teacher_name && <p className="auth-sub">{t('Учитель: {name}', { name: group.teacher_name })}</p>}
+                {joined ? (
+                  <>
+                    <p className="join-ok">{t('Ты в группе! Учитель будет видеть твои задания и результаты.')}</p>
+                    <Link href="/homework" className="nb-btn auth-submit">{t('К домашним заданиям')}</Link>
+                  </>
+                ) : loggedIn ? (
+                  <button className="nb-btn auth-submit" onClick={join} disabled={busy}>{busy ? t('Загрузка…') : t('Вступить в группу')}</button>
+                ) : loggedIn === false ? (
+                  <>
+                    <p className="auth-sub">{t('Чтобы вступить, войди или зарегистрируйся — потом вернёшься сюда автоматически.')}</p>
+                    <Link href="/login" className="nb-btn auth-submit">{t('Войти или зарегистрироваться')}</Link>
+                  </>
+                ) : null}
+                {error && <p className="auth-error" role="alert">{error}</p>}
               </>
-            ) : loggedIn ? (
-              <button className="btn" onClick={join} disabled={busy} style={{ width: '100%' }}>{busy ? t('Загрузка…') : t('Вступить в группу')}</button>
-            ) : loggedIn === false ? (
-              <>
-                <p style={{ fontSize: 14, color: 'var(--muted)', marginBottom: 14 }}>{t('Чтобы вступить, войди или зарегистрируйся — потом вернёшься сюда автоматически.')}</p>
-                <Link href="/login" className="btn" style={{ textDecoration: 'none', display: 'inline-flex', width: '100%', justifyContent: 'center' }}>{t('Войти или зарегистрироваться')}</Link>
-              </>
-            ) : null}
-            {error && <p style={{ color: 'var(--bad)', fontSize: 14, marginTop: 12 }}>{error}</p>}
-          </>
-        )}
+            )}
+          </section>
+        </main>
       </div>
     </div>
   )
