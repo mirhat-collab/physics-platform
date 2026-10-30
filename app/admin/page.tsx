@@ -214,7 +214,9 @@ export default function AdminPage() {
   }
   const textarea: React.CSSProperties = { ...input, height: 90, resize: 'vertical', fontFamily: 'sans-serif', lineHeight: 1.6 }
   const formulaArea: React.CSSProperties = { ...input, height: 90, resize: 'vertical', fontFamily: 'monospace', color: 'var(--warn)', background: 'var(--bg)', border: '1px solid color-mix(in srgb, var(--warn) 30%, transparent)' }
-  const btn = (color: string): React.CSSProperties => ({ padding: '9px 18px', borderRadius: 10, border: 'none', background: color, color: 'var(--text)', cursor: 'pointer', fontWeight: 600, fontSize: 14 })
+  // Залитые кнопки (акцент, зелёная, жёлтая, серая) — светлый текст; кнопки цвета листа — обычный
+  const filled = (color: string) => !['var(--surface)', 'var(--line)', 'var(--bg)'].includes(color)
+  const btn = (color: string): React.CSSProperties => ({ minHeight: 44, padding: '9px 18px', borderRadius: 999, border: 'none', background: color, color: filled(color) ? 'var(--on-accent)' : 'var(--text)', cursor: 'pointer', fontWeight: 600, fontSize: 14 })
   const label: React.CSSProperties = { display: 'block', color: 'var(--muted)', fontSize: 12, marginBottom: 4, marginTop: 4, fontWeight: 600, letterSpacing: 0.5 }
 
   if (checking) {
@@ -239,19 +241,23 @@ export default function AdminPage() {
   }
 
   return (
-    <div className="nb-root" style={{ minHeight: '100vh', padding: '2rem', color: 'var(--text)' }}>
-      <div style={{ maxWidth: 900, margin: '0 auto' }}>
+    <div className="nb-root">
+      <div className="app-page">
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
-          <h1 style={{ fontSize: '2rem', fontWeight: 800, margin: 0 }}>{t('⚙️ Панель админа')}</h1>
-          <button onClick={handleLogout} style={{ ...btn('var(--line)'), border: '1px solid var(--line)', fontSize: 13 }}>{t('🚪 Выйти')}</button>
+          <h1 className="dash-name" style={{ margin: 0 }}>{t('Панель админа')}</h1>
+          <button onClick={handleLogout} style={{ ...btn('var(--surface)'), border: '1px solid var(--line)', fontSize: 13, whiteSpace: 'nowrap' }}>{t('Выйти')}</button>
         </div>
         <p style={{ color: 'var(--muted)', marginBottom: 32 }}>{t('Управление классами, темами и справочником ЕНТ')}</p>
 
-        <div style={{ display: 'flex', gap: 12, marginBottom: 32, flexWrap: 'wrap' }}>
-          <button onClick={() => setTab('classes')} style={{ ...btn(tab === 'classes' ? 'var(--accent)' : 'var(--surface)'), border: '1px solid var(--line)' }}>{t('📚 Классы (')}{classes.length})</button>
-          <button onClick={() => setTab('topics')} style={{ ...btn(tab === 'topics' ? 'var(--accent)' : 'var(--surface)'), border: '1px solid var(--line)' }}>{t('📖 Темы (')}{topics.length})</button>
-          <button onClick={() => setTab('materials')} style={{ ...btn(tab === 'materials' ? 'var(--accent)' : 'var(--surface)'), border: '1px solid var(--line)' }}>📘 {t('Справочник ЕНТ')}{materialCount !== null ? ` (${materialCount})` : ''}</button>
-          <button onClick={() => setTab('stats')} style={{ ...btn(tab === 'stats' ? 'var(--accent)' : 'var(--surface)'), border: '1px solid var(--line)' }}>📊 {t('Статистика')}</button>
+        <div className="tc-tabs" role="tablist" aria-label={t('Разделы')} style={{ marginBottom: 28 }}>
+          {([
+            ['classes', `${t('Классы')} (${classes.length})`],
+            ['topics', `${t('Темы')} (${topics.length})`],
+            ['materials', `${t('Справочник ЕНТ')}${materialCount !== null ? ` (${materialCount})` : ''}`],
+            ['stats', t('Статистика')],
+          ] as const).map(([key, label]) => (
+            <button key={key} role="tab" aria-selected={tab === key} className={tab === key ? 'on' : ''} onClick={() => setTab(key)}>{label}</button>
+          ))}
         </div>
 
         {tab === 'materials' && <MaterialsAdmin onCount={setMaterialCount} />}
