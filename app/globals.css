@@ -1277,3 +1277,51 @@ body:has(.nb-root) .app-doodles { display: block; }
 .auth-oauth-btn { display: flex; align-items: center; justify-content: center; gap: 10px; min-height: 50px; border-radius: 999px; border: 1px solid var(--nb-line); background: var(--nb-sheet); color: var(--nb-text); font: inherit; font-size: 15.5px; font-weight: 600; cursor: pointer; }
 .auth-oauth-btn:hover { border-color: var(--nb-ink); }
 .auth-oauth-btn svg { width: 20px; height: 20px; }
+
+/* ===== Главная: «полёт мяча» при прокрутке (BallFlight) ===== */
+.bf { position: relative; height: 300vh; margin: 24px 0 0; }
+.bf-sticky { position: sticky; top: 0; height: 100vh; height: 100svh; display: grid; grid-template-rows: auto auto; gap: 12px; align-content: center; padding: 72px 0 24px; box-sizing: border-box; }
+.bf-steps { list-style: none; margin: 0; padding: 0; display: grid; }
+.bf-steps li { grid-area: 1 / 1; opacity: 0; transform: translateY(10px); transition: opacity 0.45s ease, transform 0.45s ease; pointer-events: none; }
+.bf-steps li.on { opacity: 1; transform: none; pointer-events: auto; }
+.bf-k { margin: 0 0 6px; font-family: var(--font-hand), cursive; font-size: 22px; font-weight: 600; color: var(--nb-accent); }
+.bf-steps h3 { margin: 0 0 8px; font-family: var(--font-display), Georgia, serif; font-weight: 400; font-size: clamp(1.5rem, 1.6vw + 1rem, 2.4rem); line-height: 1.12; letter-spacing: -0.02em; }
+.bf-steps p:not(.bf-k) { margin: 0; max-width: 46ch; font-size: 15.5px; line-height: 1.6; color: var(--nb-text-2); }
+.bf-sheet { position: relative; min-height: 0; padding: 14px; border-radius: 6px; background: var(--nb-sheet); box-shadow: var(--nb-sheet-shadow);
+  background-image: radial-gradient(color-mix(in srgb, var(--nb-text) 10%, transparent) 1px, transparent 1px); background-size: 20px 20px; }
+.bf-sheet svg { display: block; width: 100%; height: auto; max-height: 62vh; overflow: visible; }
+.bf svg path { fill: none; stroke-linecap: round; stroke-linejoin: round; }
+.bf-axis { stroke: var(--nb-muted); stroke-width: 1.4; opacity: 0.7; }
+.bf-flight { stroke: var(--nb-ink); stroke-width: 2.2; stroke-dasharray: 4 7; }
+.bf-ink { stroke: var(--nb-ink); stroke-width: 2; }
+.bf-dash { stroke: var(--nb-muted); stroke-width: 1.4; stroke-dasharray: 5 6; }
+.bf-red { stroke: var(--nb-accent); stroke-width: 2.4; }
+.bf-score { stroke: var(--nb-good); stroke-width: 3; }
+.bf-ball circle { fill: var(--nb-accent); }
+.bf-ball path { stroke: color-mix(in srgb, var(--nb-sheet) 70%, transparent); stroke-width: 1.4; }
+.bf-shadow { fill: var(--nb-text); opacity: 0.5; }
+.bf-dot circle { fill: var(--nb-good); }
+.bf-hand { font-family: var(--font-hand), cursive; font-size: 26px; font-weight: 600; fill: var(--nb-ink); }
+.bf-small { font-size: 21px; }
+.bf-muted { fill: var(--nb-muted); font-size: 20px; }
+.bf-red-text { fill: var(--nb-accent); font-size: 30px; }
+.bf-score-label { fill: var(--nb-good); }
+.bf-dot .bf-hand { fill: var(--nb-good); font-size: 22px; }
+/* Без анимации: обычный блок с итоговой картинкой */
+.bf.bf-static { height: auto; }
+.bf.bf-static .bf-sticky { position: static; height: auto; }
+.bf.bf-static .bf-steps { gap: 18px; }
+.bf.bf-static .bf-steps li { grid-area: auto; opacity: 1; transform: none; }
+@media (min-width: 900px) {
+  .bf { height: 340vh; }
+  .bf-sticky { grid-template-rows: none; grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr); gap: 48px; align-items: center; padding: 48px 0; }
+  .bf-sheet { padding: 22px; }
+  .bf-sheet svg { max-height: 70vh; }
+}
+
+/* Согласие с политикой конфиденциальности */
+.auth-consent { display: flex; gap: 12px; align-items: flex-start; font-size: 13.5px; line-height: 1.5; color: var(--nb-text-2); cursor: pointer; }
+.auth-consent input { flex: none; width: 22px; height: 22px; margin: 0; accent-color: var(--nb-ink); cursor: pointer; }
+.auth-consent a, .auth-oauth-note a { color: var(--nb-ink); text-decoration: underline; text-underline-offset: 3px; }
+.auth-oauth-note { margin: -4px 0 4px; text-align: center; font-size: 12.5px; color: var(--nb-muted); }
+.nb-footer small a { color: inherit; text-decoration: underline; text-underline-offset: 3px; }

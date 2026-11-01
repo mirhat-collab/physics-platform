@@ -8,6 +8,7 @@ import LanguageSwitcher from '@/app/components/LanguageSwitcher'
 import PenSheet from '@/app/components/PenSheet'
 import HeroTry from '@/app/components/HeroTry'
 import { StatsStrip } from '@/app/components/LandingLive'
+import BallFlight from '@/app/components/BallFlight'
 
 // Короткие слова (с, и, к…) не остаются висеть в конце строки
 const glue = (text: string) => text.replace(/(^|\s)(\S{1,2})\s/g, '$1$2\u00a0')
@@ -104,6 +105,8 @@ export default function LobbyPage() {
         </section>
 
         <StatsStrip />
+
+        <BallFlight />
 
         <section className="nb-section" aria-labelledby="nb-how">
           <p className="nb-kicker">{t('Как это работает')}</p>
