@@ -33,7 +33,7 @@ export default function HeroTry({ pre }: { pre: string }) {
               {o} {t('м/с')}
               {picked != null && o === RIGHT && (
                 <svg className="try-mark" viewBox="0 0 30 30" aria-hidden>
-                  <path pathLength={1} d="M4 15 C 7 18, 9 21, 11 25 C 15 15, 20 8, 27 3" />
+                  <path pathLength={1} d="M5 16 L12 23 L26 7" />
                 </svg>
               )}
             </button>

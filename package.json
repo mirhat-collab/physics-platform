@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.89.0",
+    "@react-three/fiber": "9.8.2",
     "@supabase/ssr": "^0.10.2",
     "@supabase/supabase-js": "^2.103.0",
     "@types/jszip": "^3.4.0",
@@ -20,12 +21,14 @@
     "jszip": "^3.10.1",
     "katex": "^0.16.45",
     "mammoth": "^1.12.2",
+    "motion": "14.2.0",
     "next": "16.2.3",
     "pdf-parse": "^1.1.1",
     "pdfjs-dist": "^6.2.108",
     "qrcode": "^1.5.4",
     "react": "19.2.4",
-    "react-dom": "19.2.4"
+    "react-dom": "19.2.4",
+    "three": "0.186.1"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
@@ -33,6 +36,7 @@
     "@types/qrcode": "^1.5.6",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@types/three": "0.186.0",
     "eslint": "^9",
     "eslint-config-next": "16.2.3",
     "jiti": "^2.6.1",
