@@ -1318,3 +1318,10 @@ body:has(.nb-root) .app-doodles { display: block; }
   .bf-sheet { padding: 22px; }
   .bf-sheet svg { max-height: 70vh; }
 }
+
+/* Согласие с политикой конфиденциальности */
+.auth-consent { display: flex; gap: 12px; align-items: flex-start; font-size: 13.5px; line-height: 1.5; color: var(--nb-text-2); cursor: pointer; }
+.auth-consent input { flex: none; width: 22px; height: 22px; margin: 0; accent-color: var(--nb-ink); cursor: pointer; }
+.auth-consent a, .auth-oauth-note a { color: var(--nb-ink); text-decoration: underline; text-underline-offset: 3px; }
+.auth-oauth-note { margin: -4px 0 4px; text-align: center; font-size: 12.5px; color: var(--nb-muted); }
+.nb-footer small a { color: inherit; text-decoration: underline; text-underline-offset: 3px; }

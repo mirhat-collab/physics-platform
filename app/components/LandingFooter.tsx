@@ -1,4 +1,5 @@
 'use client'
+import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useT } from '@/app/components/LanguageProvider'
 
@@ -7,10 +8,11 @@ import { useT } from '@/app/components/LanguageProvider'
 export default function LandingFooter() {
   const { t } = useT()
   const path = usePathname()
-  if (path !== '/' && path !== '/login') return null
+  const paper = path === '/' || path === '/login' || path === '/privacy'
+  if (!paper) return null
 
   // На главной и странице входа — подвал в стиле «Тетрадь»
-  if (path === '/' || path === '/login') return (
+  if (paper) return (
     <footer className="nb-footer">
       <div className="nb-footer-in">
         <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8, fontWeight: 600, color: 'var(--nb-text)' }}>
@@ -27,7 +29,7 @@ export default function LandingFooter() {
             <span className="sr-only">Email: </span>sultanovmirhat@gmail.com
           </a>
         </div>
-        <small>{t('© 2025 Mirha_Edu · Все права защищены')}</small>
+        <small>{t('© 2025 Mirha_Edu · Все права защищены')} · <Link href="/privacy">{t('Политика конфиденциальности')}</Link></small>
       </div>
     </footer>
   )

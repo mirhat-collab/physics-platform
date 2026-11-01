@@ -11,7 +11,7 @@ type NavItem = { href: string; icon: string; label: string }
 type NavGroup = { title: string; items: NavItem[] }
 
 // Страницы без меню: лендинг, вход, админка, установка приложения
-const NO_NAV = ['/', '/login', '/admin', '/install']
+const NO_NAV = ['/', '/login', '/admin', '/install', '/privacy']
 
 function buildGroups(role: string | null): NavGroup[] {
   const groups: NavGroup[] = []
