@@ -132,41 +132,107 @@ function Globe({ radius = 3, points = 5200, arcs = true }: { radius?: number; po
   )
 }
 
-// Сетка графика в плоскости XY
-function GridPlane({ w = 10, h = 6, step = 1 }) {
-  const geo = useMemo(() => {
-    const v: number[] = []
-    for (let x = -w / 2; x <= w / 2 + 1e-6; x += step) v.push(x, -h / 2, 0, x, h / 2, 0)
-    for (let y = -h / 2; y <= h / 2 + 1e-6; y += step) v.push(-w / 2, y, 0, w / 2, y, 0)
-    const g = new THREE.BufferGeometry()
-    g.setAttribute('position', new THREE.Float32BufferAttribute(v, 3))
-    return g
-  }, [w, h, step])
-  return <lineSegments geometry={geo}><lineBasicMaterial color="#2a4a8f" transparent opacity={0.35} /></lineSegments>
+// Глава 1: бросок под углом — как стробоскопическая фотография из учебника.
+// Полупрозрачные «копии» мяча через равные промежутки времени (наверху ближе —
+// там он медленнее), светящийся след, живая стрелка скорости и пол из точек.
+const G = 2.2, VX = 1.9, VY = 4.6, X0 = -4.2, Y0 = -2.6 // условные единицы сцены
+const FLIGHT_T = (2 * VY) / G
+const at = (t: number) => new THREE.Vector3(X0 + VX * t, Y0 + VY * t - (G * t * t) / 2, Math.sin(t * 0.5) * 0.6)
+
+function DotFloor() {
+  const pos = useMemo(() => {
+    const a: number[] = []
+    for (let x = -14; x <= 14; x += 0.55) for (let z = -16; z <= 6; z += 0.55) a.push(x, Y0 - 0.02, z)
+    return new Float32Array(a)
+  }, [])
+  return (
+    <points>
+      <bufferGeometry><bufferAttribute attach="attributes-position" args={[pos, 3]} /></bufferGeometry>
+      <pointsMaterial size={0.035} color="#4f78d6" transparent opacity={0.55} sizeAttenuation depthWrite={false} />
+    </points>
+  )
 }
 
-// Глава 1: мяч летит по параболе над сеткой графика
 function Projectile() {
   const ball = useRef<THREE.Group>(null)
-  const curve = useMemo(() => {
-    const pts: THREE.Vector3[] = []
-    for (let i = 0; i <= 80; i++) { const x = -4 + (8 * i) / 80; pts.push(new THREE.Vector3(x, 2.6 - 0.32 * x * x - 0.4, 0)) }
-    return pts
+  const trail = useRef<THREE.Points>(null)
+  const ghosts = useRef<THREE.Group[]>([])
+  const TRAIL = 46
+  const trailPos = useMemo(() => new Float32Array(TRAIL * 3), [])
+  const trailCol = useMemo(() => new Float32Array(TRAIL * 3), [])
+  const path = useMemo(() => new THREE.CatmullRomCurve3(Array.from({ length: 60 }, (_, i) => at((FLIGHT_T * i) / 59))), [])
+  const tube = useMemo(() => new THREE.TubeGeometry(path, 160, 0.012, 6, false), [path])
+  const glowTube = useMemo(() => new THREE.TubeGeometry(path, 160, 0.06, 8, false), [path])
+  const strobe = useMemo(() => Array.from({ length: 11 }, (_, i) => at((FLIGHT_T * i) / 10)), [])
+  const apex = useMemo(() => at(VY / G), [])
+  const arrow = useMemo(() => {
+    const a = new THREE.ArrowHelper(new THREE.Vector3(1, 0, 0), new THREE.Vector3(), 1, 0xffffff, 0.28, 0.16)
+    ;(a.line.material as THREE.LineBasicMaterial).transparent = true
+    ;(a.line.material as THREE.LineBasicMaterial).opacity = 0.9
+    return a
   }, [])
+  const history = useRef<THREE.Vector3[]>([])
+  const dot = useGlowTexture() // круглые светящиеся точки следа вместо квадратов
+
   useFrame(({ clock }) => {
-    const t = (clock.elapsedTime * 0.28) % 1
-    const x = -4 + 8 * t
-    ball.current?.position.set(x, 2.6 - 0.32 * x * x - 0.4, 0.02)
+    const cycle = FLIGHT_T + 1.2 // пауза после приземления
+    const t = Math.min((clock.elapsedTime * 0.9) % cycle, FLIGHT_T)
+    const p = at(t)
+    ball.current?.position.copy(p)
+    // стрелка скорости: касательная к траектории, длина ~ скорость
+    const v = new THREE.Vector3(VX, VY - G * t, 0.3 * Math.cos(t * 0.5))
+    arrow.position.copy(p)
+    arrow.setDirection(v.clone().normalize())
+    arrow.setLength(0.35 + v.length() * 0.32, 0.26, 0.15)
+    // «копии» мяча загораются, когда мяч их проходит
+    ghosts.current.forEach((g, i) => {
+      if (!g) return
+      const ti = (FLIGHT_T * i) / 10
+      const m = g.children[0] as THREE.Mesh
+      ;(m.material as THREE.MeshBasicMaterial).opacity = t >= ti ? 0.32 : 0.05
+    })
+    // светящийся след из затухающих точек
+    const h = history.current
+    if (t < 0.02) h.length = 0
+    h.unshift(p)
+    if (h.length > TRAIL) h.length = TRAIL
+    for (let i = 0; i < TRAIL; i++) {
+      const q = h[Math.min(i, h.length - 1)] ?? p
+      trailPos.set([q.x, q.y, q.z], i * 3)
+      const k = 1 - i / TRAIL
+      trailCol.set([1 * k, 0.55 * k, 0.3 * k], i * 3)
+    }
+    if (trail.current) {
+      trail.current.geometry.attributes.position.needsUpdate = true
+      trail.current.geometry.attributes.color.needsUpdate = true
+    }
   })
+
   return (
-    <group rotation={[0, -0.35, 0]}>
-      <GridPlane w={10} h={7} step={1} />
-      <Polyline points={curve} color={CYAN} opacity={0.9} />
-      <mesh position={[0, -3.0, 0]}><boxGeometry args={[10, 0.02, 0.02]} /><meshBasicMaterial color="#5b7fc7" /></mesh>
+    <group rotation={[0.08, -0.5, 0]} position={[-1.2, 0.3, 0]} scale={0.82}>
+      <DotFloor />
+      <mesh geometry={glowTube}><meshBasicMaterial color={BLUE} transparent opacity={0.12} blending={THREE.AdditiveBlending} depthWrite={false} /></mesh>
+      <mesh geometry={tube}><meshBasicMaterial color="#cfe0ff" transparent opacity={0.75} /></mesh>
+      {/* высота подъёма */}
+      <Polyline points={[apex, new THREE.Vector3(apex.x, Y0, apex.z)]} color={CYAN} opacity={0.45} dashed />
+      <mesh position={apex} rotation={[Math.PI / 2, 0, 0]}><ringGeometry args={[0.36, 0.4, 48]} /><meshBasicMaterial color={CYAN} transparent opacity={0.7} side={THREE.DoubleSide} /></mesh>
+      {strobe.map((q, i) => (
+        <group key={i} position={q} ref={el => { if (el) ghosts.current[i] = el }}>
+          <mesh><sphereGeometry args={[0.2, 24, 24]} /><meshBasicMaterial color="#8fb6ff" transparent opacity={0.05} depthWrite={false} blending={THREE.AdditiveBlending} /></mesh>
+        </group>
+      ))}
+      <points ref={trail}>
+        <bufferGeometry>
+          <bufferAttribute attach="attributes-position" args={[trailPos, 3]} />
+          <bufferAttribute attach="attributes-color" args={[trailCol, 3]} />
+        </bufferGeometry>
+        <pointsMaterial map={dot} size={0.34} vertexColors transparent blending={THREE.AdditiveBlending} depthWrite={false} sizeAttenuation />
+      </points>
       <group ref={ball}>
-        <mesh><sphereGeometry args={[0.28, 32, 32]} /><meshBasicMaterial color={WARM} /></mesh>
-        <Glow color={WARM} scale={2.2} opacity={0.8} />
+        <mesh><sphereGeometry args={[0.26, 32, 32]} /><meshBasicMaterial color={WARM} /></mesh>
+        <Glow color={WARM} scale={2.4} opacity={0.85} />
       </group>
+      <primitive object={arrow} />
     </group>
   )
 }
