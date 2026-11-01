@@ -320,14 +320,50 @@ function Gravity() {
   )
 }
 
+// «Гиперпрыжок»: при быстрой прокрутке вокруг камеры вытягиваются световые линии
+function Warp() {
+  const { camera } = useThree()
+  const N = 420
+  const base = useMemo(() => {
+    const rand = rng(11)
+    return Array.from({ length: N }, () => {
+      const a = rand() * Math.PI * 2, r = 2.5 + rand() * 9
+      return [Math.cos(a) * r, Math.sin(a) * r * 0.65, rand() * 26 + 2] as const
+    })
+  }, [])
+  const pos = useMemo(() => new Float32Array(N * 6), [])
+  const mat = useRef<THREE.LineBasicMaterial>(null)
+  const geo = useRef<THREE.BufferGeometry>(null)
+  useFrame(() => {
+    const v = Math.min(Math.abs(scroll.v), 3)
+    if (mat.current) mat.current.opacity = Math.min(0.75, v * 0.45)
+    if (!geo.current || v < 0.02) return
+    const len = 0.4 + v * 7
+    const cz = camera.position.z, cx = camera.position.x, cy = camera.position.y
+    for (let i = 0; i < N; i++) {
+      const [x, y, d] = base[i]
+      pos.set([cx + x, cy + y, cz - d, cx + x, cy + y, cz - d - len], i * 6)
+    }
+    geo.current.attributes.position.needsUpdate = true
+  })
+  return (
+    <lineSegments frustumCulled={false}>
+      <bufferGeometry ref={geo}><bufferAttribute attach="attributes-position" args={[pos, 3]} /></bufferGeometry>
+      <lineBasicMaterial ref={mat} color="#8fb6ff" transparent opacity={0} blending={THREE.AdditiveBlending} depthWrite={false} />
+    </lineSegments>
+  )
+}
+
 // Камера следует за прокруткой; на узком экране сцены по центру, на широком — справа
 function Rig() {
   const { camera, size } = useThree()
   const smooth = useRef(0)
   const look = useMemo(() => new THREE.Vector3(), [])
   useFrame((state, dt) => {
+    const prev = smooth.current
     smooth.current += (scroll.s - smooth.current) * Math.min(1, dt * 3.2)
     const s = smooth.current
+    scroll.v += ((s - prev) / Math.max(dt, 1e-3) - scroll.v) * 0.2
     const wide = size.width / size.height > 1.05
     // На широком экране сцены справа от текста; на телефоне — над текстом (текст внизу экрана)
     const side = wide ? -4.6 : 0
@@ -347,6 +383,7 @@ export default function PhysicsScene() {
       <fog attach="fog" args={['#04060c', 18, 60]} />
       <Rig />
       <Stars />
+      <Warp />
       <group position={[0, 0, 0]}><Globe /></group>
       <group position={[0, 0, -GAP]}><Projectile /></group>
       <group position={[0, 0, -GAP * 2]}><Pendulum /></group>

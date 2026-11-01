@@ -10,6 +10,7 @@ import LanguageSwitcher from '@/app/components/LanguageSwitcher'
 import HeroTry from '@/app/components/HeroTry'
 import { StatsStrip } from '@/app/components/LandingLive'
 import { scroll } from '@/app/components/landing/scroll-state'
+import { ChapterNav, CursorGlow, Magnetic, Marquee, SplitText, Tilt, TypeFormula } from '@/app/components/landing/Effects'
 
 // 3D-сцена только в браузере: WebGL на сервере не нужен
 const PhysicsScene = dynamic(() => import('@/app/components/landing/PhysicsScene'), { ssr: false })
@@ -105,6 +106,8 @@ export default function LobbyPage() {
     <div className="lx-root">
       <PhysicsScene />
       <ScrollDriver />
+      <CursorGlow />
+      <ChapterNav labels={chapters.map(c => c.topic)} label={t('Главы')} />
 
       <header className="lx-top">
         <Link href="/" className="lx-brand">
@@ -121,10 +124,10 @@ export default function LobbyPage() {
         <section className="lx-hero" data-scene="0">
           <Reveal>
             <p className="lx-kicker">{t('ЕНТ · физика · математика')}</p>
-            <h1 className="lx-h1"><span>{t('Каждая задача.')}</span><span className="lx-h1-accent">{t('Каждый шаг.')}</span></h1>
+            <h1 className="lx-h1"><SplitText text={t('Каждая задача.')} /><SplitText text={t('Каждый шаг.')} delay={0.45} className="lx-h1-accent" /></h1>
             <p className="lx-lead">{glue(t('Разбираем ЕНТ по физике и математике так, чтобы ты понял, а не зазубрил. Бесплатно, на русском и казахском.'))}</p>
             <div className="lx-cta">
-              <Link href="/login" className="lx-btn">{t('Начать бесплатно')}<Arrow /></Link>
+              <Magnetic><Link href="/login" className="lx-btn lx-shine">{t('Начать бесплатно')}<Arrow /></Link></Magnetic>
               <HeroTry pre={pre} />
             </div>
           </Reveal>
@@ -133,14 +136,16 @@ export default function LobbyPage() {
 
         {chapters.map((c, i) => (
           <section key={c.title} className="lx-chapter" data-scene={i + 1} aria-labelledby={`lx-ch-${i}`}>
-            <Reveal className="lx-panel">
+            <Reveal className="lx-panel lx-glow-border">
               <p className="lx-kicker"><span className="lx-num">0{i + 1}</span> {c.topic}</p>
               <h2 id={`lx-ch-${i}`} className="lx-h2">{c.title}</h2>
               <p className="lx-text">{glue(c.text)}</p>
-              <p className="lx-formula" aria-label={t('Формула')}>{c.formula}</p>
+              <TypeFormula text={c.formula} />
             </Reveal>
           </section>
         ))}
+
+        <Marquee items={['F = ma', 'E = mc²', 'v = v₀ + at', 'a² + b² = c²', 'p = mv', 'D = b² − 4ac', 'I = U / R', 'sin²α + cos²α = 1', 'Q = cmΔt', 'y = kx + b']} />
 
         <section className="lx-band" aria-label={t('Цифры')}>
           <Reveal>
@@ -164,12 +169,14 @@ export default function LobbyPage() {
           </Reveal>
           <div className="lx-subjects">
             {subjects.map((sub, i) => (
-              <Reveal key={sub.key} delay={i * 0.12} className={`lx-subject lx-subject-${sub.key}`}>
+              <Reveal key={sub.key} delay={i * 0.12}>
+                <Tilt className={`lx-subject lx-subject-${sub.key}`}>
                 <h3>{sub.title}</h3>
                 <p>{sub.text}</p>
                 <ul role="list">
                   {sub.links.map(l => <li key={l.href}><Link href={l.href}>{l.label}<Arrow /></Link></li>)}
                 </ul>
+                </Tilt>
               </Reveal>
             ))}
           </div>
@@ -180,7 +187,7 @@ export default function LobbyPage() {
           <Reveal>
             <h2 className="lx-h1 lx-final-title"><span>{t('Начни с одной')}</span><span className="lx-h1-accent">{t('задачи.')}</span></h2>
             <p className="lx-lead">{t('Сегодня. Бесплатно.')}</p>
-            <Link href="/login" className="lx-btn">{t('Начать бесплатно')}<Arrow /></Link>
+            <Magnetic><Link href="/login" className="lx-btn lx-shine">{t('Начать бесплатно')}<Arrow /></Link></Magnetic>
           </Reveal>
         </section>
       </main>
