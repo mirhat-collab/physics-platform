@@ -6,6 +6,7 @@ import { supabase } from '@/lib/supabase'
 import { ENT_SUBJECTS, MOCK_MAX, sectionOfTopic, type EntSubject } from '@/lib/ent'
 import { specSectionOf, specSections } from '@/lib/ent-spec'
 import { useT } from '@/app/components/LanguageProvider'
+import Icon from '@/app/components/Icon'
 
 type Student = { id: string; full_name: string | null; grade: string | null }
 type Row = { user_id: string; section: string | null; topic: string | null; correct: boolean }
@@ -147,7 +148,7 @@ export default function ClassReportPage() {
         <div className="label">{t('Класс')}</div>
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 14 }}>
           <button className={`chip${grade === 'all' ? ' on' : ''}`} onClick={() => setGrade('all')}>{t('Все ученики')}</button>
-          {groups.map(g => <button key={g.id} className={`chip${grade === `group:${g.id}` ? ' on' : ''}`} onClick={() => setGrade(`group:${g.id}`)}>👥 {g.name}</button>)}
+          {groups.map(g => <button key={g.id} className={`chip${grade === `group:${g.id}` ? ' on' : ''}`} onClick={() => setGrade(`group:${g.id}`)}><Icon name="users" size="1em" /> {g.name}</button>)}
           {grades.map(g => <button key={g} className={`chip${grade === g ? ' on' : ''}`} onClick={() => setGrade(g)}>{g}</button>)}
         </div>
         <div style={{ display: 'flex', gap: 24, flexWrap: 'wrap' }}>
@@ -183,7 +184,7 @@ export default function ClassReportPage() {
 
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
         <div className="label" style={{ margin: 0, flex: 1 }}>{t('Темы: от самых слабых')}</div>
-        {weakTopics.length > 0 && <Link href={printHref} className="chip">🖨 {t('Вариант по слабым разделам')}</Link>}
+        {weakTopics.length > 0 && <Link href={printHref} className="chip"><Icon name="printer" size="1em" /> {t('Вариант по слабым разделам')}</Link>}
       </div>
       <div className="card" style={{ padding: 0, marginBottom: 18 }}>
         {topics.length === 0 && <div style={{ padding: 16, color: 'var(--muted)', fontSize: 14 }}>{t('Пока мало данных: нужно хотя бы {n} ответов по теме.', { n: MIN_TOPIC })}</div>}

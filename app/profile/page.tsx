@@ -7,6 +7,7 @@ import { gradeLabel } from '@/lib/grade-match'
 import ThemeToggle from '@/app/components/ThemeToggle'
 import LanguageSwitcher from '@/app/components/LanguageSwitcher'
 import { useT } from '@/app/components/LanguageProvider'
+import Icon from '@/app/components/Icon'
 
 type Profile = { id: string; full_name: string; email: string; grade: string; total_xp: number; streak: number; avatar_url?: string; role?: string }
 
@@ -54,7 +55,7 @@ export default function ProfilePage() {
       .upload(userId + '.jpg', file, { upsert: true })
 
     if (uploadError) {
-      setMsg(t('❌ Ошибка загрузки: ') + uploadError.message)
+      setMsg(t('Ошибка загрузки: ') + uploadError.message)
       setAvatarUploading(false)
       setTimeout(() => setMsg(''), 5000)
       return
@@ -72,7 +73,7 @@ export default function ProfilePage() {
       .eq('id', userId)
 
     if (updateError) {
-      setMsg(t('❌ Ошибка сохранения: ') + updateError.message)
+      setMsg(t('Ошибка сохранения: ') + updateError.message)
       setAvatarUploading(false)
       setTimeout(() => setMsg(''), 5000)
       return
@@ -82,7 +83,7 @@ export default function ProfilePage() {
     setAvatarUrl(publicUrl + '?t=' + Date.now())
     setProfile({ ...profile, avatar_url: publicUrl })
     setAvatarUploading(false)
-    setMsg(t('✅ Фото обновлено!'))
+    setMsg(t('Фото обновлено!'))
     setTimeout(() => setMsg(''), 3000)
   }
 
@@ -91,7 +92,7 @@ export default function ProfilePage() {
     setSaving(true)
     const { error } = await supabase.from('profiles').update({ full_name: newName.trim() }).eq('id', profile.id)
     if (error) {
-      setMsg(t('❌ Ошибка: ') + error.message)
+      setMsg(t('Ошибка: ') + error.message)
       setSaving(false)
       setTimeout(() => setMsg(''), 5000)
       return
@@ -99,7 +100,7 @@ export default function ProfilePage() {
     setProfile({ ...profile, full_name: newName.trim() })
     setEditing(false)
     setSaving(false)
-    setMsg(t('✅ Имя сохранено!'))
+    setMsg(t('Имя сохранено!'))
     setTimeout(() => setMsg(''), 3000)
   }
 
@@ -109,12 +110,12 @@ export default function ProfilePage() {
     if (!profile) return
     const { error } = await supabase.from('profiles').update({ grade }).eq('id', profile.id)
     if (error) {
-      setMsg(t('❌ Ошибка: ') + error.message)
+      setMsg(t('Ошибка: ') + error.message)
       setTimeout(() => setMsg(''), 5000)
       return
     }
     setProfile({ ...profile, grade })
-    setMsg(t('✅ Класс сохранён!'))
+    setMsg(t('Класс сохранён!'))
     setTimeout(() => setMsg(''), 3000)
   }
 
@@ -130,7 +131,7 @@ export default function ProfilePage() {
       body: JSON.stringify({ code: teacherCode.trim() }),
     }).catch(() => null)
     const data = await res?.json().catch(() => null)
-    if (!res?.ok) { setTeacherMsg('❌ ' + t(data?.error || 'Ошибка')); return }
+    if (!res?.ok) { setTeacherMsg(<Icon name="x" size="1em" /> + t(data?.error || 'Ошибка')); return }
     router.push('/teacher')
   }
 
@@ -160,12 +161,12 @@ export default function ProfilePage() {
       <div style={{ maxWidth: 500, margin: '0 auto' }}>
 
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
-          <h1 style={{ fontSize: '1.8rem', fontWeight: 800, margin: 0 }}>{t('👤 Профиль')}</h1>
+          <h1 style={{ fontSize: '1.8rem', fontWeight: 800, margin: 0 }}>{t('Профиль')}</h1>
           <ThemeToggle />
         </div>
 
         <div style={{ background: 'var(--surface)', borderRadius: 16, padding: '14px 18px', marginBottom: 20, border: '1px solid var(--line)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
-          <span style={{ fontWeight: 600 }}>🌐 {t('Язык')}</span>
+          <span style={{ fontWeight: 600 }}><Icon name="globe" size="1em" /> {t('Язык')}</span>
           <LanguageSwitcher compact />
         </div>
 
@@ -225,7 +226,7 @@ export default function ProfilePage() {
                 fontSize: avatarUploading ? 14 : 22,
                 transition: 'opacity 0.15s',
               }}>
-                {avatarUploading ? '...' : '📷'}
+                {avatarUploading ? '...' : <Icon name="image" size="1em" />}
               </div>
             )}
           </div>
@@ -252,7 +253,7 @@ export default function ProfilePage() {
 
         {profile?.role === 'student' && (
           <details style={{ background: 'var(--surface)', borderRadius: 16, padding: '14px 18px', marginBottom: 20, border: '1px solid var(--line)' }}>
-            <summary style={{ cursor: 'pointer', fontWeight: 600 }}>👨‍🏫 {t('Я учитель')}</summary>
+            <summary style={{ cursor: 'pointer', fontWeight: 600 }}><Icon name="user" size="1em" /> {t('Я учитель')}</summary>
             <div style={{ color: 'var(--muted)', fontSize: 13, margin: '10px 0' }}>{t('Если ты регистрировался как учитель, но попал в кабинет ученика, введи код учителя.')}</div>
             <div style={{ display: 'flex', gap: 8 }}>
               <input type="password" value={teacherCode} onChange={e => setTeacherCode(e.target.value)} placeholder={t('Введи секретный код учителя')}
@@ -270,7 +271,7 @@ export default function ProfilePage() {
             <div style={{ color: 'var(--muted)', fontSize: 12, marginTop: 4 }}>{t('Всего XP')}</div>
           </div>
           <div style={{ background: 'var(--surface)', borderRadius: 16, padding: 16, border: '1px solid var(--line)', textAlign: 'center' }}>
-            <div style={{ fontSize: 26, fontWeight: 800, color: 'var(--warn)' }}>🔥{profile?.streak}</div>
+            <div style={{ fontSize: 26, fontWeight: 800, color: 'var(--warn)' }}><Icon name="flame" size="1em" />{profile?.streak}</div>
             <div style={{ color: 'var(--muted)', fontSize: 12, marginTop: 4 }}>{t('Дней подряд')}</div>
           </div>
           <div style={{ background: 'var(--surface)', borderRadius: 16, padding: 16, border: '1px solid var(--line)', textAlign: 'center' }}>
@@ -294,7 +295,7 @@ export default function ProfilePage() {
         <Link href="/stats" style={{ textDecoration: 'none', display: 'block', marginBottom: 12 }}>
           <div style={{ background: 'var(--surface)', border: '1px solid var(--line)', borderRadius: 16, padding: '18px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-              <span style={{ fontSize: 24 }}>📊</span>
+              <span style={{ fontSize: 24 }}><Icon name="chart" size="1em" /></span>
               <div>
                 <div style={{ fontWeight: 600, fontSize: 15 }}>{t('Моя статистика')}</div>
                 <div style={{ color: 'var(--muted)', fontSize: 12, marginTop: 2 }}>{t('Сильные и слабые темы, работа над ошибками')}</div>
@@ -308,7 +309,7 @@ export default function ProfilePage() {
         <Link href="/achievements" style={{ textDecoration: 'none', display: 'block', marginBottom: 12 }}>
           <div style={{ background: 'var(--surface)', border: '1px solid var(--line)', borderRadius: 16, padding: '18px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-              <span style={{ fontSize: 24 }}>🏅</span>
+              <span style={{ fontSize: 24 }}><Icon name="medal" size="1em" /></span>
               <div>
                 <div style={{ fontWeight: 600, fontSize: 15 }}>{t('Достижения')}</div>
                 <div style={{ color: 'var(--muted)', fontSize: 12, marginTop: 2 }}>{t('Твои награды и значки')}</div>
@@ -320,13 +321,13 @@ export default function ProfilePage() {
 
         {/* Редактировать имя */}
         <div style={{ background: 'var(--surface)', borderRadius: 16, padding: '20px', marginBottom: 20, border: '1px solid var(--line)' }}>
-          <div style={{ fontWeight: 600, marginBottom: 12 }}>{t('✏️ Изменить имя')}</div>
+          <div style={{ fontWeight: 600, marginBottom: 12 }}>{t('Изменить имя')}</div>
           {editing ? (
             <div>
               <input style={input} value={newName} onChange={e => setNewName(e.target.value)} placeholder={t('Твоё имя')} />
               <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
                 <button onClick={saveName} disabled={saving} style={{ flex: 1, padding: '10px', borderRadius: 10, border: 'none', background: 'var(--good)', color: 'var(--on-accent)', fontWeight: 700, cursor: 'pointer', fontSize: 14 }}>
-                  {saving ? t('Сохраняю...') : t('💾 Сохранить')}
+                  {saving ? t('Сохраняю...') : t('Сохранить')}
                 </button>
                 <button onClick={() => setEditing(false)} style={{ padding: '10px 16px', borderRadius: 10, border: 'none', background: 'var(--line)', color: 'var(--text)', cursor: 'pointer', fontSize: 14 }}>
                   {t('Отмена')}
@@ -345,7 +346,7 @@ export default function ProfilePage() {
         <Link href="/install" style={{ textDecoration: 'none', display: 'block', marginBottom: 12 }}>
           <div style={{ background: 'linear-gradient(135deg, color-mix(in srgb, var(--accent) 15%, transparent), color-mix(in srgb, var(--accent) 15%, transparent))', border: '1px solid color-mix(in srgb, var(--accent) 30%, transparent)', borderRadius: 16, padding: '18px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-              <span style={{ fontSize: 24 }}>📲</span>
+              <span style={{ fontSize: 24 }}><Icon name="phone" size="1em" /></span>
               <div>
                 <div style={{ fontWeight: 600, fontSize: 15 }}>{t('Установить приложение')}</div>
                 <div style={{ color: 'var(--muted)', fontSize: 12, marginTop: 2 }}>{t('Добавь на экран телефона — бесплатно!')}</div>
@@ -360,7 +361,7 @@ export default function ProfilePage() {
           onClick={handleLogout}
           style={{ width: '100%', padding: '14px', borderRadius: 14, border: '1px solid color-mix(in srgb, var(--bad) 20%, transparent)', background: 'var(--surface)', color: 'var(--bad)', fontSize: 16, fontWeight: 700, cursor: 'pointer' }}
         >
-          {t('🚪 Выйти из аккаунта')}
+          {t('Выйти из аккаунта')}
         </button>
 
       </div>

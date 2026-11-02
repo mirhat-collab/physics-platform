@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import { gradeLabel } from '@/lib/grade-match'
 import { useT } from '@/app/components/LanguageProvider'
+import Icon from '@/app/components/Icon'
 
 type Profile = { id: string; full_name: string; email?: string; grade: string; total_xp: number; streak: number }
 type ClassStat = { name: string; total_topics: number; completed_topics: number; avg_xp: number; student_count: number; locked: boolean }
@@ -64,7 +65,7 @@ export default function ProgressPage() {
         <div style={{ maxWidth: 800, margin: '0 auto' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 16 }}>
             <div style={{ width: 48, height: 48, borderRadius: 14, background: 'var(--warn)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24 }}>
-              📈
+              <Icon name="chart" size="1em" />
             </div>
             <div>
               <h1 style={{ fontSize: '1.9rem', fontWeight: 800, margin: 0 }}>{t('Прогресс')}</h1>
@@ -86,7 +87,7 @@ export default function ProgressPage() {
                     <div style={{ fontSize: 11, opacity: 0.8 }}>XP</div>
                   </div>
                   <div style={{ textAlign: 'center' }}>
-                    <div style={{ fontSize: '1.6rem', fontWeight: 800 }}>🔥{currentUser.streak}</div>
+                    <div style={{ fontSize: '1.6rem', fontWeight: 800 }}><Icon name="flame" size="1em" />{currentUser.streak}</div>
                     <div style={{ fontSize: 11, opacity: 0.8 }}>{t('дней')}</div>
                   </div>
                 </div>
@@ -107,7 +108,7 @@ export default function ProgressPage() {
                     <div>
                       <div style={{ fontWeight: 700, fontSize: 18 }}>{cls.name}</div>
                       <div style={{ color: 'var(--muted)', fontSize: 13, marginTop: 2 }}>{cls.locked
-                          ? (currentUser ? t('🔒 закрытый класс') : t('🔒 по списку администратора · {student_count} учеников', { student_count: cls.student_count }))
+                          ? (currentUser ? t('закрытый класс') : t('по списку администратора · {student_count} учеников', { student_count: cls.student_count }))
                           : t('{student_count} учеников', { student_count: cls.student_count })}</div>
                     </div>
                     <div style={{ display: 'flex', gap: 20, textAlign: 'center' }}>

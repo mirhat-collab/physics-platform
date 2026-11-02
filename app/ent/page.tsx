@@ -294,7 +294,7 @@ export default function EntPage() {
           <Icon name="book" size={18} /> <span style={{ flex: 1 }}>{t('Справочник ЕНТ: формулы и важные материалы')}</span> <Icon name="arrowRight" size={16} />
         </Link>
         <Link href="/ent/mock" className="card" style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16, padding: '12px 16px', color: 'var(--text)', textDecoration: 'none', borderColor: 'color-mix(in srgb, var(--accent) 50%, transparent)' }}>
-          <span style={{ fontSize: 18 }}>⏱</span>
+          <span style={{ fontSize: 18 }}><Icon name="clock" size="1em" /></span>
           <span style={{ flex: 1 }}>
             <b>{t('Пробный ЕНТ')}</b>
             <span style={{ display: 'block', color: 'var(--muted)', fontSize: 13 }}>{t('Полный вариант на время с баллами и разбором по разделам')}</span>
@@ -469,7 +469,7 @@ export default function EntPage() {
                 {open && (
                   <div style={{ padding: '0 16px 16px' }}>
                     <QuestionBody q={q} chosen={a} />
-                    <Link href={referenceHref(subject, q)} style={{ display: 'inline-block', marginTop: 10, fontSize: 13, color: 'var(--accent)' }}>📘 {t('Повторить теорию в справочнике')}</Link>
+                    <Link href={referenceHref(subject, q)} style={{ display: 'inline-block', marginTop: 10, fontSize: 13, color: 'var(--accent)' }}><Icon name="book" size="1em" /> {t('Повторить теорию в справочнике')}</Link>
                     <div style={{ marginTop: 12 }}>
                       <Explain q={q} chosen={a === SKIPPED ? null : a} turns={dialogs[i] || []} setTurns={t => setDialogs(d => ({ ...d, [i]: t }))} />
                     </div>
@@ -584,7 +584,7 @@ export default function EntPage() {
           <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', alignItems: 'center', marginTop: 12 }}>
             {hintShown < hintMax && (
               <button onClick={() => setHints(h => ({ ...h, [index]: hintShown + 1 }))} style={{ background: 'none', border: 'none', color: 'var(--accent)', fontSize: 14, cursor: 'pointer', fontFamily: 'inherit', textDecoration: 'underline', padding: 0 }}>
-                💡 {hintShown ? t('Следующий шаг ({a}/{b})', { a: hintShown + 1, b: hintMax }) : t('Подсказка')}
+                <Icon name="bulb" size="1em" /> {hintShown ? t('Следующий шаг ({a}/{b})', { a: hintShown + 1, b: hintMax }) : t('Подсказка')}
               </button>
             )}
             <button onClick={() => answer(SKIPPED)} style={{ background: 'none', border: 'none', color: 'var(--muted)', fontSize: 14, cursor: 'pointer', fontFamily: 'inherit', textDecoration: 'underline', padding: 0 }}>
@@ -617,7 +617,7 @@ export default function EntPage() {
             </>
           )}
 
-          <Link href={referenceHref(subject, q)} target="_blank" style={{ fontSize: 14, color: 'var(--accent)' }}>📘 {t('Повторить теорию по теме «{topic}»', { topic: t(q.topic || q.section || '') })}</Link>
+          <Link href={referenceHref(subject, q)} target="_blank" style={{ fontSize: 14, color: 'var(--accent)' }}><Icon name="book" size="1em" /> {t('Повторить теорию по теме «{topic}»', { topic: t(q.topic || q.section || '') })}</Link>
 
           <button className="btn" onClick={next}>
             {index + 1 < total ? t('Следующее задание') : t('Завершить')} <Icon name="arrowRight" size={18} />

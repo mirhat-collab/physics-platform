@@ -7,6 +7,7 @@ import { gradeVariants } from '@/lib/grade-match'
 import { sortTopicsByNumber } from '@/lib/topic-order'
 import { useT } from '@/app/components/LanguageProvider'
 import { useTranslatedNames } from '@/app/components/useTranslatedNames'
+import Icon from '@/app/components/Icon'
 
 type Topic = { id: string; name: string; theory: string; grade: string }
 type ClassData = { id: string; name: string; program: string; total_topics: number }
@@ -56,7 +57,7 @@ export default function ClassPage() {
   if (!classData) return (
     <div className="nb-root" style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
       <div style={{ background: 'var(--surface)', borderRadius: 24, padding: 48, width: '100%', maxWidth: 400, border: '1px solid var(--line)', textAlign: 'center' }}>
-        <div style={{ fontSize: 48, marginBottom: 16 }}>🔒</div>
+        <div style={{ fontSize: 48, marginBottom: 16 }}><Icon name="lock" size="1em" /></div>
         <h1 style={{ color: 'var(--text)', fontSize: '1.4rem', fontWeight: 800, marginBottom: 8 }}>{t('Класс закрыт')}</h1>
         <p style={{ color: 'var(--muted)', marginBottom: 32, fontSize: 14 }}>{t('У тебя нет доступа к этому классу. Обратись к администратору.')}</p>
         <Link href="/classes" style={{ display: 'inline-block', width: '100%', boxSizing: 'border-box', padding: '14px', borderRadius: 12, background: 'var(--accent)', color: 'var(--on-accent)', fontSize: 16, fontWeight: 700, textDecoration: 'none' }}>{t('← Все классы')}</Link>
@@ -92,7 +93,7 @@ export default function ClassPage() {
         </div>
 
         {/* Список тем */}
-        <h2 style={{ fontSize: '1.2rem', fontWeight: 700, marginBottom: 16 }}>{t('📚 Темы')}</h2>
+        <h2 style={{ fontSize: '1.2rem', fontWeight: 700, marginBottom: 16 }}>{t('Темы')}</h2>
 
         {topics.length === 0 && (
           <div style={{ color: 'var(--muted)', textAlign: 'center', padding: 40 }}>{t('Темы ещё не добавлены')}</div>
@@ -137,7 +138,7 @@ export default function ClassPage() {
                     </div>
                   </div>
                   <div style={{ color: isDone ? 'var(--good)' : 'var(--muted)', fontSize: 20, flexShrink: 0 }}>
-                    {isDone ? '✅' : '→'}
+                    {isDone ? <Icon name="check" size="1em" /> : '→'}
                   </div>
                 </div>
               </Link>

@@ -4,6 +4,7 @@ import ProtectedFileViewer, { canView } from '@/app/components/ProtectedFileView
 import { extractStoragePath } from '@/lib/file-protect'
 import { fileSize, mediaIcon, type MediaItem } from '@/app/components/MediaUploader'
 import { useT } from '@/app/components/LanguageProvider'
+import Icon from '@/app/components/Icon'
 
 // Файлы материала справочника: «Открыть» на сайте (без водяного знака) и «Скачать»
 
@@ -59,7 +60,7 @@ export default function MaterialFiles({ media }: { media: MediaItem[] }) {
           )}
           {item.type !== 'link' && (
             <button className="btn" style={btn} disabled={busy === item.url} onClick={() => download(item)}>
-              {busy === item.url ? '⏳' : '⬇'} {t('Скачать')}
+              {busy === item.url ? <Icon name="clock" size="1em" /> : <Icon name="download" size="1em" />} {t('Скачать')}
             </button>
           )}
         </div>

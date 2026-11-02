@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { extractStoragePath, isPdf, isOfficeDoc, fileExt } from '@/lib/file-protect'
 import { useT } from '@/app/components/LanguageProvider'
+import Icon from '@/app/components/Icon'
 
 type Props = {
   fileUrl: string   // старое значение media[].url (используем только чтобы достать путь)
@@ -95,7 +96,7 @@ export default function ProtectedFileViewer({ fileUrl, fileName, watermarkLabel 
               background: '#667eea', border: 'none', color: '#fff', borderRadius: 10, padding: '8px 16px', cursor: 'pointer', fontSize: 14,
             }}
           >
-            ⬇ {t('Скачать')}
+            <Icon name="download" size="1em" /> {t('Скачать')}
           </button>
         )}
         <button
@@ -115,10 +116,10 @@ export default function ProtectedFileViewer({ fileUrl, fileName, watermarkLabel 
         borderRadius: 16, marginBottom: 20, position: 'relative',
       }}>
         {loading && (
-          <div style={{ color: '#888', textAlign: 'center', padding: '80px 20px' }}>{t('⏳ Открываем файл…')}</div>
+          <div style={{ color: '#888', textAlign: 'center', padding: '80px 20px' }}>{t('Открываем файл…')}</div>
         )}
         {error && (
-          <div style={{ color: '#f5576c', textAlign: 'center', padding: '80px 20px' }}>😕 {error}</div>
+          <div style={{ color: '#f5576c', textAlign: 'center', padding: '80px 20px' }}><Icon name="search" size="1em" /> {error}</div>
         )}
         {!loading && !error && signedUrl && isPdf(fileName) && (
           <PdfCanvasViewer url={signedUrl} watermarkLabel={watermarkLabel} />

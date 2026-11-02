@@ -4,6 +4,7 @@ import QRCode from 'qrcode'
 import { supabase } from '@/lib/supabase'
 import { joinPath, makeJoinCode, type StudyGroup } from '@/lib/groups'
 import { useT } from '@/app/components/LanguageProvider'
+import Icon from '@/app/components/Icon'
 
 type Member = { student_id: string; joined_at: string; name: string; grade: string | null }
 
@@ -48,7 +49,7 @@ export default function TeacherGroups({ teacherId, onGroups }: { teacherId: stri
   return (
     <div>
       <div style={box}>
-        <div style={{ fontWeight: 700, marginBottom: 6 }}>➕ {t('Новая группа')}</div>
+        <div style={{ fontWeight: 700, marginBottom: 6 }}><Icon name="plus" size="1em" /> {t('Новая группа')}</div>
         <div style={{ color: 'var(--muted)', fontSize: 13, marginBottom: 10 }}>{t('Например: «10А, школа №5» или «Подготовка к ЕНТ, вечер». Ученики вступают по ссылке или QR-коду — и вы видите только своих.')}</div>
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
           <input className="input" value={name} onChange={e => setName(e.target.value)} onKeyDown={e => e.key === 'Enter' && create()}
@@ -105,7 +106,7 @@ function GroupCard({ group, open, onToggle, onDelete }: { group: StudyGroup; ope
   return (
     <div style={{ background: 'var(--surface)', borderRadius: 16, border: '1px solid var(--line)', marginBottom: 12, overflow: 'hidden' }}>
       <button onClick={onToggle} style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 10, padding: '14px 18px', background: 'transparent', border: 'none', color: 'var(--text)', cursor: 'pointer', fontFamily: 'inherit', textAlign: 'left' }}>
-        <span style={{ fontSize: 20 }}>👥</span>
+        <span style={{ fontSize: 20 }}><Icon name="users" size="1em" /></span>
         <span style={{ flex: 1, fontWeight: 700 }}>{group.name}</span>
         <span style={{ color: 'var(--accent)', fontFamily: 'monospace', fontSize: 15, letterSpacing: 1 }}>{group.join_code}</span>
         <span style={{ color: 'var(--muted)' }}>{open ? '▾' : '▸'}</span>
@@ -118,9 +119,9 @@ function GroupCard({ group, open, onToggle, onDelete }: { group: StudyGroup; ope
               <div style={{ color: 'var(--muted)', fontSize: 13 }}>{t('Покажите ученикам QR-код на уроке или отправьте ссылку в чат класса:')}</div>
               <div style={{ background: 'var(--bg)', border: '1px solid var(--line)', borderRadius: 10, padding: '8px 10px', fontSize: 13, wordBreak: 'break-all' }}>{link}</div>
               <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                <button className="btn" style={{ padding: '7px 14px', fontSize: 13 }} onClick={copy}>{copied ? `✅ ${t('Скопировано')}` : `📋 ${t('Скопировать ссылку')}`}</button>
+                <button className="btn" style={{ padding: '7px 14px', fontSize: 13 }} onClick={copy}>{copied ? `${t('Скопировано')}` : `${t('Скопировать ссылку')}`}</button>
                 <a className="btn btn-ghost" style={{ padding: '7px 14px', fontSize: 13, textDecoration: 'none' }} href={`https://wa.me/?text=${encodeURIComponent(t('Вступай в группу «{name}» на Mirha_Edu: {link}', { name: group.name, link }))}`} target="_blank" rel="noreferrer">WhatsApp</a>
-                {qr && <a className="btn btn-ghost" style={{ padding: '7px 14px', fontSize: 13, textDecoration: 'none' }} href={qr} download={`qr-${group.join_code}.png`}>⬇ {t('QR-код')}</a>}
+                {qr && <a className="btn btn-ghost" style={{ padding: '7px 14px', fontSize: 13, textDecoration: 'none' }} href={qr} download={`qr-${group.join_code}.png`}><Icon name="download" size="1em" /> {t('QR-код')}</a>}
               </div>
               <div style={{ color: 'var(--muted)', fontSize: 12 }}>{t('Или продиктуйте код {code} — ученик вводит его на странице «Вступить в группу» ({site}/join).', { code: group.join_code, site: typeof window === 'undefined' ? '' : window.location.host })}</div>
             </div>
@@ -135,7 +136,7 @@ function GroupCard({ group, open, onToggle, onDelete }: { group: StudyGroup; ope
               <button onClick={() => kick(m)} title={t('Убрать из группы')} style={{ background: 'none', border: 'none', color: 'var(--bad)', cursor: 'pointer', fontSize: 16 }}>×</button>
             </div>
           ))}
-          <button onClick={onDelete} style={{ marginTop: 14, background: 'none', border: 'none', color: 'var(--bad)', cursor: 'pointer', fontSize: 13, padding: 0, fontFamily: 'inherit' }}>🗑 {t('Удалить группу')}</button>
+          <button onClick={onDelete} style={{ marginTop: 14, background: 'none', border: 'none', color: 'var(--bad)', cursor: 'pointer', fontSize: 13, padding: 0, fontFamily: 'inherit' }}><Icon name="trash" size="1em" /> {t('Удалить группу')}</button>
         </div>
       )}
     </div>

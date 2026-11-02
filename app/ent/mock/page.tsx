@@ -343,7 +343,7 @@ export default function MockEntPage() {
     <div className="nb-root page animate-fade-in">
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 14 }}>
         <span style={{ fontWeight: 800, fontSize: 20, fontVariantNumeric: 'tabular-nums', color: left < 5 * 60 * 1000 ? 'var(--bad)' : 'var(--text)' }}>
-          ⏱ {clock(left)}
+          <Icon name="clock" size="1em" /> {clock(left)}
         </span>
         <span style={{ flex: 1, color: 'var(--muted)', fontSize: 13 }}>{t('Отвечено: {a} из {b}', { a: answered, b: questions.length })}</span>
         <button className="btn" onClick={submit} style={{ padding: '8px 14px' }}>{t('Сдать')}</button>

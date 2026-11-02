@@ -2,6 +2,7 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useT } from '@/app/components/LanguageProvider'
+import Icon from '@/app/components/Icon'
 
 // Подвал с контактами — только на лендинге и странице входа.
 // Внутри приложения навигацию рисует AppNav.
@@ -43,11 +44,11 @@ export default function LandingFooter() {
       <div style={{ display: 'flex', justifyContent: 'center', gap: 16, flexWrap: 'wrap' }}>
         <a href="https://wa.me/77083528305" target="_blank" rel="noopener noreferrer"
           style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#4ade80', textDecoration: 'none', fontWeight: 500, fontSize: 13 }}>
-          📱 +7 708 352 8305
+          <Icon name="phone" size="1em" /> +7 708 352 8305
         </a>
         <a href="mailto:sultanovmirhat@gmail.com"
           style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#60a5fa', textDecoration: 'none', fontWeight: 500, fontSize: 13 }}>
-          ✉️ sultanovmirhat@gmail.com
+          <Icon name="mail" size="1em" /> sultanovmirhat@gmail.com
         </a>
       </div>
       <div style={{ marginTop: 12, fontSize: 11, color: '#555' }}>{t('© 2025 Mirha_Edu · Все права защищены')}</div>

@@ -7,6 +7,7 @@ import { HW_COUNTS, hwHref, hwProgress, type EntHomework, type HwAnswer } from '
 import { gradeMatchesClass } from '@/lib/grade-match'
 import { groupIdOf } from '@/lib/groups'
 import { useT } from '@/app/components/LanguageProvider'
+import Icon from '@/app/components/Icon'
 
 const bar = (pct: number, color: string) => (
   <div style={{ height: 8, borderRadius: 999, background: 'var(--bg)', overflow: 'hidden' }}>
@@ -85,7 +86,7 @@ export function EntHomeworkStudent({ hw, since, userId }: { hw: EntHomework; sin
         </>
       )}
       {p?.done
-        ? <div style={{ marginTop: 10, color: 'var(--good)', fontWeight: 700, fontSize: 14 }}>{t('✅ Выполнено — учитель видит результат')}</div>
+        ? <div style={{ marginTop: 10, color: 'var(--good)', fontWeight: 700, fontSize: 14 }}>{t('Выполнено — учитель видит результат')}</div>
         : <Link href={hwHref(hw)} className="btn" style={{ marginTop: 12, display: 'inline-flex', textDecoration: 'none' }}>{t('Решать задания')}</Link>}
     </div>
   )
@@ -144,7 +145,7 @@ export function EntHomeworkClass({ hw, since, className }: { hw: EntHomework; si
       <div style={{ display: 'grid', gap: 6, marginBottom: 14 }}>
         {per.map(({ s, p }) => (
           <div key={s.id} style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1.4fr) 1fr 104px', gap: 10, alignItems: 'center', fontSize: 14 }}>
-            <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.done ? '✅ ' : ''}{s.full_name || s.email}</span>
+            <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.done ? <Icon name="check" size="1em" /> : ''}{s.full_name || s.email}</span>
             {bar((p.solved / hw.count) * 100, p.done ? 'var(--good)' : 'var(--accent)')}
             <span style={{ textAlign: 'right', color: p.solved ? color(p.accuracy) : 'var(--muted)', fontSize: 13 }}>{Math.min(p.solved, hw.count)}/{hw.count}{p.solved ? ` · ${Math.round(p.accuracy * 100)}%` : ''}</span>
           </div>

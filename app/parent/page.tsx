@@ -5,6 +5,7 @@ import { supabase } from '@/lib/supabase'
 import { gradeLabel } from '@/lib/grade-match'
 import { useT } from '@/app/components/LanguageProvider'
 import { useTranslatedNames } from '@/app/components/useTranslatedNames'
+import Icon from '@/app/components/Icon'
 
 type Student = { id: string; full_name: string; email?: string; grade: string; total_xp: number; streak: number }
 type Progress = { topic: string; completed_at: string; name?: string }
@@ -68,13 +69,13 @@ export default function ParentPage() {
     // Чужие профили родителю не видны — ищем одного ученика по точной почте
     const { data: found } = await supabase.rpc('find_student_by_email', { p_email: linkEmail.trim() })
     const student = ((found || []) as Student[])[0] ?? null
-    if (!student) { setLinkMsg(t('❌ Ученик с таким email не найден')); setLinking(false); return }
+    if (!student) { setLinkMsg(t('Ученик с таким email не найден')); setLinking(false); return }
     const { data: existing } = await supabase.from('parent_links').select('id').eq('parent_id', userId).eq('student_id', student.id).maybeSingle()
     if (existing) { setLinkMsg(t('Этот ученик уже привязан')); setLinking(false); return }
     await supabase.from('parent_links').insert({ parent_id: userId, student_id: student.id })
     setStudents([...students, student])
     setLinkEmail('')
-    setLinkMsg(t('✅ Ученик успешно привязан!'))
+    setLinkMsg(t('Ученик успешно привязан!'))
     setLinking(false)
     setTimeout(() => setLinkMsg(''), 3000)
   }
@@ -102,13 +103,13 @@ export default function ParentPage() {
     <div className="nb-root" style={{ minHeight: '100vh', color: 'var(--text)', padding: '2rem' }}>
       <div style={{ maxWidth: 700, margin: '0 auto' }}>
         <div style={{ background: 'var(--surface)', borderRadius: 20, padding: '24px', marginBottom: 24, border: '1px solid var(--line)' }}>
-          <h1 style={{ fontSize: '1.8rem', fontWeight: 800, margin: '0 0 4px' }}>{t('👨‍👩‍👧 Родительский доступ')}</h1>
+          <h1 style={{ fontSize: '1.8rem', fontWeight: 800, margin: '0 0 4px' }}>{t('Родительский доступ')}</h1>
           <p style={{ color: 'var(--muted)', margin: 0 }}>{t('Следи за успехами своего ребёнка')}</p>
         </div>
 
         {/* Привязать ученика */}
         <div style={{ background: 'var(--surface)', borderRadius: 16, padding: '20px', border: '1px solid var(--line)', marginBottom: 24 }}>
-          <h3 style={{ margin: '0 0 14px', fontWeight: 700 }}>{t('🔗 Привязать ученика')}</h3>
+          <h3 style={{ margin: '0 0 14px', fontWeight: 700 }}>{t('Привязать ученика')}</h3>
           <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
             <input
               value={linkEmail} onChange={e => setLinkEmail(e.target.value)}
@@ -120,14 +121,14 @@ export default function ParentPage() {
               {linking ? '...' : t('Привязать')}
             </button>
           </div>
-          {linkMsg && <div style={{ marginTop: 10, fontSize: 13, color: linkMsg.startsWith('✅') ? 'var(--good)' : 'var(--bad)' }}>{linkMsg}</div>}
+          {linkMsg && <div style={{ marginTop: 10, fontSize: 13, color: linkMsg === t('Ученик успешно привязан!') ? 'var(--good)' : 'var(--bad)' }}>{linkMsg}</div>}
           <p style={{ color: 'var(--muted)', fontSize: 12, marginTop: 10 }}>{t('Введи email который ученик использовал при регистрации')}</p>
         </div>
 
         {/* Список привязанных учеников */}
         {students.length === 0 ? (
           <div style={{ textAlign: 'center', color: 'var(--muted)', padding: '40px 0' }}>
-            <div style={{ fontSize: 40, marginBottom: 12 }}>👶</div>
+            <div style={{ fontSize: 40, marginBottom: 12 }}><Icon name="user" size="1em" /></div>
             {t('Привяжи ученика чтобы видеть его прогресс')}
           </div>
         ) : (
@@ -149,7 +150,7 @@ export default function ParentPage() {
                     <div style={{ display: 'flex', gap: 16, textAlign: 'center' }}>
                       <div><div style={{ fontWeight: 800, color: 'var(--accent)', fontSize: 18 }}>{s.total_xp}</div><div style={{ color: 'var(--muted)', fontSize: 11 }}>XP</div></div>
                       <div><div style={{ fontWeight: 800, color: 'var(--good)', fontSize: 18 }}>{level(s.total_xp)}</div><div style={{ color: 'var(--muted)', fontSize: 11 }}>{t('Уровень')}</div></div>
-                      <div><div style={{ fontWeight: 800, color: 'var(--warn)', fontSize: 18 }}>🔥{s.streak}</div><div style={{ color: 'var(--muted)', fontSize: 11 }}>{t('дней')}</div></div>
+                      <div><div style={{ fontWeight: 800, color: 'var(--warn)', fontSize: 18 }}><Icon name="flame" size="1em" />{s.streak}</div><div style={{ color: 'var(--muted)', fontSize: 11 }}>{t('дней')}</div></div>
                     </div>
                   </div>
                 </div>
@@ -163,7 +164,7 @@ export default function ParentPage() {
                       <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                         {progress.slice(0, 10).map((p, i) => (
                           <div key={i} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, padding: '8px 12px', background: 'var(--bg)', borderRadius: 8 }}>
-                            <span style={{ color: 'var(--text)' }}>✅ {p.name ? topicName(p.topic, p.name) : t('Тема #{topic}', { topic: p.topic })}</span>
+                            <span style={{ color: 'var(--text)' }}><Icon name="check" size="1em" /> {p.name ? topicName(p.topic, p.name) : t('Тема #{topic}', { topic: p.topic })}</span>
                             <span style={{ color: 'var(--muted)' }}>{new Date(p.completed_at).toLocaleDateString(dateLocale)}</span>
                           </div>
                         ))}
@@ -179,7 +180,7 @@ export default function ParentPage() {
 
         <button onClick={async () => { await supabase.auth.signOut(); router.push('/login') }}
           style={{ marginTop: 32, width: '100%', padding: '14px', borderRadius: 14, border: '1px solid color-mix(in srgb, var(--bad) 20%, transparent)', background: 'var(--surface)', color: 'var(--bad)', fontSize: 15, fontWeight: 700, cursor: 'pointer' }}>
-          {t('🚪 Выйти')}
+          {t('Выйти')}
         </button>
       </div>
     </div>

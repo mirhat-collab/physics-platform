@@ -5,6 +5,7 @@ import { supabase } from '@/lib/supabase'
 import { sortTopicsByNumber } from '@/lib/topic-order'
 import { useT } from '@/app/components/LanguageProvider'
 import { useTranslatedNames } from '@/app/components/useTranslatedNames'
+import Icon from '@/app/components/Icon'
 
 type Topic = {
   id: string
@@ -161,7 +162,7 @@ export default function TopicsPage() {
 
         {filtered.length === 0 ? (
           <p className="tp-empty">
-            {search ? t('😕 Ничего не найдено по запросу "{search}"', { search: search }) : statusFilter === 'completed' ? t('😅 Ты ещё не изучил ни одной темы') : statusFilter === 'bookmarked' ? t('🔖 Нет сохранённых тем — нажми 📌 на странице темы') : t('😅 Нет недавно открытых тем')}
+            {search ? t('Ничего не найдено по запросу "{search}"', { search: search }) : statusFilter === 'completed' ? t('Ты ещё не изучил ни одной темы') : statusFilter === 'bookmarked' ? t('Нет сохранённых тем — нажми <Icon name="sparkle" size="1em" /> на странице темы') : t('Нет недавно открытых тем')}
           </p>
         ) : (
           <ol className="tp-list" role="list">
@@ -178,7 +179,7 @@ export default function TopicsPage() {
                     </span>
                     {isDone && (
                       <span className="tp-done" title={t('Изучено')}>
-                        <svg viewBox="0 0 30 30" aria-hidden><path d="M4 15 C 7 18, 9 21, 11 25 C 15 15, 20 8, 27 3" /></svg>
+                        <svg viewBox="0 0 30 30" aria-hidden><path d="M6 16 L12 22 L25 8" /></svg>
                         <span className="sr-only">{t('Изучено')}</span>
                       </span>
                     )}

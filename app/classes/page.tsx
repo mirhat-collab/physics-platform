@@ -3,14 +3,15 @@ import { gradeVariants } from '../../lib/grade-match'
 import Link from 'next/link'
 import { getLocale, getT } from '../../lib/i18n/server'
 import { cachedTranslations } from '../../lib/translate'
+import Icon from '@/app/components/Icon'
 
 // Обложки тетрадей: светлый лист с оттенком цвета класса
-const gradeColors: Record<string, { bg: string; accent: string; icon: string }> = {
-  '7th Grade': { bg: 'color-mix(in srgb, var(--accent) 14%, var(--surface))', accent: 'var(--accent)', icon: '🔬' },
-  '8th Grade': { bg: 'color-mix(in srgb, var(--bad) 14%, var(--surface))', accent: 'var(--bad)', icon: '⚡' },
-  '9th Grade': { bg: 'color-mix(in srgb, var(--accent) 14%, var(--surface))', accent: 'var(--accent)', icon: '🌊' },
-  '10th Grade': { bg: 'color-mix(in srgb, var(--good) 14%, var(--surface))', accent: 'var(--good)', icon: '⚗️' },
-  '11th Grade': { bg: 'color-mix(in srgb, var(--warn) 14%, var(--surface))', accent: 'var(--warn)', icon: '🚀' },
+const gradeColors: Record<string, { bg: string; accent: string; icon: React.ReactNode }> = {
+  '7th Grade': { bg: 'color-mix(in srgb, var(--accent) 14%, var(--surface))', accent: 'var(--accent)', icon: <Icon name="flask" size="1em" /> },
+  '8th Grade': { bg: 'color-mix(in srgb, var(--bad) 14%, var(--surface))', accent: 'var(--bad)', icon: <Icon name="zap" size="1em" /> },
+  '9th Grade': { bg: 'color-mix(in srgb, var(--accent) 14%, var(--surface))', accent: 'var(--accent)', icon: <Icon name="waves" size="1em" /> },
+  '10th Grade': { bg: 'color-mix(in srgb, var(--good) 14%, var(--surface))', accent: 'var(--good)', icon: <Icon name="flask" size="1em" /> },
+  '11th Grade': { bg: 'color-mix(in srgb, var(--warn) 14%, var(--surface))', accent: 'var(--warn)', icon: <Icon name="rocket" size="1em" /> },
 }
 
 export default async function ClassesPage() {
@@ -42,14 +43,14 @@ export default async function ClassesPage() {
       <main className="nb-root" style={{ minHeight: '100vh', padding: '2rem' }}>
         <div style={{ maxWidth: 900, margin: '0 auto' }}>
           <h1 style={{ fontSize: '2.5rem', fontWeight: 800, color: 'var(--text)', marginBottom: 8 }}>
-            {t('⚡ Классы физики')}
+            {t('Классы физики')}
           </h1>
           <p style={{ color: 'var(--muted)', marginBottom: 40, fontSize: '1.1rem' }}>
             {t('Выбери свой класс и начни изучать')}
           </p>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: '1.5rem' }}>
             {classes?.map((cls) => {
-              const s = gradeColors[cls.name] ?? { bg: 'color-mix(in srgb, var(--accent) 14%, var(--surface))', accent: 'var(--accent)', icon: '📚' }
+              const s = gradeColors[cls.name] ?? { bg: 'color-mix(in srgb, var(--accent) 14%, var(--surface))', accent: 'var(--accent)', icon: <Icon name="book" size="1em" /> }
               return (
                 <Link key={cls.id} href={`/classes/${cls.id}`} style={{ textDecoration: 'none' }}>
                   <div className="class-card" style={{ background: 'var(--surface)', borderRadius: 16, overflow: 'hidden', border: '1px solid var(--line)', cursor: 'pointer' }}>

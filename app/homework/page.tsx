@@ -8,6 +8,7 @@ import type { EntHomework } from '@/lib/ent-homework'
 import { useT } from '@/app/components/LanguageProvider'
 import { useTranslatedItems } from '@/app/components/useTranslatedItems'
 import { groupClass, groupIdOf } from '@/lib/groups'
+import Icon from '@/app/components/Icon'
 
 type Homework = { id: number; title: string; description: string; class_name: string; due_date: string; created_at: string; media_urls?: string[]; ent?: EntHomework | null }
 type Submission = { id: number; homework_id: number; answer: string; grade: string; media_url?: string }
@@ -136,7 +137,7 @@ export default function HomeworkPage() {
     <div className="nb-root" style={{ minHeight: '100vh', color: 'var(--text)', padding: '2rem' }}>
       <div style={{ maxWidth: 700, margin: '0 auto' }}>
         <div style={{ background: 'var(--surface)', borderBottom: '1px solid var(--line)', borderRadius: 20, padding: '24px', marginBottom: 24 }}>
-          <h1 style={{ fontSize: '1.8rem', fontWeight: 800, margin: '0 0 4px' }}>{t('📝 Домашние задания')}</h1>
+          <h1 style={{ fontSize: '1.8rem', fontWeight: 800, margin: '0 0 4px' }}>{t('Домашние задания')}</h1>
           <p style={{ color: 'var(--muted)', margin: 0, fontSize: 14 }}>{preview ? userGrade : gradeLabel(userGrade, t)}</p>
         </div>
 
@@ -153,7 +154,7 @@ export default function HomeworkPage() {
 
         {homeworks.length === 0 && (
           <div style={{ textAlign: 'center', color: 'var(--muted)', padding: '60px 0' }}>
-            <div style={{ fontSize: 40, marginBottom: 12 }}>📭</div>
+            <div style={{ fontSize: 40, marginBottom: 12 }}><Icon name="inbox" size="1em" /></div>
             {t('Заданий пока нет')}
           </div>
         )}
@@ -171,15 +172,15 @@ export default function HomeworkPage() {
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
                   <div>
                     <div style={{ fontWeight: 700, fontSize: 16 }}>{tri(hw.id, 'title', hw.title)}</div>
-                    {groupIdOf(hw.class_name) !== null && <div style={{ color: 'var(--accent)', fontSize: 12, marginTop: 2 }}>👥 {groupNames[groupIdOf(hw.class_name)!] || t('Группа')}</div>}
+                    {groupIdOf(hw.class_name) !== null && <div style={{ color: 'var(--accent)', fontSize: 12, marginTop: 2 }}><Icon name="users" size="1em" /> {groupNames[groupIdOf(hw.class_name)!] || t('Группа')}</div>}
                     <div style={{ color: 'var(--muted)', fontSize: 12, marginTop: 4 }}>
                       {hw.due_date ? t('До {date}', { date: new Date(hw.due_date).toLocaleDateString(dateLocale) }) : t('Без срока')}
-                      {isOverdue && !isSent && <span style={{ color: 'var(--bad)', marginLeft: 8 }}>{t('⚠️ Просрочено')}</span>}
+                      {isOverdue && !isSent && <span style={{ color: 'var(--bad)', marginLeft: 8 }}>{t('Просрочено')}</span>}
                     </div>
                   </div>
                   {isSent && (
                     <span style={{ background: 'color-mix(in srgb, var(--good) 15%, transparent)', color: 'var(--good)', padding: '4px 12px', borderRadius: 999, fontSize: 12, fontWeight: 600 }}>
-                      {mySub?.grade ? t('Оценка: {grade}', { grade: mySub.grade }) : t('✅ Сдано')}
+                      {mySub?.grade ? t('Оценка: {grade}', { grade: mySub.grade }) : t('Сдано')}
                     </span>
                   )}
                 </div>
@@ -244,14 +245,14 @@ export default function HomeworkPage() {
                     ) : (
                       <button onClick={() => fileRefs.current[hw.id]?.click()}
                         style={{ width: '100%', padding: '10px', borderRadius: 10, border: '2px dashed var(--line)', background: 'transparent', color: 'var(--muted)', fontSize: 13, cursor: 'pointer', marginBottom: 10 }}>
-                        {t('📎 Прикрепить фото или видео')}
+                        {t('Прикрепить фото или видео')}
                       </button>
                     )}
 
                     <button onClick={() => submitAnswer(hw.id)}
                       disabled={sending === hw.id || uploading === hw.id || (!answers[hw.id]?.trim() && !mediaFiles[hw.id])}
                       style={{ padding: '10px 24px', borderRadius: 10, border: 'none', background: (answers[hw.id]?.trim() || mediaFiles[hw.id]) ? 'var(--accent)' : 'var(--line)', color: 'var(--on-accent)', fontWeight: 700, cursor: 'pointer', fontSize: 14 }}>
-                      {uploading === hw.id ? t('⏳ Загружаю файл...') : sending === hw.id ? t('Отправляем...') : t('📨 Сдать')}
+                      {uploading === hw.id ? t('Загружаю файл...') : sending === hw.id ? t('Отправляем...') : t('Сдать')}
                     </button>
                   </div>
                 )}

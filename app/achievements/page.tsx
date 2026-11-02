@@ -3,30 +3,31 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import { useT } from '@/app/components/LanguageProvider'
+import Icon from '@/app/components/Icon'
 
 type Profile = { total_xp: number; streak: number }
 type Stats = { topics: number; homeworkDone: number }
 
 const ACHIEVEMENTS = [
   // Темы
-  { id: 'first_topic', icon: '🥇', title: 'Первые шаги', desc: 'Пройди первую тему', category: 'Учёба', check: (_: Profile, s: Stats) => s.topics >= 1 },
-  { id: 'five_topics', icon: '📚', title: 'Книгочей', desc: 'Пройди 5 тем', category: 'Учёба', check: (_: Profile, s: Stats) => s.topics >= 5 },
-  { id: 'ten_topics', icon: '🚀', title: 'Мастер', desc: 'Пройди 10 тем', category: 'Учёба', check: (_: Profile, s: Stats) => s.topics >= 10 },
-  { id: 'twenty_topics', icon: '🧠', title: 'Физик', desc: 'Пройди 20 тем', category: 'Учёба', check: (_: Profile, s: Stats) => s.topics >= 20 },
+  { id: 'first_topic', icon: <Icon name="medal" size="1em" />, title: 'Первые шаги', desc: 'Пройди первую тему', category: 'Учёба', check: (_: Profile, s: Stats) => s.topics >= 1 },
+  { id: 'five_topics', icon: <Icon name="book" size="1em" />, title: 'Книгочей', desc: 'Пройди 5 тем', category: 'Учёба', check: (_: Profile, s: Stats) => s.topics >= 5 },
+  { id: 'ten_topics', icon: <Icon name="rocket" size="1em" />, title: 'Мастер', desc: 'Пройди 10 тем', category: 'Учёба', check: (_: Profile, s: Stats) => s.topics >= 10 },
+  { id: 'twenty_topics', icon: <Icon name="brain" size="1em" />, title: 'Физик', desc: 'Пройди 20 тем', category: 'Учёба', check: (_: Profile, s: Stats) => s.topics >= 20 },
 
   // XP
-  { id: 'xp_100', icon: '⭐', title: 'Отличник', desc: 'Набери 100 XP', category: 'XP', check: (p: Profile, _: Stats) => p.total_xp >= 100 },
-  { id: 'xp_500', icon: '💎', title: 'Эксперт', desc: 'Набери 500 XP', category: 'XP', check: (p: Profile, _: Stats) => p.total_xp >= 500 },
-  { id: 'xp_1000', icon: '👑', title: 'Гений', desc: 'Набери 1000 XP', category: 'XP', check: (p: Profile, _: Stats) => p.total_xp >= 1000 },
+  { id: 'xp_100', icon: <Icon name="star" size="1em" />, title: 'Отличник', desc: 'Набери 100 XP', category: 'XP', check: (p: Profile, _: Stats) => p.total_xp >= 100 },
+  { id: 'xp_500', icon: <Icon name="gem" size="1em" />, title: 'Эксперт', desc: 'Набери 500 XP', category: 'XP', check: (p: Profile, _: Stats) => p.total_xp >= 500 },
+  { id: 'xp_1000', icon: <Icon name="crown" size="1em" />, title: 'Гений', desc: 'Набери 1000 XP', category: 'XP', check: (p: Profile, _: Stats) => p.total_xp >= 1000 },
 
   // Стрики
-  { id: 'streak_3', icon: '🔥', title: '3 дня подряд', desc: 'Заходи 3 дня подряд', category: 'Стрик', check: (p: Profile, _: Stats) => p.streak >= 3 },
-  { id: 'streak_7', icon: '⚡', title: 'Неделя подряд', desc: 'Заходи 7 дней подряд', category: 'Стрик', check: (p: Profile, _: Stats) => p.streak >= 7 },
-  { id: 'streak_30', icon: '🌟', title: 'Легенда', desc: 'Заходи 30 дней подряд', category: 'Стрик', check: (p: Profile, _: Stats) => p.streak >= 30 },
+  { id: 'streak_3', icon: <Icon name="flame" size="1em" />, title: '3 дня подряд', desc: 'Заходи 3 дня подряд', category: 'Стрик', check: (p: Profile, _: Stats) => p.streak >= 3 },
+  { id: 'streak_7', icon: <Icon name="zap" size="1em" />, title: 'Неделя подряд', desc: 'Заходи 7 дней подряд', category: 'Стрик', check: (p: Profile, _: Stats) => p.streak >= 7 },
+  { id: 'streak_30', icon: <Icon name="star" size="1em" />, title: 'Легенда', desc: 'Заходи 30 дней подряд', category: 'Стрик', check: (p: Profile, _: Stats) => p.streak >= 30 },
 
   // Домашние задания
-  { id: 'hw_first', icon: '📝', title: 'Прилежный ученик', desc: 'Сдай первое домашнее задание', category: 'Домашка', check: (_: Profile, s: Stats) => s.homeworkDone >= 1 },
-  { id: 'hw_ten', icon: '📋', title: 'Ответственный', desc: 'Сдай 10 домашних заданий', category: 'Домашка', check: (_: Profile, s: Stats) => s.homeworkDone >= 10 },
+  { id: 'hw_first', icon: <Icon name="file" size="1em" />, title: 'Прилежный ученик', desc: 'Сдай первое домашнее задание', category: 'Домашка', check: (_: Profile, s: Stats) => s.homeworkDone >= 1 },
+  { id: 'hw_ten', icon: <Icon name="clipboard" size="1em" />, title: 'Ответственный', desc: 'Сдай 10 домашних заданий', category: 'Домашка', check: (_: Profile, s: Stats) => s.homeworkDone >= 10 },
 ]
 
 const CATEGORY_COLORS: Record<string, string> = {
@@ -77,7 +78,7 @@ export default function AchievementsPage() {
     <div className="nb-root" style={{ minHeight: '100vh', color: 'var(--text)', padding: '1.5rem', paddingBottom: 80 }}>
       <div style={{ maxWidth: 500, margin: '0 auto' }}>
 
-        <h1 style={{ fontSize: '1.8rem', fontWeight: 800, marginBottom: 4 }}>{t('🏅 Достижения')}</h1>
+        <h1 style={{ fontSize: '1.8rem', fontWeight: 800, marginBottom: 4 }}>{t('Достижения')}</h1>
         <p style={{ color: 'var(--muted)', marginBottom: 20, fontSize: 14 }}>{t('{a} из {b} получено', { a: unlocked.length, b: ACHIEVEMENTS.length })}</p>
 
         {/* Прогресс */}
@@ -131,7 +132,7 @@ export default function AchievementsPage() {
                         <div style={{ fontWeight: 700, fontSize: 14, color: done ? 'var(--text)' : 'var(--muted)' }}>{t(a.title)}</div>
                         <div style={{ color: 'var(--muted)', fontSize: 12, marginTop: 2 }}>{t(a.desc)}</div>
                       </div>
-                      <div style={{ fontSize: 18 }}>{done ? '✅' : '🔒'}</div>
+                      <div style={{ fontSize: 18 }}>{done ? <Icon name="check" size="1em" /> : <Icon name="lock" size="1em" />}</div>
                     </div>
                   )
                 })}

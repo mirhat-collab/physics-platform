@@ -154,7 +154,7 @@ export default function PrintPage() {
 
         {result.length > 0 && (
           <button className="btn" onClick={() => window.print()} style={{ width: '100%', marginBottom: 18 }}>
-            🖨 {t('Печать / сохранить в PDF')}
+            <Icon name="printer" size="1em" /> {t('Печать / сохранить в PDF')}
           </button>
         )}
       </div>

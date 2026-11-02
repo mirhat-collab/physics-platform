@@ -1,6 +1,7 @@
 'use client'
 import { useEffect, useState } from 'react'
 import { useT } from '@/app/components/LanguageProvider'
+import Icon from '@/app/components/Icon'
 
 export default function PwaInstall() {
   const { t } = useT()
@@ -47,7 +48,7 @@ export default function PwaInstall() {
       alignItems: 'center', gap: 12, boxShadow: '0 8px 32px color-mix(in srgb, var(--accent) 50%, transparent)',
       maxWidth: 360, width: '90%', animation: 'slideUp 0.4s ease'
     }}>
-      <span style={{ fontSize: 28 }}>📲</span>
+      <span style={{ fontSize: 28 }}><Icon name="phone" size="1em" /></span>
       <div style={{ flex: 1 }}>
         <div style={{ fontWeight: 800, color: 'var(--text)', fontSize: 14 }}>{t('Установи как приложение')}</div>
         <div style={{ color: 'color-mix(in srgb, var(--text) 80%, transparent)', fontSize: 12 }}>{t('Работает без интернета!')}</div>
