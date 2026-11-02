@@ -1653,3 +1653,13 @@ svg[width="1em"] { display: inline-block !important; vertical-align: -0.14em; ma
 .tg-card b { display: block; font-size: 15px; }
 .tg-card small { display: block; color: var(--muted); font-size: 12.5px; margin-top: 2px; }
 .tg-card-i { width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; color: #fff; background: linear-gradient(135deg, #2aabee, #229ed9); }
+
+/* ── Поделиться результатом ── */
+.share-page { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 32px 16px; background: radial-gradient(ellipse at 70% 0%, rgba(37,99,235,.25), transparent 60%), #070a14; color: #e8ecf6; }
+.share-wrap { max-width: 720px; width: 100%; text-align: center; }
+.share-img { width: 100%; height: auto; border-radius: 20px; box-shadow: 0 30px 80px -30px rgba(37,99,235,.6); border: 1px solid rgba(127,178,255,.2); animation: review-pop .7s cubic-bezier(.2,1.2,.4,1) both; }
+.share-title { font-size: clamp(26px, 5vw, 40px); font-weight: 800; margin: 28px 0 10px; color: #fff; }
+.share-sub { color: rgba(232,236,246,.7); margin: 0 auto 24px; max-width: 520px; line-height: 1.5; }
+.share-actions { display: flex; gap: 16px; justify-content: center; align-items: center; flex-wrap: wrap; }
+.share-link { color: #7fb2ff; font-weight: 600; text-decoration: none; }
+.share-box { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin-top: 14px; }

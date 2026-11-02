@@ -5,6 +5,7 @@ import { supabase } from '@/lib/supabase'
 import { ENT_SUBJECTS, MOCK, MOCK_MAX, answerErrors, answerPoints, isAnswered, mockPoints, type EntQuestion, type EntSubject, type MockAnswer } from '@/lib/ent'
 import Figure from '@/app/components/Figure'
 import MathText, { MathLine } from '@/app/components/MathText'
+import ShareResult from '@/app/components/ShareResult'
 import Icon from '@/app/components/Icon'
 import Explain from '../Explain'
 import QuestionBody, { LETTERS } from '../QuestionBody'
@@ -277,6 +278,7 @@ export default function MockEntPage() {
             {wrongTopics.length > 0 && <Link className="btn" href={practice(wrongTopics, true)}><Icon name="refresh" size={18} /> {t('Отработать ошибки')}</Link>}
             <button className="btn btn-ghost" onClick={() => setPhase('setup')}>{t('Новый вариант')}</button>
           </div>
+          <ShareResult data={{ s: score, m: max, c: result.correct, n: questions.length, sub: subject }} />
         </div>
 
         <div className="label">{t('Где потеряны баллы')}</div>
