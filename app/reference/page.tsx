@@ -131,7 +131,7 @@ export default function ReferencePage() {
               <button onClick={() => setOpen(isOpen ? null : m.id)} style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 12, padding: '14px 16px', background: 'transparent', border: 'none', color: 'var(--text)', cursor: 'pointer', textAlign: 'left', fontFamily: 'inherit' }}>
                 <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--muted)', flexShrink: 0 }}>{t(SUBJECTS[m.subject])}</span>
                 <span style={{ flex: 1, fontWeight: 700, fontSize: 15 }}>{tr(m.id, 'title', m.title)}</span>
-                {m.media?.length > 0 && <span style={{ color: 'var(--muted)', fontSize: 12 }}>📎 {m.media.length}</span>}
+                {m.media?.length > 0 && <span style={{ color: 'var(--muted)', fontSize: 12 }}><Icon name="clip" size="1em" /> {m.media.length}</span>}
                 <Icon name="arrowRight" size={16} style={{ transform: isOpen ? 'rotate(90deg)' : 'none', transition: 'transform 0.2s', color: 'var(--muted)' }} />
               </button>
               {isOpen && (

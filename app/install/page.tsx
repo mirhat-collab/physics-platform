@@ -1,6 +1,7 @@
 'use client'
 import Link from 'next/link'
 import { useT } from '@/app/components/LanguageProvider'
+import Icon from '@/app/components/Icon'
 
 export default function InstallPage() {
   const { t } = useT()
@@ -13,7 +14,7 @@ export default function InstallPage() {
         </Link>
 
         <div style={{ textAlign: 'center', marginBottom: 32 }}>
-          <div style={{ fontSize: 64, marginBottom: 16 }}>📲</div>
+          <div style={{ fontSize: 64, marginBottom: 16 }}><Icon name="phone" size="1em" /></div>
           <h1 style={{ fontSize: '2rem', fontWeight: 800, margin: '0 0 8px' }}>{t('Установи приложение')}</h1>
           <p style={{ color: 'var(--muted)', fontSize: 15, margin: 0 }}>{t('Бесплатно — прямо с браузера, без магазинов!')}</p>
         </div>
@@ -22,7 +23,7 @@ export default function InstallPage() {
         <div style={{ background: 'var(--surface)', borderRadius: 20, padding: '24px', border: '1px solid var(--line)', marginBottom: 16 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 20 }}>
             <div style={{ width: 48, height: 48, borderRadius: 14, background: 'var(--good)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 26 }}>
-              🤖
+              <Icon name="phone" size="1em" />
             </div>
             <div>
               <div style={{ fontWeight: 800, fontSize: 18 }}>Android</div>
@@ -49,7 +50,7 @@ export default function InstallPage() {
         <div style={{ background: 'var(--surface)', borderRadius: 20, padding: '24px', border: '1px solid var(--line)', marginBottom: 32 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 20 }}>
             <div style={{ width: 48, height: 48, borderRadius: 14, background: 'var(--accent)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 26 }}>
-              🍎
+              <Icon name="phone" size="1em" />
             </div>
             <div>
               <div style={{ fontWeight: 800, fontSize: 18 }}>iPhone / iPad</div>
@@ -75,7 +76,7 @@ export default function InstallPage() {
 
         {/* После установки */}
         <div style={{ background: 'color-mix(in srgb, var(--accent) 10%, transparent)', border: '1px solid color-mix(in srgb, var(--accent) 30%, transparent)', borderRadius: 16, padding: '20px', textAlign: 'center', marginBottom: 32 }}>
-          <div style={{ fontSize: 28, marginBottom: 8 }}>✨</div>
+          <div style={{ fontSize: 28, marginBottom: 8 }}><Icon name="sparkle" size="1em" /></div>
           <div style={{ fontWeight: 700, marginBottom: 6 }}>{t('После установки:')}</div>
           <div style={{ color: 'var(--muted)', fontSize: 14, lineHeight: 1.8 }}>
             {t('Иконка появится на рабочем столе')}<br />
@@ -105,7 +106,7 @@ export default function InstallPage() {
             color: 'var(--on-accent)', fontSize: 16, fontWeight: 700, cursor: 'pointer',
             marginBottom: 32
           }}>
-          {t('📤 Поделиться инструкцией')}
+          {t('Поделиться инструкцией')}
         </button>
 
       </div>

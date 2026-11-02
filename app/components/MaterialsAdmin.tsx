@@ -3,8 +3,9 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
 import MaterialEditor, { EMPTY_MATERIAL, MATERIAL_SUBJECTS, deleteMaterial, type Material, type MaterialDraft } from '@/app/components/MaterialEditor'
-import { fileSize, mediaIcon } from '@/app/components/MediaUploader'
+import { fileSize } from '@/app/components/MediaUploader'
 import { useT } from '@/app/components/LanguageProvider'
+import Icon from '@/app/components/Icon'
 
 // Вкладка админки «Справочник ЕНТ»: список материалов, добавление и правка
 export default function MaterialsAdmin({ onCount }: { onCount?: (n: number) => void }) {
@@ -36,7 +37,7 @@ export default function MaterialsAdmin({ onCount }: { onCount?: (n: number) => v
       </p>
       {draft
         ? <MaterialEditor key={draft.id ?? 'new'} initial={draft} onCancel={() => setDraft(null)} onSaved={() => { setDraft(null); load() }} />
-        : <button className="btn" style={{ marginBottom: 16 }} onClick={() => { setDraft({ ...EMPTY_MATERIAL }); setError('') }}>➕ {t('Добавить материал')}</button>}
+        : <button className="btn" style={{ marginBottom: 16 }} onClick={() => { setDraft({ ...EMPTY_MATERIAL }); setError('') }}><Icon name="plus" size="1em" /> {t('Добавить материал')}</button>}
       {error && <div style={{ color: 'var(--bad)', fontSize: 14, marginBottom: 12 }}>{error}</div>}
       {items === null && <div style={{ color: 'var(--muted)' }}>{t('Загрузка…')}</div>}
       {items?.length === 0 && !draft && <div className="card" style={{ color: 'var(--muted)', textAlign: 'center' }}>{t('Материалов пока нет.')}</div>}
@@ -48,12 +49,12 @@ export default function MaterialsAdmin({ onCount }: { onCount?: (n: number) => v
               <div style={{ fontWeight: 700 }}>{m.title}</div>
               {m.media?.length > 0 && (
                 <div style={{ color: 'var(--muted)', fontSize: 13, marginTop: 4 }}>
-                  {m.media.map(x => `${mediaIcon(x)} ${x.name}${x.size ? ` (${fileSize(x.size)})` : ''}`).join(' · ')}
+                  {m.media.map(x => `${x.name}${x.size ? ` (${fileSize(x.size)})` : ''}`).join(' · ')}
                 </div>
               )}
             </div>
-            <button className="btn btn-ghost" style={{ padding: '6px 12px' }} onClick={() => { setDraft({ id: m.id, subject: m.subject, title: m.title, body: m.body, media: m.media || [] }); setError(''); window.scrollTo({ top: 0, behavior: 'smooth' }) }}>✏️ {t('Изменить')}</button>
-            <button className="btn btn-ghost" style={{ padding: '6px 12px', color: 'var(--bad)' }} onClick={() => remove(m)}>🗑️</button>
+            <button className="btn btn-ghost" style={{ padding: '6px 12px' }} onClick={() => { setDraft({ id: m.id, subject: m.subject, title: m.title, body: m.body, media: m.media || [] }); setError(''); window.scrollTo({ top: 0, behavior: 'smooth' }) }}><Icon name="edit" size="1em" /> {t('Изменить')}</button>
+            <button className="btn btn-ghost" style={{ padding: '6px 12px', color: 'var(--bad)' }} onClick={() => remove(m)}><Icon name="trash" size="1em" /></button>
           </div>
         ))}
       </div>

@@ -7,6 +7,7 @@ import Figure from '@/app/components/Figure'
 import MathText from '@/app/components/MathText'
 import { LETTERS } from './QuestionBody'
 import { useT } from '@/app/components/LanguageProvider'
+import Icon from '@/app/components/Icon'
 
 // Решить задачу ещё раз: варианты без подсказки, где верный, затем проверка,
 // подсказки по шагам и решение. Ответ идёт в статистику.
@@ -48,7 +49,7 @@ export function RetryCard({ q, subject, onDone }: { q: EntQuestion; subject: Ent
       )}
       {!answered && hints < steps.length && (
         <button onClick={() => setHints(hints + 1)} style={{ justifySelf: 'start', background: 'none', border: 'none', color: 'var(--accent)', fontSize: 14, cursor: 'pointer', fontFamily: 'inherit', textDecoration: 'underline', padding: 0 }}>
-          💡 {hints ? t('Следующий шаг ({a}/{b})', { a: hints + 1, b: steps.length }) : t('Подсказка')}
+          <Icon name="bulb" size="1em" /> {hints ? t('Следующий шаг ({a}/{b})', { a: hints + 1, b: steps.length }) : t('Подсказка')}
         </button>
       )}
       {answered && (
@@ -106,8 +107,8 @@ export default function PracticeTools({ q, subject, retry = true }: { q: EntQues
   return (
     <div style={{ display: 'grid', gap: 10, marginTop: 12 }}>
       <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-        {retry && <button style={btn} onClick={() => setMode(mode === 'retry' ? 'none' : 'retry')}>🔁 {t('Решить ещё раз')}</button>}
-        {q.topic && <button style={btn} onClick={loadSimilar} disabled={loading}>🎲 {loading ? t('Загрузка…') : similar ? t('Ещё похожую') : t('Похожая задача')}</button>}
+        {retry && <button style={btn} onClick={() => setMode(mode === 'retry' ? 'none' : 'retry')}><Icon name="repeat" size="1em" /> {t('Решить ещё раз')}</button>}
+        {q.topic && <button style={btn} onClick={loadSimilar} disabled={loading}><Icon name="shuffle" size="1em" /> {loading ? t('Загрузка…') : similar ? t('Ещё похожую') : t('Похожая задача')}</button>}
         {streak > 0 && <span style={{ alignSelf: 'center', fontSize: 13, color: 'var(--good)' }}>{t('Верно подряд: {n}', { n: streak })}</span>}
       </div>
       {mode === 'retry' && <RetryCard key="retry" q={q} subject={subject} />}

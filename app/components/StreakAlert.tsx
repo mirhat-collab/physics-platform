@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import { kzDate } from '@/lib/streak'
 import { useT } from '@/app/components/LanguageProvider'
+import Icon from '@/app/components/Icon'
 
 export default function StreakAlert() {
   const { t } = useT()
@@ -51,7 +52,7 @@ export default function StreakAlert() {
       alignItems: 'center', gap: 12, boxShadow: '0 8px 32px color-mix(in srgb, var(--warn) 40%, transparent)',
       maxWidth: 360, width: '90%', animation: 'slideDown 0.4s ease'
     }}>
-      <span style={{ fontSize: 28 }}>🔥</span>
+      <span style={{ fontSize: 28 }}><Icon name="flame" size="1em" /></span>
       <div style={{ flex: 1 }}>
         <div style={{ fontWeight: 800, color: 'var(--text)', fontSize: 14 }}>{t('Стрик')} {streak} {t('дней!')}</div>
         <div style={{ color: 'color-mix(in srgb, var(--text) 85%, transparent)', fontSize: 12 }}>{t('Заходи каждый день чтобы не потерять')}</div>

@@ -2,6 +2,7 @@
 import { useRef, useState } from 'react'
 import { extractStoragePath } from '@/lib/file-protect'
 import { useT } from '@/app/components/LanguageProvider'
+import Icon from '@/app/components/Icon'
 
 // Загрузка файлов в Storage для тем и справочника ЕНТ (только для админа)
 
@@ -12,19 +13,19 @@ export const MAX_FILE_MB = 50
 
 export type MediaItem = { url: string; type: 'image' | 'video' | 'file' | 'link'; name: string; size?: number }
 
-export function fileIcon(name: string): string {
+export function fileIcon(name: string): React.ReactNode {
   const ext = name.split('.').pop()?.toLowerCase() || ''
-  if (ext === 'pdf') return '📕'
-  if (ext === 'doc' || ext === 'docx') return '📘'
-  if (ext === 'ppt' || ext === 'pptx') return '📙'
-  if (ext === 'xls' || ext === 'xlsx' || ext === 'csv') return '📗'
-  if (['zip', 'rar', '7z'].includes(ext)) return '🗜'
-  if (['mp3', 'wav', 'ogg', 'm4a'].includes(ext)) return '🎧'
-  return '📄'
+  if (ext === 'pdf') return <Icon name="book" size="1em" />
+  if (ext === 'doc' || ext === 'docx') return <Icon name="book" size="1em" />
+  if (ext === 'ppt' || ext === 'pptx') return <Icon name="book" size="1em" />
+  if (ext === 'xls' || ext === 'xlsx' || ext === 'csv') return <Icon name="book" size="1em" />
+  if (['zip', 'rar', '7z'].includes(ext)) return <Icon name="archive" size="1em" />
+  if (['mp3', 'wav', 'ogg', 'm4a'].includes(ext)) return <Icon name="headphones" size="1em" />
+  return <Icon name="file" size="1em" />
 }
 
-export function mediaIcon(item: MediaItem): string {
-  return item.type === 'image' ? '🖼' : item.type === 'video' ? '🎬' : item.type === 'link' ? '🔗' : fileIcon(item.name)
+export function mediaIcon(item: MediaItem): React.ReactNode {
+  return item.type === 'image' ? <Icon name="image" size="1em" /> : item.type === 'video' ? <Icon name="film" size="1em" /> : item.type === 'link' ? <Icon name="link" size="1em" /> : fileIcon(item.name)
 }
 
 export function fileSize(bytes?: number): string {
@@ -118,7 +119,7 @@ export default function MediaUploader({ existing, onDone }: { existing: MediaIte
     setProgress(null)
     setErrors(errs)
     if (newItems.length) {
-      setMsg(t('✅ Загружено {length} файл(ов)', { length: newItems.length }))
+      setMsg(t('Загружено {length} файл(ов)', { length: newItems.length }))
       setTimeout(() => setMsg(''), 3000)
     }
     if (fileRef.current) fileRef.current.value = ''
@@ -159,7 +160,7 @@ export default function MediaUploader({ existing, onDone }: { existing: MediaIte
           background: 'var(--bg)', marginBottom: 10,
         }}
       >
-        {uploading ? t('⏳ Загружаю...') : t('📎 Нажми или перетащи сюда файлы — любые: PDF, Word, презентации, фото, видео, архивы')}
+        {uploading ? t('Загружаю...') : t('Нажми или перетащи сюда файлы — любые: PDF, Word, презентации, фото, видео, архивы')}
         <div style={{ fontSize: 12, marginTop: 4, color: 'var(--muted)' }}>{t('До {max} МБ на файл. Больше — добавь ссылкой.', { max: MAX_FILE_MB })}</div>
       </div>
       <input ref={fileRef} type="file" multiple style={{ display: 'none' }} onChange={e => upload(Array.from(e.target.files || []))} />
@@ -188,7 +189,7 @@ export default function MediaUploader({ existing, onDone }: { existing: MediaIte
           </div>
         </div>
       ) : (
-        <button type="button" className="chip" style={{ marginBottom: 10 }} onClick={() => setLink({ url: '', name: '' })}>🔗 {t('Добавить ссылку')}</button>
+        <button type="button" className="chip" style={{ marginBottom: 10 }} onClick={() => setLink({ url: '', name: '' })}><Icon name="link" size="1em" /> {t('Добавить ссылку')}</button>
       )}
       {msg && <div style={{ color: 'var(--good)', fontSize: 13, marginBottom: 8 }}>{msg}</div>}
       {errors.map((e, i) => <div key={i} style={{ color: 'var(--bad)', fontSize: 13, marginBottom: 6 }}>{e}</div>)}
@@ -212,7 +213,7 @@ export default function MediaUploader({ existing, onDone }: { existing: MediaIte
                 style={{ position: 'absolute', top: 3, right: 3, width: 20, height: 20, borderRadius: '50%', background: 'var(--bad)', border: 'none', color: 'var(--on-accent)', fontSize: 12, cursor: 'pointer', padding: 0, lineHeight: '20px' }}
               >×</button>
               <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, background: 'rgba(0,0,0,.6)', fontSize: 9, color: 'var(--text)', padding: '2px 4px', textAlign: 'center' }}>
-                {item.type === 'video' ? t('▶ видео') : item.type === 'image' ? t('🖼 фото') : item.type === 'link' ? t('🔗 ссылка') : item.size ? fileSize(item.size) : t('📄 файл')}
+                {item.type === 'video' ? t('▶ видео') : item.type === 'image' ? t('фото') : item.type === 'link' ? t('ссылка') : item.size ? fileSize(item.size) : t('файл')}
               </div>
             </div>
           ))}

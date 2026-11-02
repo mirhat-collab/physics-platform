@@ -10,6 +10,7 @@ import type { EntHomework } from '@/lib/ent-homework'
 import { useT } from '@/app/components/LanguageProvider'
 import TeacherGroups from '@/app/components/TeacherGroups'
 import { groupClass, groupIdOf, type StudyGroup } from '@/lib/groups'
+import Icon from '@/app/components/Icon'
 
 type Profile = { id: string; full_name: string; email?: string; grade: string; total_xp: number; streak: number; role: string }
 type ClassStat = { name: string; students: Profile[]; avg_xp: number; completed_topics: number; total_topics: number }
@@ -181,7 +182,7 @@ export default function TeacherPage() {
   // Название класса или группы учителя (ДЗ группе: class_name = 'group:<id>')
   const classLabel = (name: string) => {
     const id = groupIdOf(name)
-    return id === null ? name : `👥 ${groups.find(g => g.id === id)?.name ?? t('Группа')}`
+    return id === null ? name : `${groups.find(g => g.id === id)?.name ?? t('Группа')}`
   }
 
   const inputStyle: React.CSSProperties = {
@@ -272,7 +273,7 @@ export default function TeacherPage() {
                     </div>
                     <div style={{ display: 'flex', gap: 16, textAlign: 'center' }}>
                       <div><div style={{ fontWeight: 700, color: 'var(--accent)' }}>{s.total_xp}</div><div style={{ color: 'var(--muted)', fontSize: 11 }}>XP</div></div>
-                      <div><div style={{ fontWeight: 700, color: 'var(--warn)' }}>🔥{s.streak}</div><div style={{ color: 'var(--muted)', fontSize: 11 }}>{t('дней')}</div></div>
+                      <div><div style={{ fontWeight: 700, color: 'var(--warn)' }}><Icon name="flame" size="1em" />{s.streak}</div><div style={{ color: 'var(--muted)', fontSize: 11 }}>{t('дней')}</div></div>
                     </div>
                   </div>
                 ))}
@@ -285,7 +286,7 @@ export default function TeacherPage() {
         {tab === 'students' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
             {students.map((s, i) => {
-              const medal = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `${i + 1}.`
+              const medal = i === 0 ? <Icon name="medal" size="1em" /> : i === 1 ? <Icon name="medal" size="1em" /> : i === 2 ? <Icon name="medal" size="1em" /> : `${i + 1}.`
               return (
                 <div key={s.id} style={{ background: 'var(--surface)', borderRadius: 14, padding: '14px 18px', border: '1px solid var(--line)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
@@ -300,7 +301,7 @@ export default function TeacherPage() {
                   </div>
                   <div style={{ display: 'flex', gap: 16, textAlign: 'center' }}>
                     <div><div style={{ fontWeight: 700, color: 'var(--accent)' }}>{s.total_xp}</div><div style={{ color: 'var(--muted)', fontSize: 11 }}>XP</div></div>
-                    <div><div style={{ fontWeight: 700, color: 'var(--warn)' }}>🔥{s.streak}</div><div style={{ color: 'var(--muted)', fontSize: 11 }}>{t('дней')}</div></div>
+                    <div><div style={{ fontWeight: 700, color: 'var(--warn)' }}><Icon name="flame" size="1em" />{s.streak}</div><div style={{ color: 'var(--muted)', fontSize: 11 }}>{t('дней')}</div></div>
                   </div>
                 </div>
               )
@@ -313,10 +314,10 @@ export default function TeacherPage() {
           <div>
             {/* Форма создания */}
             <div style={{ background: 'var(--surface)', borderRadius: 16, padding: '20px', border: '1px solid var(--line)', marginBottom: 24 }}>
-              <h3 style={{ margin: '0 0 16px', fontWeight: 700 }}>{t('➕ Новое задание')}</h3>
+              <h3 style={{ margin: '0 0 16px', fontWeight: 700 }}>{t('Новое задание')}</h3>
               <div style={{ display: 'flex', gap: 8, marginBottom: 10, flexWrap: 'wrap' }}>
-                <button type="button" className={`chip${!hwEnt ? ' on' : ''}`} onClick={() => setHwEnt(null)}>{t('📄 Обычное задание')}</button>
-                <button type="button" className={`chip${hwEnt ? ' on' : ''}`} onClick={() => setHwEnt(hwEnt || { subject: 'physics', topics: [], count: 20 })}>{t('🎯 Задания из тренажёра ЕНТ')}</button>
+                <button type="button" className={`chip${!hwEnt ? ' on' : ''}`} onClick={() => setHwEnt(null)}>{t('Обычное задание')}</button>
+                <button type="button" className={`chip${hwEnt ? ' on' : ''}`} onClick={() => setHwEnt(hwEnt || { subject: 'physics', topics: [], count: 20 })}>{t('Задания из тренажёра ЕНТ')}</button>
               </div>
               {hwEnt && (
                 <>
@@ -331,7 +332,7 @@ export default function TeacherPage() {
                   <option value="">{t('Выбери класс или группу')}</option>
                   {groups.length > 0 && (
                     <optgroup label={t('Мои группы')}>
-                      {groups.map(g => <option key={g.id} value={groupClass(g.id)}>👥 {g.name}</option>)}
+                      {groups.map(g => <option key={g.id} value={groupClass(g.id)}><Icon name="users" size="1em" /> {g.name}</option>)}
                     </optgroup>
                   )}
                   <optgroup label={t('Классы (все ученики параллели)')}>
@@ -347,7 +348,7 @@ export default function TeacherPage() {
                 style={{ border: '2px dashed var(--line)', borderRadius: 12, padding: '14px', textAlign: 'center', cursor: 'pointer', color: 'var(--muted)', fontSize: 13, background: 'var(--bg)', marginBottom: 10 }}
                 onMouseEnter={e => (e.currentTarget.style.borderColor = 'var(--good)')}
                 onMouseLeave={e => (e.currentTarget.style.borderColor = 'var(--line)')}>
-                {t('📎 Прикрепить фото или видео к заданию')}
+                {t('Прикрепить фото или видео к заданию')}
               </div>
               {hwMediaPreviews.length > 0 && (
                 <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 10 }}>
@@ -366,7 +367,7 @@ export default function TeacherPage() {
 
               <button onClick={createHomework} disabled={savingHw || hwUploading || !hwClass || (hwEnt ? !hwEnt.topics.length : !hwTitle.trim())}
                 style={{ padding: '10px 24px', borderRadius: 10, border: 'none', background: hwClass && (hwEnt ? hwEnt.topics.length : hwTitle) ? 'var(--good)' : 'var(--line)', color: 'var(--on-accent)', fontWeight: 700, cursor: 'pointer', fontSize: 14 }}>
-                {hwUploading ? t('⏳ Загружаю файлы...') : savingHw ? t('Создаём...') : t('✅ Создать задание')}
+                {hwUploading ? t('Загружаю файлы...') : savingHw ? t('Создаём...') : t('Создать задание')}
               </button>
             </div>
 
@@ -415,7 +416,7 @@ export default function TeacherPage() {
                             ) : (
                               <button onClick={() => { setGradingId(sub.id); setGradeValue('') }}
                                 style={{ padding: '4px 12px', borderRadius: 8, border: '1px solid var(--line)', background: 'transparent', color: 'var(--muted)', cursor: 'pointer', fontSize: 12 }}>
-                                {t('✏️ Поставить оценку')}
+                                {t('Поставить оценку')}
                               </button>
                             )}
                           </div>

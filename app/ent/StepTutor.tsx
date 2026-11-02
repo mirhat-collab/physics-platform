@@ -2,6 +2,7 @@
 import { useState } from 'react'
 import MathText from '@/app/components/MathText'
 import { useT } from '@/app/components/LanguageProvider'
+import Icon from '@/app/components/Icon'
 
 // Шаги решения с кнопкой «Не понимаю этот шаг» у каждого: ИИ объясняет
 // только выбранный шаг (и ещё проще, если снова непонятно).
@@ -45,7 +46,7 @@ export default function StepTutor({ question, steps, shown, hideAnswer = false, 
       {steps.slice(0, shown ?? steps.length).map((s, i) => (
         <div key={i}>
           <MathText text={numbered ? `${i + 1}. ${s}` : s} style={{ fontSize: 14 }} />
-          {open !== i && <button style={link} onClick={() => explain(i)}>🤔 {t('Не понимаю этот шаг')}</button>}
+          {open !== i && <button style={link} onClick={() => explain(i)}><Icon name="help" size="1em" /> {t('Не понимаю этот шаг')}</button>}
           {open === i && (
             <div className="animate-fade-in" style={{ margin: '6px 0 4px', padding: '10px 12px', borderRadius: 10, background: 'color-mix(in srgb, var(--accent) 8%, transparent)', borderLeft: '3px solid var(--accent)' }}>
               {loading === i && <div style={{ color: 'var(--muted)', fontSize: 13 }}>{t('Объясняю…')}</div>}

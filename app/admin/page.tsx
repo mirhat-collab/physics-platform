@@ -8,6 +8,7 @@ import { useT } from '@/app/components/LanguageProvider'
 import MediaUploader, { fileIcon, type MediaItem } from '@/app/components/MediaUploader'
 import MaterialsAdmin from '@/app/components/MaterialsAdmin'
 import AdminStats from '@/app/components/AdminStats'
+import Icon from '@/app/components/Icon'
 
 
 
@@ -231,7 +232,7 @@ export default function AdminPage() {
     return (
       <div className="nb-root" style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
         <div style={{ background: 'var(--surface)', borderRadius: 24, padding: 48, width: '100%', maxWidth: 400, border: '1px solid var(--line)', textAlign: 'center' }}>
-          <div style={{ fontSize: 48, marginBottom: 16 }}>🔒</div>
+          <div style={{ fontSize: 48, marginBottom: 16 }}><Icon name="lock" size="1em" /></div>
           <h1 style={{ color: 'var(--text)', fontSize: '1.6rem', fontWeight: 800, marginBottom: 8 }}>{t('Доступ запрещён')}</h1>
           <p style={{ color: 'var(--muted)', marginBottom: 32, fontSize: 14 }}>{t('Эта страница только для администраторов. Войди под аккаунтом с ролью admin.')}</p>
           <button onClick={() => router.push('/login')} style={{ width: '100%', padding: '14px', borderRadius: 12, border: 'none', background: 'var(--accent)', color: 'var(--on-accent)', fontSize: 16, fontWeight: 700, cursor: 'pointer' }}>{t('Войти')}</button>
@@ -266,14 +267,14 @@ export default function AdminPage() {
         {tab === 'classes' && (
           <div>
             <div style={{ background: 'var(--surface)', borderRadius: 20, padding: 28, marginBottom: 32, border: '1px solid var(--line)' }}>
-              <h2 style={{ marginBottom: 20, fontSize: '1.1rem' }}>{t('➕ Добавить класс')}</h2>
+              <h2 style={{ marginBottom: 20, fontSize: '1.1rem' }}>{t('Добавить класс')}</h2>
               <span style={label}>{t('Название класса')}</span>
               <input style={input} placeholder={t('Например: 10А')} value={newClass.name} onChange={e => setNewClass({ ...newClass, name: e.target.value })} />
               <span style={label}>{t('Программа')}</span>
               <input style={input} placeholder={t('Физика базовый уровень')} value={newClass.program} onChange={e => setNewClass({ ...newClass, program: e.target.value })} />
-              <button onClick={addClass} style={btn('var(--good)')}>{t('✅ Добавить класс')}</button>
+              <button onClick={addClass} style={btn('var(--good)')}>{t('Добавить класс')}</button>
             </div>
-            <h2 style={{ marginBottom: 16 }}>{t('📋 Все классы')}</h2>
+            <h2 style={{ marginBottom: 16 }}>{t('Все классы')}</h2>
             {classes.map(cls => (
               <div key={cls.id} style={{ background: 'var(--surface)', borderRadius: 16, padding: 20, marginBottom: 12, border: '1px solid var(--line)' }}>
                 {editClass?.id === cls.id ? (
@@ -283,7 +284,7 @@ export default function AdminPage() {
                     <span style={label}>{t('Программа')}</span>
                     <input style={input} value={editClass.program} onChange={e => setEditClass({ ...editClass, program: e.target.value })} />
                     <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
-                      <button onClick={saveEditClass} style={btn('var(--good)')}>{t('💾 Сохранить')}</button>
+                      <button onClick={saveEditClass} style={btn('var(--good)')}>{t('Сохранить')}</button>
                       <button onClick={() => setEditClass(null)} style={btn('var(--muted)')}>{t('Отмена')}</button>
                     </div>
                   </div>
@@ -294,7 +295,7 @@ export default function AdminPage() {
                         {cls.name}
                         {cls.is_locked && (
                           <span style={{ background: 'color-mix(in srgb, var(--bad) 13%, transparent)', color: 'var(--bad)', border: '1px solid color-mix(in srgb, var(--bad) 33%, transparent)', borderRadius: 20, padding: '2px 10px', fontSize: 11, fontWeight: 700 }}>
-                            {t('🔒 закрыт')}
+                            {t('закрыт')}
                           </span>
                         )}
                       </div>
@@ -302,11 +303,11 @@ export default function AdminPage() {
                     </div>
                     <div style={{ display: 'flex', gap: 8 }}>
                       <button onClick={() => toggleLock(cls)} style={btn(cls.is_locked ? 'var(--good)' : 'var(--muted)')}>
-                        {cls.is_locked ? t('🔓 Открыть всем') : t('🔒 Закрыть класс')}
+                        {cls.is_locked ? t('Открыть всем') : t('Закрыть класс')}
                       </button>
-                      <button onClick={() => openAccess(cls)} style={btn('var(--warn)')}>{t('👤 Доступ')}</button>
-                      <button onClick={() => setEditClass(cls)} style={btn('var(--accent)')}>✏️</button>
-                      <button onClick={() => deleteClass(cls.id)} style={btn('var(--bad)')}>🗑️</button>
+                      <button onClick={() => openAccess(cls)} style={btn('var(--warn)')}>{t('Доступ')}</button>
+                      <button onClick={() => setEditClass(cls)} style={btn('var(--accent)')}><Icon name="edit" size="1em" /></button>
+                      <button onClick={() => deleteClass(cls.id)} style={btn('var(--bad)')}><Icon name="trash" size="1em" /></button>
                     </div>
                   </div>
                 )}
@@ -318,7 +319,7 @@ export default function AdminPage() {
         {tab === 'topics' && (
           <div>
             <div style={{ background: 'var(--surface)', borderRadius: 20, padding: 28, marginBottom: 32, border: '1px solid var(--line)' }}>
-              <h2 style={{ marginBottom: 20, fontSize: '1.1rem' }}>{t('➕ Добавить тему')}</h2>
+              <h2 style={{ marginBottom: 20, fontSize: '1.1rem' }}>{t('Добавить тему')}</h2>
               <span style={label}>{t('Название темы')}</span>
               <input style={input} placeholder={t('Законы Ньютона')} value={newTopic.name} onChange={e => setNewTopic({ ...newTopic, name: e.target.value })} />
               <span style={label}>{t('Класс')}</span>
@@ -326,23 +327,23 @@ export default function AdminPage() {
                 <option value="">{t('— выбери класс —')}</option>
                 {gradeOptions(newTopic.grade).map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
               </select>
-              <span style={label}>{t('📖 Теория')}</span>
+              <span style={label}>{t('Теория')}</span>
               <textarea style={textarea} placeholder={t('Объяснение темы...')} value={newTopic.theory} onChange={e => setNewTopic({ ...newTopic, theory: e.target.value })} />
-              <span style={label}>{t('🔢 Формулы (LaTeX, каждая на новой строке)')}</span>
+              <span style={label}>{t('Формулы (LaTeX, каждая на новой строке)')}</span>
               <textarea style={formulaArea} placeholder={"F = ma\n\\frac{v_f - v_i}{t}"} value={newTopic.formulas} onChange={e => setNewTopic({ ...newTopic, formulas: e.target.value })} />
-              <div style={{ color: 'var(--muted)', fontSize: 11, marginBottom: 10 }}>{t('💡 Дроби: \\frac')}{t('{числитель}')}{t('{знаменатель}')}  {t('| Степень: x^2 | Индекс: v_0')}</div>
-              <span style={label}>{t('💡 Примеры')}</span>
+              <div style={{ color: 'var(--muted)', fontSize: 11, marginBottom: 10 }}>{t('Дроби: \\frac')}{t('{числитель}')}{t('{знаменатель}')}  {t('| Степень: x^2 | Индекс: v_0')}</div>
+              <span style={label}>{t('Примеры')}</span>
               <textarea style={textarea} placeholder={t('Разобранные примеры...')} value={newTopic.examples} onChange={e => setNewTopic({ ...newTopic, examples: e.target.value })} />
-              <span style={label}>{t('🧪 Практика / Задачи')}</span>
+              <span style={label}>{t('Практика / Задачи')}</span>
               <textarea style={textarea} placeholder={t('Задачи для решения...')} value={newTopic.tasks} onChange={e => setNewTopic({ ...newTopic, tasks: e.target.value })} />
-              <span style={label}>{t('🌐 Ссылка на ресурс')}</span>
+              <span style={label}>{t('Ссылка на ресурс')}</span>
               <input style={input} placeholder="https://..." value={newTopic.resource} onChange={e => setNewTopic({ ...newTopic, resource: e.target.value })} />
-              <span style={label}>{t('🖼 Фото и видео')}</span>
+              <span style={label}>{t('Фото и видео')}</span>
               <MediaUploader existing={newMedia} onDone={setNewMedia} />
-              <button onClick={addTopic} style={{ ...btn('var(--good)'), marginTop: 16 }}>{t('✅ Добавить тему')}</button>
+              <button onClick={addTopic} style={{ ...btn('var(--good)'), marginTop: 16 }}>{t('Добавить тему')}</button>
             </div>
 
-            <h2 style={{ marginBottom: 16 }}>{t('📋 Все темы')}</h2>
+            <h2 style={{ marginBottom: 16 }}>{t('Все темы')}</h2>
             {topics.map(topic => (
               <div key={topic.id} style={{ background: 'var(--surface)', borderRadius: 16, padding: 20, marginBottom: 12, border: '1px solid var(--line)' }}>
                 {editTopic?.id === topic.id ? (
@@ -353,21 +354,21 @@ export default function AdminPage() {
                     <select style={input} value={editTopic.grade} onChange={e => setEditTopic({ ...editTopic, grade: e.target.value })}>
                       {gradeOptions(editTopic.grade).map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
                     </select>
-                    <span style={label}>{t('📖 Теория')}</span>
+                    <span style={label}>{t('Теория')}</span>
                     <textarea style={textarea} value={editTopic.theory} onChange={e => setEditTopic({ ...editTopic, theory: e.target.value })} />
-                    <span style={label}>{t('🔢 Формулы (LaTeX)')}</span>
+                    <span style={label}>{t('Формулы (LaTeX)')}</span>
                     <textarea style={formulaArea} value={editTopic.formulas} onChange={e => setEditTopic({ ...editTopic, formulas: e.target.value })} />
-                    <div style={{ color: 'var(--muted)', fontSize: 11, marginBottom: 10 }}>{t('💡 Дроби: \\frac')}{t('{числитель}')}{t('{знаменатель}')}  {t('| Степень: x^2 | Индекс: v_0')}</div>
-                    <span style={label}>{t('💡 Примеры')}</span>
+                    <div style={{ color: 'var(--muted)', fontSize: 11, marginBottom: 10 }}>{t('Дроби: \\frac')}{t('{числитель}')}{t('{знаменатель}')}  {t('| Степень: x^2 | Индекс: v_0')}</div>
+                    <span style={label}>{t('Примеры')}</span>
                     <textarea style={textarea} value={editTopic.examples || ''} onChange={e => setEditTopic({ ...editTopic, examples: e.target.value })} />
-                    <span style={label}>{t('🧪 Практика')}</span>
+                    <span style={label}>{t('Практика')}</span>
                     <textarea style={textarea} value={editTopic.tasks} onChange={e => setEditTopic({ ...editTopic, tasks: e.target.value })} />
-                    <span style={label}>{t('🌐 Ссылка на ресурс')}</span>
+                    <span style={label}>{t('Ссылка на ресурс')}</span>
                     <input style={input} value={editTopic.resource || ''} onChange={e => setEditTopic({ ...editTopic, resource: e.target.value })} />
-                    <span style={label}>{t('🖼 Фото и видео')}</span>
+                    <span style={label}>{t('Фото и видео')}</span>
                     <MediaUploader existing={editMedia} onDone={setEditMedia} />
                     <div style={{ display: 'flex', gap: 8, marginTop: 16 }}>
-                      <button onClick={saveEditTopic} style={btn('var(--good)')}>{t('💾 Сохранить')}</button>
+                      <button onClick={saveEditTopic} style={btn('var(--good)')}>{t('Сохранить')}</button>
                       <button onClick={() => setEditTopic(null)} style={btn('var(--muted)')}>{t('Отмена')}</button>
                     </div>
                   </div>
@@ -391,8 +392,8 @@ export default function AdminPage() {
                       )}
                     </div>
                     <div style={{ display: 'flex', gap: 8, marginLeft: 16, flexShrink: 0 }}>
-                      <button onClick={() => startEdit(topic)} style={btn('var(--accent)')}>{t('✏️ Изменить')}</button>
-                      <button onClick={() => deleteTopic(topic.id)} style={btn('var(--bad)')}>{t('🗑️ Удалить')}</button>
+                      <button onClick={() => startEdit(topic)} style={btn('var(--accent)')}>{t('Изменить')}</button>
+                      <button onClick={() => deleteTopic(topic.id)} style={btn('var(--bad)')}>{t('Удалить')}</button>
                     </div>
                   </div>
                 )}
@@ -412,7 +413,7 @@ export default function AdminPage() {
             style={{ background: 'var(--surface)', borderRadius: 20, padding: 28, width: '100%', maxWidth: 460, border: '1px solid var(--line)', maxHeight: '85vh', overflowY: 'auto' }}
           >
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 4 }}>
-              <h2 style={{ fontSize: '1.15rem', margin: 0 }}>{t('👤 Доступ:')} {accessClass.name}</h2>
+              <h2 style={{ fontSize: '1.15rem', margin: 0 }}>{t('Доступ:')} {accessClass.name}</h2>
               <button onClick={() => setAccessClass(null)} style={{ ...btn('var(--line)'), border: '1px solid var(--line)', padding: '4px 10px' }}>✕</button>
             </div>
             <p style={{ color: 'var(--muted)', fontSize: 13, marginBottom: 20 }}>

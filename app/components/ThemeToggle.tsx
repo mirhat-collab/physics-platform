@@ -1,6 +1,7 @@
 'use client'
 import { useEffect, useState } from 'react'
 import { useT } from '@/app/components/LanguageProvider'
+import Icon from '@/app/components/Icon'
 
 export default function ThemeToggle() {
   const { t } = useT()
@@ -41,7 +42,7 @@ export default function ThemeToggle() {
       borderRadius: 10, padding: '8px 14px', cursor: 'pointer',
       fontSize: 18, transition: 'all 0.2s', display: 'flex', alignItems: 'center', gap: 6
     }} title={dark ? t('Светлая тема') : t('Тёмная тема')}>
-      {dark ? '☀️' : '🌙'}
+      {dark ? <Icon name="sun" size="1em" /> : <Icon name="moon" size="1em" />}
       <span style={{ fontSize: 12, fontWeight: 600, color: dark ? 'var(--muted)' : 'var(--muted)' }}>
         {dark ? t('Светлая') : t('Тёмная')}
       </span>

@@ -1610,3 +1610,5 @@ body:has(.nb-root) .nav-group-title { font-family: var(--font-mono), monospace; 
 .nb-root .tp-done path { stroke: var(--nb-ink); }
 .nb-root .ls-n { color: var(--nb-ink); font-family: var(--font-mono), monospace; font-size: 14px; }
 @media (max-width: 899px) { .nb-root .auth-title { font-size: 27px !important; } }
+/* Значки вместо эмодзи стоят ровно по строке текста */
+svg[width="1em"] { display: inline-block !important; vertical-align: -0.14em; margin-right: 0.3em; }

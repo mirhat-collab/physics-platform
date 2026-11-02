@@ -8,15 +8,16 @@ import katex from 'katex'
 import 'katex/dist/katex.min.css'
 import ProtectedFileViewer from '@/app/components/ProtectedFileViewer'
 import { useT } from '@/app/components/LanguageProvider'
+import Icon from '@/app/components/Icon'
 
 type MediaItem = { url: string; type: 'image' | 'video' | 'file' | 'link'; name: string }
 
-function fileIcon(name: string): string {
+function fileIcon(name: string): React.ReactNode {
   const ext = name.split('.').pop()?.toLowerCase() || ''
-  if (ext === 'pdf') return '📕'
-  if (ext === 'doc' || ext === 'docx') return '📘'
-  if (ext === 'ppt' || ext === 'pptx') return '📙'
-  return '📄'
+  if (ext === 'pdf') return <Icon name="book" size="1em" />
+  if (ext === 'doc' || ext === 'docx') return <Icon name="book" size="1em" />
+  if (ext === 'ppt' || ext === 'pptx') return <Icon name="book" size="1em" />
+  return <Icon name="file" size="1em" />
 }
 
 type Topic = {
@@ -274,7 +275,7 @@ export default function TopicPage() {
           {topic.media.map((item, i) => (
             <button key={i} type="button" className="ls-file"
               onClick={() => item.type === 'link' ? window.open(item.url, '_blank', 'noopener,noreferrer') : setViewerItem(item)}>
-              <span aria-hidden>{item.type === 'image' ? '🖼' : item.type === 'video' ? '🎬' : item.type === 'link' ? '🔗' : fileIcon(item.name)}</span>
+              <span aria-hidden>{item.type === 'image' ? <Icon name="image" size="1em" /> : item.type === 'video' ? <Icon name="film" size="1em" /> : item.type === 'link' ? <Icon name="link" size="1em" /> : fileIcon(item.name)}</span>
               <span className="ls-file-name">{item.name}</span>
               <span className="ls-file-open">{t('Открыть')} ↗</span>
             </button>
