@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Нет интернета · Mirha_Edu</title>
+<style>
+  :root { color-scheme: light dark; --bg: #f3f5fa; --text: #0b1220; --muted: #5b6478; --ink: #2563eb; --card: #fff; --line: #e3e7f0; }
+  @media (prefers-color-scheme: dark) { :root { --bg: #070a14; --text: #e8ecf6; --muted: #8b93a7; --ink: #7fb2ff; --card: #0f1424; --line: #1d2438; } }
+  * { box-sizing: border-box; }
+  body { margin: 0; min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 24px 16px; background: var(--bg); color: var(--text); font-family: Montserrat, system-ui, -apple-system, Segoe UI, Roboto, sans-serif; }
+  main { max-width: 420px; width: 100%; text-align: center; }
+  img { width: 64px; height: 64px; border-radius: 16px; }
+  h1 { font-size: 24px; font-weight: 800; margin: 18px 0 8px; }
+  p { color: var(--muted); line-height: 1.5; margin: 0 0 22px; }
+  nav { display: grid; gap: 10px; }
+  a { display: block; padding: 14px 16px; border-radius: 14px; border: 1px solid var(--line); background: var(--card); color: var(--text); text-decoration: none; font-weight: 600; }
+  a.main { background: var(--ink); border-color: var(--ink); color: #fff; }
+</style>
+</head>
+<body>
+<main>
+  <img src="/logo-mark.png" alt="">
+  <h1>Нет интернета</h1>
+  <p>Эта страница не сохранена на телефоне. Без сети работают тренажёр формул, справочник и страницы, которые ты уже открывал.</p>
+  <nav>
+    <a class="main" href="/formulas">Тренажёр формул</a>
+    <a href="/reference">Справочник ЕНТ</a>
+    <a href="javascript:location.reload()">Попробовать снова</a>
+  </nav>
+</main>
+</body>
+</html>
