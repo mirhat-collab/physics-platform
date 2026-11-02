@@ -1,5 +1,5 @@
 'use client'
-import { useMemo, useRef } from 'react'
+import { useMemo, useRef, useState } from 'react'
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import * as THREE from 'three'
 import { scroll } from './scroll-state'
@@ -78,10 +78,9 @@ function spherePoints(n: number, r: number) {
   return arr
 }
 
-function Stars() {
+function Stars({ n = 2600 }: { n?: number }) {
   const ref = useRef<THREE.Points>(null)
   const pos = useMemo(() => {
-    const n = 2600
     const rand = rng(7)
     const a = new Float32Array(n * 3)
     for (let i = 0; i < n; i++) {
@@ -90,7 +89,7 @@ function Stars() {
       a[i * 3 + 2] = 20 - rand() * (GAP * 5 + 60)
     }
     return a
-  }, [])
+  }, [n])
   useFrame((_, dt) => { if (ref.current) ref.current.rotation.z += dt * 0.004 })
   return (
     <points ref={ref}>
@@ -376,14 +375,52 @@ function Rig() {
   return null
 }
 
+// Слабое устройство? Смотрим заранее (ядра, память, режим экономии трафика),
+// а потом следим за реальной частотой кадров и при необходимости снижаем качество.
+function looksWeak(): boolean {
+  if (typeof navigator === 'undefined') return false
+  const nav = navigator as Navigator & { deviceMemory?: number; connection?: { saveData?: boolean } }
+  return (nav.hardwareConcurrency || 8) <= 4 || (nav.deviceMemory || 8) <= 3 || !!nav.connection?.saveData
+}
+
+const DPR_STEPS = [2, 1.5, 1.25, 1, 0.75]
+
+// Каждые ~1.5 с меряем FPS: если меньше 45 — понижаем чёткость, на минимуме — включаем «лёгкий» режим
+function Quality({ onLite }: { onLite: () => void }) {
+  const { setDpr, viewport } = useThree()
+  const step = useRef(Math.max(0, DPR_STEPS.findIndex(d => d <= Math.min(viewport.dpr, 2))))
+  const acc = useRef({ t: 0, n: 0, warm: 0, lite: false })
+  useFrame((_, dt) => {
+    const a = acc.current
+    if (a.warm < 1.2) { a.warm += dt; return } // первые кадры после загрузки не считаем
+    a.t += dt; a.n++
+    if (a.t < 1.5) return
+    const fps = a.n / a.t
+    a.t = 0; a.n = 0
+    if (fps >= 45) return
+    if (step.current < DPR_STEPS.length - 1) {
+      step.current++
+      setDpr(DPR_STEPS[step.current])
+    } else if (!a.lite && fps < 35) {
+      a.lite = true
+      onLite()
+    }
+  })
+  return null
+}
+
 export default function PhysicsScene() {
+  const [weak] = useState(looksWeak)
+  const [lite, setLite] = useState(weak)
   return (
-    <Canvas className="lx-canvas" dpr={[1, 2]} camera={{ fov: 50, near: 0.1, far: 220, position: [0, 0, 11] }} gl={{ antialias: true, powerPreference: 'high-performance' }}>
+    <Canvas className="lx-canvas" dpr={weak ? [0.75, 1] : [1, 2]} camera={{ fov: 50, near: 0.1, far: 220, position: [0, 0, 11] }}
+      gl={{ antialias: !weak, powerPreference: 'high-performance' }}>
       <color attach="background" args={['#04060c']} />
       <fog attach="fog" args={['#04060c', 18, 60]} />
+      <Quality onLite={() => setLite(true)} />
       <Rig />
-      <Stars />
-      <Warp />
+      <Stars n={lite ? 900 : 2600} />
+      {!lite && <Warp />}
       <group position={[0, 0, 0]}><Globe /></group>
       <group position={[0, 0, -GAP]}><Projectile /></group>
       <group position={[0, 0, -GAP * 2]}><Pendulum /></group>
