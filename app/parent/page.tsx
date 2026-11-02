@@ -6,6 +6,7 @@ import { gradeLabel } from '@/lib/grade-match'
 import { useT } from '@/app/components/LanguageProvider'
 import { useTranslatedNames } from '@/app/components/useTranslatedNames'
 import Icon from '@/app/components/Icon'
+import TelegramConnect from '@/app/components/TelegramConnect'
 
 type Student = { id: string; full_name: string; email?: string; grade: string; total_xp: number; streak: number }
 type Progress = { topic: string; completed_at: string; name?: string }
@@ -106,6 +107,8 @@ export default function ParentPage() {
           <h1 style={{ fontSize: '1.8rem', fontWeight: 800, margin: '0 0 4px' }}>{t('Родительский доступ')}</h1>
           <p style={{ color: 'var(--muted)', margin: 0 }}>{t('Следи за успехами своего ребёнка')}</p>
         </div>
+
+        <TelegramConnect parent />
 
         {/* Привязать ученика */}
         <div style={{ background: 'var(--surface)', borderRadius: 16, padding: '20px', border: '1px solid var(--line)', marginBottom: 24 }}>

@@ -7,6 +7,7 @@ import { gradeLabel } from '@/lib/grade-match'
 import ThemeToggle from '@/app/components/ThemeToggle'
 import LanguageSwitcher from '@/app/components/LanguageSwitcher'
 import { useT } from '@/app/components/LanguageProvider'
+import TelegramConnect from '@/app/components/TelegramConnect'
 import Icon from '@/app/components/Icon'
 
 type Profile = { id: string; full_name: string; email: string; grade: string; total_xp: number; streak: number; avatar_url?: string; role?: string }
@@ -341,6 +342,8 @@ export default function ProfilePage() {
           )}
           {msg && <div style={{ color: 'var(--good)', fontSize: 13, marginTop: 8 }}>{msg}</div>}
         </div>
+
+        <TelegramConnect parent={profile?.role === 'parent'} />
 
         {/* Установить приложение */}
         <Link href="/install" style={{ textDecoration: 'none', display: 'block', marginBottom: 12 }}>

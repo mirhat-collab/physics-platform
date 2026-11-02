@@ -8,6 +8,8 @@ import { sortTopicsByNumber } from '@/lib/topic-order'
 import EntCoach from '@/app/components/EntCoach'
 import { useT } from '@/app/components/LanguageProvider'
 import { useTranslatedNames } from '@/app/components/useTranslatedNames'
+import { dueReviewCount } from '@/lib/review'
+import { kzDate } from '@/lib/streak'
 
 type Profile = { id: string; full_name: string; email: string; grade: string; total_xp: number; streak: number }
 type Topic = { id: string; name: string; grade: string }
@@ -21,6 +23,8 @@ export default function DashboardPage() {
   const [topics, setTopics] = useState<Topic[]>([])
   const [completed, setCompleted] = useState<string[]>([])
   const [loading, setLoading] = useState(true)
+  const [due, setDue] = useState(0)
+  const [dailyDone, setDailyDone] = useState(false)
   const topicName = useTranslatedNames('topic', topics.map(t => t.id))
 
   useEffect(() => { loadData() }, [])
@@ -31,6 +35,8 @@ export default function DashboardPage() {
 
     const { data: p } = await supabase.from('profiles').select('*').eq('id', user.id).single()
     if (p) setProfile(p)
+    dueReviewCount(user.id).then(setDue)
+    try { setDailyDone(['physics', 'math'].some(s => localStorage.getItem(`daily:${kzDate()}:${s}`) !== null)) } catch {}
 
     const safeGrade = p?.grade && VALID_GRADES.includes(p.grade) ? p.grade : null
     if (safeGrade) {
@@ -95,6 +101,18 @@ export default function DashboardPage() {
             <span className="nb-btn">{t('Начать · +10 XP')}</span>
           </Link>
         )}
+
+        <div className="dash-today">
+          <Link href="/daily" className="dash-today-card">
+            <span className="dash-today-i"><Icon name={dailyDone ? 'check' : 'sparkle'} size={22} /></span>
+            <span><b>{t('Задача дня')}</b><small>{dailyDone ? t('Решена — приходи завтра') : t('Одна задача ЕНТ, 2 минуты')}</small></span>
+          </Link>
+          <Link href="/review" className="dash-today-card">
+            <span className="dash-today-i"><Icon name="repeat" size={22} /></span>
+            <span><b>{t('Работа над ошибками')}</b><small>{due ? t('Пора повторить') : t('На сегодня всё повторено')}</small></span>
+            {due > 0 && <span className="dash-today-n">{due}</span>}
+          </Link>
+        </div>
 
         <EntCoach />
 

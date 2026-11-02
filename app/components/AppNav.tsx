@@ -11,7 +11,7 @@ type NavItem = { href: string; icon: string; label: string }
 type NavGroup = { title: string; items: NavItem[] }
 
 // Страницы без меню: лендинг, вход, админка, установка приложения
-const NO_NAV = ['/', '/login', '/admin', '/install', '/privacy']
+const NO_NAV = ['/', '/login', '/admin', '/install', '/privacy', '/r']
 
 function buildGroups(role: string | null): NavGroup[] {
   const groups: NavGroup[] = []
@@ -38,6 +38,8 @@ function buildGroups(role: string | null): NavGroup[] {
         { href: '/topics', icon: 'book', label: 'Темы' },
         { href: '/homework', icon: 'clipboard', label: 'Домашние задания' },
         { href: '/stats', icon: 'pie', label: 'Моя статистика' },
+        { href: '/review', icon: 'repeat', label: 'Работа над ошибками' },
+        { href: '/daily', icon: 'sparkle', label: 'Задача дня' },
       ],
     },
     {

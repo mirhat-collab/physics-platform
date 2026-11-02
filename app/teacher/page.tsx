@@ -11,6 +11,7 @@ import { useT } from '@/app/components/LanguageProvider'
 import TeacherGroups from '@/app/components/TeacherGroups'
 import { groupClass, groupIdOf, type StudyGroup } from '@/lib/groups'
 import Icon from '@/app/components/Icon'
+import TeacherWeakTopics from '@/app/components/TeacherWeakTopics'
 
 type Profile = { id: string; full_name: string; email?: string; grade: string; total_xp: number; streak: number; role: string }
 type ClassStat = { name: string; students: Profile[]; avg_xp: number; completed_topics: number; total_topics: number }
@@ -221,6 +222,7 @@ export default function TeacherPage() {
         </div>
 
         {/* ОБЗОР */}
+        {tab === 'overview' && <TeacherWeakTopics studentIds={students.map(s => s.id)} />}
         {tab === 'overview' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
             {classStats.map(cls => {
