@@ -1,0 +1,17 @@
+{
+  "name": "mirha-promo",
+  "private": true,
+  "description": "Промо-ролик Mirha_Edu (Remotion). Просмотр: npm run studio, рендер: npm run render",
+  "scripts": {
+    "studio": "remotion studio src/index.ts",
+    "render": "remotion render src/index.ts Vertical out/promo-9x16.mp4 && remotion render src/index.ts Horizontal out/promo-16x9.mp4 && remotion render src/index.ts Square out/promo-1x1.mp4"
+  },
+  "dependencies": {
+    "@remotion/cli": "4.0.536",
+    "@remotion/google-fonts": "4.0.536",
+    "react": "19.2.4",
+    "react-dom": "19.2.4",
+    "remotion": "4.0.536"
+  },
+  "devDependencies": { "@types/react": "19.2.2", "typescript": "5.8.3" }
+}
