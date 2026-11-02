@@ -1647,3 +1647,9 @@ svg[width="1em"] { display: inline-block !important; vertical-align: -0.14em; ma
 .daily-skeleton i { display: block; height: 18px; border-radius: 8px; background: linear-gradient(90deg, var(--line) 0%, color-mix(in srgb, var(--line) 40%, transparent) 50%, var(--line) 100%); background-size: 200% 100%; animation: daily-shimmer 1.2s linear infinite; }
 .daily-skeleton i:nth-child(2) { width: 80%; } .daily-skeleton i:nth-child(3) { width: 60%; }
 @keyframes daily-shimmer { to { background-position: -200% 0 } }
+
+/* ── Telegram ── */
+.tg-card { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; padding: 16px 18px; margin-bottom: 12px; border-radius: 16px; border: 1px solid var(--line); background: var(--surface); }
+.tg-card b { display: block; font-size: 15px; }
+.tg-card small { display: block; color: var(--muted); font-size: 12.5px; margin-top: 2px; }
+.tg-card-i { width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; color: #fff; background: linear-gradient(135deg, #2aabee, #229ed9); }
