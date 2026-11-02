@@ -38,6 +38,8 @@ function buildGroups(role: string | null): NavGroup[] {
         { href: '/topics', icon: 'book', label: 'Темы' },
         { href: '/homework', icon: 'clipboard', label: 'Домашние задания' },
         { href: '/stats', icon: 'pie', label: 'Моя статистика' },
+        { href: '/review', icon: 'repeat', label: 'Работа над ошибками' },
+        { href: '/daily', icon: 'sparkle', label: 'Задача дня' },
       ],
     },
     {
