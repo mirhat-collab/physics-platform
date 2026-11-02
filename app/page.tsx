@@ -65,8 +65,10 @@ export default function LobbyPage() {
   const [checking, setChecking] = useState(true)
 
   useEffect(() => {
+    // ?landing — показать главную и тем, кто уже вошёл (посмотреть дизайн)
+    const keep = new URLSearchParams(window.location.search).has('landing')
     supabase.auth.getUser().then(({ data: { user } }) => {
-      if (user) router.replace('/dashboard')
+      if (user && !keep) router.replace('/dashboard')
       else setChecking(false)
     })
   }, [router])
