@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Caveat, Golos_Text, Literata } from "next/font/google";
+import { Caveat, Golos_Text, JetBrains_Mono, Literata, Montserrat } from "next/font/google";
 import "./globals.css";
 import AppNav from "./components/AppNav";
 import AppDoodles from "./components/AppDoodles";
@@ -33,6 +33,10 @@ const caveat = Caveat({
   display: "swap",
   preload: false,
 });
+
+// Новый стиль главной: Montserrat для заголовков и текста, моноширинные формулы
+const montserrat = Montserrat({ subsets: ["latin", "cyrillic"], variable: "--font-wide", display: "swap", preload: false });
+const mono = JetBrains_Mono({ subsets: ["latin", "cyrillic"], variable: "--font-mono", display: "swap", preload: false });
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
@@ -90,7 +94,7 @@ export default async function RootLayout({
         <link rel="icon" href="/icon-192.png" type="image/png" />
         <link rel="apple-touch-icon" href="/icon-192.png" />
       </head>
-      <body className={`${golos.variable} ${literata.variable} ${caveat.variable}`}style={{ margin: 0, fontFamily: 'var(--font-body), sans-serif', background: 'var(--nb-paper)' }}>
+      <body className={`${golos.variable} ${literata.variable} ${caveat.variable} ${montserrat.variable} ${mono.variable}`}style={{ margin: 0, fontFamily: 'var(--font-body), sans-serif', background: 'var(--nb-paper)' }}>
         <div aria-hidden className="app-backdrop" style={{ position: 'fixed', inset: 0, zIndex: -1, overflow: 'hidden', background: 'var(--nb-paper)' }}>
           <div className="aurora-blob aurora-blob-1" />
           <div className="aurora-blob aurora-blob-2" />

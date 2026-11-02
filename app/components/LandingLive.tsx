@@ -1,5 +1,5 @@
 'use client'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useT } from '@/app/components/LanguageProvider'
 
 // Строка с честными цифрами на главной (данные — /api/landing).
@@ -27,6 +27,32 @@ function useLanding() {
   return data
 }
 
+// Число отсчитывается от нуля, когда попадает на экран
+function CountUp({ value, locale }: { value: number; locale: string }) {
+  const ref = useRef<HTMLSpanElement>(null)
+  const [n, setN] = useState(0)
+  useEffect(() => {
+    const el = ref.current
+    if (!el) return
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) { setN(value); return } // eslint-disable-line react-hooks/set-state-in-effect
+    let raf = 0
+    const io = new IntersectionObserver(([e]) => {
+      if (!e.isIntersecting) return
+      io.disconnect()
+      const t0 = performance.now()
+      const tick = (t: number) => {
+        const k = Math.min(1, (t - t0) / 1600)
+        setN(Math.round(value * (1 - Math.pow(1 - k, 4))))
+        if (k < 1) raf = requestAnimationFrame(tick)
+      }
+      raf = requestAnimationFrame(tick)
+    }, { threshold: 0.5 })
+    io.observe(el)
+    return () => { io.disconnect(); cancelAnimationFrame(raf) }
+  }, [value])
+  return <span ref={ref} className="nb-stat-n">{n.toLocaleString(locale)}</span>
+}
+
 // Русские окончания после числа: 1 ученик, 2 ученика, 5 учеников
 function plural(n: number, forms: [string, string, string]) {
   const a = n % 10, b = n % 100
@@ -50,7 +76,7 @@ export function StatsStrip() {
     <ul className="nb-stats" role="list">
       {items.map(it => (
         <li key={it.label}>
-          <span className="nb-stat-n">{it.n.toLocaleString(dateLocale)}</span>
+          <CountUp value={it.n} locale={dateLocale} />
           <span className="nb-stat-l">{it.label}</span>
         </li>
       ))}
