@@ -237,10 +237,16 @@ function Screens() {
           </div>
           <Img src={staticFile('desk-hero.png')} style={{ width: '100%', display: 'block' }} />
         </div>
+      ) : null}
+      {wide ? (
+        <>
+          {phone('app-daily.png', 560 * u, 5, 16, 640 * u)}
+          {phone('app-review.png', -600 * u, -5, 22, 600 * u)}
+        </>
       ) : (
         <>
-          {phone('phone-ch1.png', -300 * u, -8, 6, 820 * u)}
-          {phone('phone-ch3.png', 300 * u, 8, 12, 820 * u)}
+          {phone('app-daily.png', -300 * u, -8, 6, 820 * u)}
+          {phone('app-review.png', 300 * u, 8, 12, 820 * u)}
           {phone('phone-hero.png', 0, 0, 0, 900 * u)}
         </>
       )}
