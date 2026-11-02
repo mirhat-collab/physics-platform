@@ -178,7 +178,7 @@ export default function TopicsPage() {
                     </span>
                     {isDone && (
                       <span className="tp-done" title={t('Изучено')}>
-                        <svg viewBox="0 0 30 30" aria-hidden><path d="M4 15 C 7 18, 9 21, 11 25 C 15 15, 20 8, 27 3" /></svg>
+                        <svg viewBox="0 0 30 30" aria-hidden><path d="M6 16 L12 22 L25 8" /></svg>
                         <span className="sr-only">{t('Изучено')}</span>
                       </span>
                     )}

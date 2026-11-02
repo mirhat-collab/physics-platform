@@ -1517,3 +1517,96 @@ body:has(.lx-root) .nb-footer small { color: #6f7a90; }
   .lx-char { animation: none; opacity: 1; transform: none; filter: none; }
   .lx-shine::after, .lx-glow-border::before, .lx-marquee-track, .lx-root::after, .lx-caret, .lx-hint { animation: none; }
 }
+
+/* =====================================================================
+   НОВЫЙ СТИЛЬ ДЛЯ ВСЕГО САЙТА (этап 2)
+   Поверх «Тетради»: те же классы, новые цвета и шрифты. Светлая тема —
+   чистая и холодная для учёбы, тёмная — космос как на главной.
+   Рукописное убрано: Caveat и Literata заменены на Montserrat.
+   ===================================================================== */
+:root {
+  --nb-paper: #f3f5fa; --nb-paper-2: #e9edf6; --nb-sheet: #ffffff; --nb-dot: rgba(37, 99, 235, 0.10);
+  --nb-text: #0c1222; --nb-text-2: #475066; --nb-muted: #687187; --nb-line: rgba(12, 18, 34, 0.09);
+  --nb-ink: #2563eb; --nb-ink-hover: #1d4fd8; --nb-on-ink: #ffffff;
+  --nb-accent: #e5484d; --nb-accent-soft: rgba(229, 72, 77, 0.10); --nb-good: #12a150; --nb-warn: #c26a00;
+  --nb-sheet-shadow: 0 0 0 1px rgba(12, 18, 34, 0.06), 0 10px 30px -18px rgba(16, 24, 48, 0.22);
+  --nb-btn-shadow: 0 10px 26px -12px rgba(37, 99, 235, 0.65), inset 0 1px 0 rgba(255, 255, 255, 0.18);
+  --nb-grain-opacity: 0;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not(.light-theme) {
+    --nb-paper: #070a14; --nb-paper-2: #0b1020; --nb-sheet: #0e1528; --nb-dot: rgba(127, 178, 255, 0.10);
+    --nb-text: #eef2fb; --nb-text-2: #a9b3c7; --nb-muted: #7d879c; --nb-line: rgba(160, 185, 255, 0.13);
+    --nb-ink: #7fb2ff; --nb-ink-hover: #a9caff; --nb-on-ink: #04060c;
+    --nb-accent: #ff6b6b; --nb-accent-soft: rgba(255, 107, 107, 0.14); --nb-good: #3ddc97; --nb-warn: #f5b14c;
+    --nb-sheet-shadow: 0 0 0 1px rgba(160, 185, 255, 0.12), 0 20px 50px -24px rgba(0, 0, 0, 0.85);
+    --nb-btn-shadow: 0 10px 30px -10px rgba(61, 123, 255, 0.7);
+  }
+}
+:root.dark-theme {
+  --nb-paper: #070a14; --nb-paper-2: #0b1020; --nb-sheet: #0e1528; --nb-dot: rgba(127, 178, 255, 0.10);
+  --nb-text: #eef2fb; --nb-text-2: #a9b3c7; --nb-muted: #7d879c; --nb-line: rgba(160, 185, 255, 0.13);
+  --nb-ink: #7fb2ff; --nb-ink-hover: #a9caff; --nb-on-ink: #04060c;
+  --nb-accent: #ff6b6b; --nb-accent-soft: rgba(255, 107, 107, 0.14); --nb-good: #3ddc97; --nb-warn: #f5b14c;
+  --nb-sheet-shadow: 0 0 0 1px rgba(160, 185, 255, 0.12), 0 20px 50px -24px rgba(0, 0, 0, 0.85);
+  --nb-btn-shadow: 0 10px 30px -10px rgba(61, 123, 255, 0.7);
+}
+/* Логотип на тёмном фоне не надо отбеливать сильнее, чем нужно */
+@media (prefers-color-scheme: dark) { :root:not(.light-theme) .nb-root img, :root:not(.light-theme) .nb-footer img { filter: brightness(1.35); } }
+:root.dark-theme .nb-root img, :root.dark-theme .nb-footer img { filter: brightness(1.35); }
+
+/* Шрифты: везде Montserrat, рукописный и книжный больше не используются */
+body:has(.nb-root), .nb-root { --font-display: var(--font-wide); --font-hand: var(--font-wide); --font-body: var(--font-wide); }
+.nb-root { font-family: var(--font-wide), system-ui, sans-serif; }
+.nb-root :is(h1, h2, .page-title, .dash-name, .app-h2, .auth-title, .auth-side-title, .ls-h, .pg-h2, .pg-final-title, .pg-subject-title, .nb-h1, .nb-h2, .nb-stat-n) {
+  font-family: var(--font-wide), sans-serif !important; font-weight: 800 !important; letter-spacing: -0.025em !important; font-style: normal;
+}
+.nb-root :is(h3, .tp-title, .pg-articles h2, .pg-faq h2, .pg-prose h2, .lx-subject h3) { font-family: var(--font-wide), sans-serif; font-weight: 700; letter-spacing: -0.01em; font-style: normal; }
+.nb-root :is(em, .ls-n, .pg-toc a::before) { font-style: normal; }
+.nb-root .dash-name, .nb-root .page-title { text-transform: none; }
+
+/* Подписи разделов — как на главной: моноширинные заглавные, синие */
+.nb-eyebrow, .nb-kicker, .nb-root .label, .dash-next-k, .pg-task-n, .pg-formula-name, .pg-subject-n, .bf-k {
+  font-family: var(--font-mono), monospace !important; font-weight: 500 !important; font-size: 12px !important;
+  letter-spacing: 0.16em !important; text-transform: uppercase !important; color: var(--nb-ink) !important; line-height: 1.4 !important;
+}
+.nb-eyebrow::before { background: var(--nb-ink) !important; opacity: 0.8; height: 2px !important; }
+.nb-root .label { color: var(--nb-muted) !important; }
+
+/* Никакой бумаги: без зерна и точечных фонов */
+.nb-root::after { display: none !important; }
+.dash-next, .pg-final { background-image: none !important; }
+.app-doodles { display: none !important; }
+
+/* Карточки и интерактив: тонкая граница, мягкая тень, отклик на наведение */
+.nb-root :is(.card, .tp-list, .pg-toc, .pg-articles, .pg-sheet, .pg-task, .pg-formula, .pg-subject, .ls-sheet, .auth-sheet, .dash-next) { border-radius: 16px !important; }
+.nb-root :is(a.card, .tp-row, .dash-tools a, .pg-subject, .pg-articles a, .pg-toc a, .nb-book) { transition: transform .35s cubic-bezier(.16, 1, .3, 1), box-shadow .35s, background-color .2s, color .2s; }
+.nb-root :is(a.card, .dash-tools a, .pg-subject, .nb-book):hover { transform: translateY(-3px); box-shadow: 0 0 0 1px var(--nb-line), 0 18px 40px -20px rgba(37, 99, 235, 0.35); }
+.nb-root .tp-row:hover { background: color-mix(in srgb, var(--nb-ink) 5%, transparent); }
+.nb-root .nb-btn, .nb-root .btn { border-radius: 999px; transition: transform .25s cubic-bezier(.16, 1, .3, 1), box-shadow .25s, background .2s; }
+.nb-root .nb-btn:hover, .nb-root .btn:hover { transform: translateY(-1px); }
+.nb-root ::selection { background: color-mix(in srgb, var(--nb-ink) 22%, transparent); }
+
+/* Боковое меню в новом стиле */
+body:has(.nb-root) .nav-brand { font-family: var(--font-wide), sans-serif !important; font-weight: 800 !important; letter-spacing: -0.01em; }
+body:has(.nb-root) .nav-link { font-family: var(--font-wide), sans-serif; font-weight: 500; border-radius: 12px; }
+body:has(.nb-root) .nav-link.active { background: color-mix(in srgb, var(--nb-ink) 10%, transparent) !important; color: var(--nb-ink) !important; box-shadow: none !important; }
+body:has(.nb-root) .nav-group-title { font-family: var(--font-mono), monospace; letter-spacing: 0.16em; font-size: 11px; }
+
+/* Плавное появление страниц */
+.page-enter { animation: page-enter .5s ease both; }
+@keyframes page-enter { from { opacity: 0; } to { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .page-enter { animation: none; } }
+
+/* Вход и регистрация — тёмные, с 3D-глобусом, как главная */
+.lx-auth .nb-wrap { position: relative; z-index: 1; }
+.lx-auth .auth-sheet { background: rgba(10, 15, 30, 0.78) !important; backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border: 1px solid rgba(160, 185, 255, 0.16); box-shadow: 0 30px 80px -30px rgba(0, 0, 0, 0.9) !important; }
+.lx-auth .auth-side-title em { color: var(--lx-blue-2); }
+.lx-auth .auth-perks path { stroke: var(--lx-blue-2); }
+.lx-auth .auth-input { background: rgba(255, 255, 255, 0.04); }
+.lx-auth .nb-btn, .lx-auth .auth-submit { background: var(--lx-blue) !important; color: #fff !important; box-shadow: 0 10px 40px -8px rgba(61, 123, 255, 0.75) !important; }
+.lx-auth .nb-btn:hover { background: #5a8fff !important; }
+.nb-root .tp-row.done .tp-grade { border-color: var(--nb-ink); color: var(--nb-ink); }
+.nb-root .tp-done path { stroke: var(--nb-ink); }
+.nb-root .ls-n { color: var(--nb-ink); font-family: var(--font-mono), monospace; font-size: 14px; }
+@media (max-width: 899px) { .nb-root .auth-title { font-size: 27px !important; } }

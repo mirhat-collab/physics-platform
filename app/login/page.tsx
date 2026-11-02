@@ -4,6 +4,8 @@ import { getActualGrade } from '@/lib/grade-match'
 import { supabase } from '@/lib/supabase'
 import { kzDate, nextStreak } from '@/lib/streak'
 import { useRouter } from 'next/navigation'
+import dynamic from 'next/dynamic'
+import { scroll } from '@/app/components/landing/scroll-state'
 import Link from 'next/link'
 import { useT } from '@/app/components/LanguageProvider'
 import LanguageSwitcher from '@/app/components/LanguageSwitcher'
@@ -12,6 +14,9 @@ import { POLICY_VERSION } from '@/lib/privacy'
 import { OAUTH_PROVIDERS, PASSWORD_RULES, authErrorText, passwordOk, type OAuthProvider } from '@/lib/auth-ui'
 
 const GRADES = ['7', '8', '9', '10', '11']
+
+// Тот же 3D-глобус, что на главной (только в браузере)
+const PhysicsScene = dynamic(() => import('@/app/components/landing/PhysicsScene'), { ssr: false })
 
 const PENDING_TEACHER_CODE = 'pendingTeacherCode'
 
@@ -42,8 +47,9 @@ export default function LoginPage() {
   const [consent, setConsent] = useState(false) // согласие с политикой конфиденциальности
   const [existing, setExisting] = useState(false) // почта уже зарегистрирована — предложим войти
 
-  // Ошибка, с которой вернул вход через Google / Apple
+  // Ошибка, с которой вернул вход через Google / Apple; камеру 3D-фона — на глобус
   useEffect(() => {
+    scroll.s = 0
     const e = new URLSearchParams(window.location.search).get('oauth_error')
     if (e) setError(t(authErrorText(e))) // eslint-disable-line react-hooks/set-state-in-effect
   }, [t])
@@ -191,7 +197,8 @@ export default function LoginPage() {
   ]
 
   return (
-    <div className="nb-root">
+    <div className="nb-root lx-root lx-auth">
+      <PhysicsScene />
       <div className="nb-wrap">
         <header className="nb-top">
           <Link href="/" className="nb-brand" aria-label={t('На главную')}>
@@ -208,7 +215,7 @@ export default function LoginPage() {
             <ul className="auth-perks" role="list">
               {[t('Задачи ЕНТ с подробным решением'), t('Пробный ЕНТ и прогноз балла'), t('ИИ объяснит непонятный шаг')].map(p => (
                 <li key={p}>
-                  <svg viewBox="0 0 30 30" aria-hidden><path d="M4 15 C 7 18, 9 21, 11 25 C 15 15, 20 8, 27 3" /></svg>
+                  <svg viewBox="0 0 30 30" aria-hidden><path d="M6 16 L12 22 L25 8" /></svg>
                   {p}
                 </li>
               ))}

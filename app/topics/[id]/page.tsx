@@ -326,7 +326,7 @@ export default function TopicPage() {
         {showXP && (
           <div className="ls-xp-backdrop" role="status">
             <div className="ls-xp">
-              <svg viewBox="0 0 30 30" aria-hidden><path d="M4 15 C 7 18, 9 21, 11 25 C 15 15, 20 8, 27 3" /></svg>
+              <svg viewBox="0 0 30 30" aria-hidden><path d="M6 16 L12 22 L25 8" /></svg>
               <p className="ls-xp-t">{t('Тема завершена!')}</p>
               <p className="ls-xp-n">+10 XP</p>
               <p className="ls-xp-s">{t('Продолжай в том же духе!')}</p>
@@ -337,7 +337,7 @@ export default function TopicPage() {
         <div className="ls-actions">
           {completed ? (
             <p className="ls-done">
-              <svg viewBox="0 0 30 30" aria-hidden><path d="M4 15 C 7 18, 9 21, 11 25 C 15 15, 20 8, 27 3" /></svg>
+              <svg viewBox="0 0 30 30" aria-hidden><path d="M6 16 L12 22 L25 8" /></svg>
               <span><b>{t('Тема пройдена')}</b><br />{t('Отличная работа! Ты уже прошёл эту тему.')}</span>
             </p>
           ) : (
