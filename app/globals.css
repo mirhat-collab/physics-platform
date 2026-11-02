@@ -1663,3 +1663,18 @@ svg[width="1em"] { display: inline-block !important; vertical-align: -0.14em; ma
 .share-actions { display: flex; gap: 16px; justify-content: center; align-items: center; flex-wrap: wrap; }
 .share-link { color: #7fb2ff; font-weight: 600; text-decoration: none; }
 .share-box { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin-top: 14px; }
+
+/* ── Слабые темы класса (кабинет учителя) ── */
+.tw-card { margin-bottom: 14px; }
+.tw-head { display: flex; justify-content: space-between; align-items: flex-end; gap: 12px; margin-bottom: 12px; flex-wrap: wrap; }
+.tw-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; counter-reset: tw; }
+.tw-list li { display: grid; grid-template-columns: 1fr 120px 48px 32px; align-items: center; gap: 12px; padding: 10px 0; border-top: 1px solid var(--line); counter-increment: tw; }
+.tw-list li:first-child { border-top: 0; }
+.tw-name { font-weight: 600; font-size: 14.5px; min-width: 0; }
+.tw-name::before { content: counter(tw) ". "; color: var(--muted); }
+.tw-name small { display: block; font-weight: 500; color: var(--muted); font-size: 12px; margin-top: 2px; }
+.tw-bar { height: 6px; border-radius: 99px; background: var(--line); overflow: hidden; }
+.tw-bar span { display: block; height: 100%; border-radius: 99px; background: var(--bad); }
+.tw-pct { color: var(--bad); text-align: right; font-size: 14px; }
+.tw-go { display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: 10px; color: var(--nb-ink, #2563eb); background: color-mix(in srgb, var(--nb-ink, #2563eb) 10%, transparent); }
+@media (max-width: 560px) { .tw-list li { grid-template-columns: 1fr 44px 32px; } .tw-bar { display: none; } }
