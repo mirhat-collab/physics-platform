@@ -6,10 +6,10 @@
 //   C (33–40) — сложные задачи в несколько действий с пятью вариантами;
 // - теория (определения, явления) на ЕНТ попадается нечасто: не больше
 //   MOCK_THEORY вопросов и только среди простых заданий уровня A;
-// - задания за 2 балла (31–40) — только расчётные: 31–35 «несколько правильных
-//   ответов» (на уровне C — из сложных задач), 36–40 «на соответствие»
-//   (три задачи уровня ЕНТ и пять ответов).
-import { ENT_DIFFICULTIES, MOCK, mockFormat, mockLevel, sectionOfTopic, type EntQuestion, type EntSubject } from './ent'
+// - задания за 2 балла (31–40) — только расчётные: 31–35 «на соответствие»
+//   (две задачи уровня ЕНТ и четыре ответа), 36–40 «несколько правильных
+//   ответов» (из сложных задач, шесть вариантов, верных не меньше двух).
+import { ENT_DIFFICULTIES, MATCH_ITEMS, MOCK, mockFormat, mockLevel, sectionOfTopic, type EntQuestion, type EntSubject } from './ent'
 import { ENT_SPEC, type SpecTopic } from './ent-spec'
 import { generateFromTemplate, topicKinds, type TemplateKind } from './templates'
 import { buildMatch, buildMulti } from './mock-formats'
@@ -52,7 +52,7 @@ export function multiCapable(subject: EntSubject, topic: string, kind: TemplateK
   return v
 }
 
-// Подходит ли тема для «соответствия»: три разных задачи с разными ответами
+// Подходит ли тема для «соответствия»: две разные задачи с разными ответами
 // (у некоторых тем ответов мало — они совпадают). Так же — пробной сборкой.
 const matchCache = new Map<string, boolean>()
 export function matchCapable(subject: EntSubject, topic: string): boolean {
@@ -61,7 +61,7 @@ export function matchCapable(subject: EntSubject, topic: string): boolean {
   if (v === undefined) {
     let ok = 0
     for (let i = 0; i < CAPABLE_TRIES; i++) {
-      const gs = [0, 1, 2].map(() => generateFromTemplate(subject, topic, 4, 'ru', 'ent', 'calc')).filter(g => !!g)
+      const gs = Array.from({ length: MATCH_ITEMS }, () => generateFromTemplate(subject, topic, 4, 'ru', 'ent', 'calc')).filter(g => !!g)
       if (buildMatch(gs, 'ru')) ok++
     }
     v = ok >= CAPABLE_TRIES / 2
@@ -102,8 +102,8 @@ export function mockPlan(subject: EntSubject): MockSlot[] {
   // 2) «несколько ответов» — темам, где у ответа бывает вторая запись;
   // 3) остальные места
   const multiOk = (t: string, i: number) => multiCapable(subject, t, kind[i])
-  for (let i = MOCK.multiFrom; i < MOCK.matchFrom; i++) take(i, st => st.ours.some(t => multiOk(t, i)))
-  for (let i = MOCK.matchFrom; i < MOCK.count; i++) take(i, st => st.ours.some(t => matchCapable(subject, t)))
+  for (let i = MOCK.multiFrom; i < MOCK.count; i++) take(i, st => st.ours.some(t => multiOk(t, i)))
+  for (let i = MOCK.matchFrom; i < MOCK.multiFrom; i++) take(i, st => st.ours.some(t => matchCapable(subject, t)))
   for (let i = 0; i < MOCK.count; i++) if (!assigned[i]) take(i, st => !onlyTheory(st))
 
   // Немного теории — на случайные места уровня A, где у темы она есть,
@@ -158,8 +158,8 @@ export function buildMock(subject: EntSubject, locale: Locale): EntQuestion[] {
       }
     } else if (format === 'match') {
       for (let attempt = 0; attempt < 40 && !q; attempt++) {
-        const gs = [0, 1, 2].map(() => generateFromTemplate(subject, topic, 4, locale, 'ent', 'calc')).filter(g => !!g)
-        const m = gs.length === 3 && gs.every(g => !seen.has(g.question)) ? buildMatch(gs, locale) : null
+        const gs = Array.from({ length: MATCH_ITEMS }, () => generateFromTemplate(subject, topic, 4, locale, 'ent', 'calc')).filter(g => !!g)
+        const m = gs.length === MATCH_ITEMS && gs.every(g => !seen.has(g.question)) ? buildMatch(gs, locale) : null
         if (m) q = withTopic(m, topic)
       }
     }

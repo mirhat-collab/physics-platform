@@ -33,16 +33,16 @@ test('пробный ЕНТ: собранный вариант — количе�
       qs.forEach((q, i) => {
         const fmt = mockFormat(i)
         if (q.kind) { assert.equal(q.kind, fmt, `${s} №${i + 1}: формат`); formats++ }
-        const n = q.kind === 'multi' ? 6 : q.kind === 'match' ? 5 : 4
+        const n = q.kind === 'multi' ? 6 : q.kind === 'match' ? 4 : 4
         assert.equal(q.options.length, n, `${s} №${i + 1}: вариантов ${q.options.length}`)
         assert.equal(new Set(q.options).size, n)
         assert.ok(q.topic && q.section, `${s} №${i + 1}: нет темы`)
         if (q.kind === 'multi') {
-          assert.ok(q.answers!.length >= 1 && q.answers!.length <= 3 && q.answers!.every(x => x >= 0 && x < 6))
+          assert.ok(q.answers!.length >= 2 && q.answers!.length <= 3 && q.answers!.every(x => x >= 0 && x < 6), `${s} №${i + 1}: верных ${q.answers!.length}`)
         } else if (q.kind === 'match') {
-          assert.equal(q.left!.length, 3)
-          assert.equal(new Set(q.pairs).size, 3)
-          assert.ok(q.pairs!.every(x => x >= 0 && x < 5))
+          assert.equal(q.left!.length, 2)
+          assert.equal(new Set(q.pairs).size, 2)
+          assert.ok(q.pairs!.every(x => x >= 0 && x < 4))
         } else {
           assert.ok(q.correct >= 0 && q.correct < n)
           assert.equal(fmt, 'single', `${s} №${i + 1}: формат ${fmt} не собрался`)

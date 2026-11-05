@@ -27,13 +27,13 @@ export default function QuestionBody({ q, chosen }: { q: EntQuestion; chosen: Mo
             const ok = sel[k] === q.pairs![k]
             return (
               <div key={k} style={{ padding: '10px 12px', borderRadius: 10, background: 'var(--surface-2)' }}>
-                <MathText text={`${k + 1}) ${l}`} style={{ fontSize: 14, lineHeight: 1.55 }} />
+                <MathText text={`${LETTERS[k]}) ${l}`} style={{ fontSize: 14, lineHeight: 1.55 }} />
                 <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 6, fontSize: 14, alignItems: 'baseline' }}>
-                  <span style={mark(true, false)}>{t('Верно:')} {LETTERS[q.pairs![k]]})</span>
+                  <span style={mark(true, false)}>{t('Верно:')}</span>
                   <MathText text={q.options[q.pairs![k]]} style={mark(true, false)} />
                   {sel[k] >= 0 && !ok && (
                     <span style={{ display: 'flex', gap: 6, alignItems: 'baseline', ...mark(false, true) }}>
-                      · {t('твой ответ')} {LETTERS[sel[k]]}) <MathText text={q.options[sel[k]]} />
+                      · {t('твой ответ')} <MathText text={q.options[sel[k]]} />
                     </span>
                   )}
                 </div>
@@ -54,7 +54,7 @@ export default function QuestionBody({ q, chosen }: { q: EntQuestion; chosen: Mo
     <div>
       <MathText text={q.question} style={{ fontSize: 15, lineHeight: 1.6, marginBottom: 10 }} />
       <Figure svg={q.figure} />
-      {multi && <div style={{ color: 'var(--muted)', fontSize: 13, marginBottom: 6 }}>{t('Один или несколько правильных ответов')}</div>}
+      {multi && <div style={{ color: 'var(--muted)', fontSize: 13, marginBottom: 6 }}>{t('Несколько правильных ответов (не меньше двух)')}</div>}
       <div style={{ display: 'grid', gap: 4, fontSize: 14 }}>
         {q.options.map((opt, i) => (
           <div key={i} style={{ display: 'flex', gap: 8, alignItems: 'baseline', ...mark(right(i), picked(i) && !right(i)) }}>
