@@ -5,13 +5,15 @@ import { LESSONS } from '@/lib/stereo/lessons'
 test('уроки стереометрии: тексты на двух языках, формулы и сцены корректны', () => {
   assert.equal(new Set(LESSONS.map(l => l.id)).size, LESSONS.length)
   for (const l of LESSONS) {
-    const texts = [l.title, l.summary, ...l.steps.flatMap(s => [s.title, s.text]), ...l.quiz.flatMap(q => [q.q, q.why, ...q.options])]
+    const texts = [l.title, l.summary, ...l.steps.flatMap(s => [s.title, s.text, ...(s.tip ? [s.tip] : [])]), ...l.quiz.flatMap(q => [q.q, q.why, ...q.options]),
+      ...(l.practice ?? []).flatMap(t => [t.title, t.text, t.answer, ...t.steps.map(x => x.text)])]
     for (const t of texts) {
       assert.ok(t.ru.trim() && t.kk.trim(), `${l.id}: пустой текст`)
       for (const s of [t.ru, t.kk]) assert.equal((s.replace(/\$\$/g, '').match(/\$/g) || []).length % 2, 0, `${l.id}: непарный $ в «${s.slice(0, 50)}»`)
     }
-    for (const s of l.steps) {
+    for (const s of [...l.steps, ...(l.practice ?? [])]) {
       if (/[а-яё]{4}/i.test(s.text.ru.replace(/\$[^$]*\$/g, ''))) assert.notEqual(s.text.kk, s.text.ru, `${l.id}: шаг «${s.title.ru}» не переведён`)
+      if ('steps' in s) assert.ok(s.steps.length > 0, `${l.id}: у задачи «${s.title.ru}» нет решения`)
       const sc = s.scene
       assert.ok((sc.points?.length ?? 0) + (sc.lines?.length ?? 0) + (sc.planes?.length ?? 0) > 0, `${l.id}: пустая сцена «${s.title.ru}»`)
       for (const p of sc.planes ?? []) assert.ok(p.corners.length >= 3)

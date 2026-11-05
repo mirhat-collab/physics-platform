@@ -4,6 +4,7 @@
 
 import { C, type Lesson, type SceneLine, type ScenePoint, type Txt, type V3 } from './types'
 import { POLYHEDRA } from './lesson-polyhedra'
+import { PERPENDICULAR } from './lesson-perpendicular'
 
 export * from './types'
 
@@ -181,13 +182,13 @@ export const LESSONS: Lesson[] = [
       },
     ],
   },
+  PERPENDICULAR,
   POLYHEDRA,
 ]
 
 // Следующие уроки — пока в планах (показываем в списке как «скоро»)
 export const UPCOMING: Txt[] = [
   { ru: 'Параллельность в пространстве', kk: 'Кеңістіктегі параллельдік' },
-  { ru: 'Перпендикуляр и наклонная', kk: 'Перпендикуляр және көлбеу' },
   { ru: 'Цилиндр, конус и шар', kk: 'Цилиндр, конус және шар' },
   { ru: 'Сечения', kk: 'Қималар' },
   { ru: 'Объёмы тел', kk: 'Денелердің көлемдері' },

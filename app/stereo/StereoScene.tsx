@@ -98,7 +98,7 @@ export default function StereoScene({ scene, resetKey }: { scene: Scene; resetKe
   // Подписи: точки — чуть выше точки, прямые — у конца, плоскости — у угла
   const labels: Label[] = useMemo(() => {
     const out: Label[] = []
-    for (const p of scene.points ?? []) if (p.label) out.push({ at: [p.at[0] + 0.14, p.at[1] + 0.2, p.at[2]], text: p.label, color: p.color ?? '#e2e8f0' })
+    for (const p of scene.points ?? []) if (p.label) out.push({ at: p.dot === false ? p.at : [p.at[0] + 0.14, p.at[1] + 0.2, p.at[2]], text: p.label, color: p.color ?? '#e2e8f0' })
     for (const l of scene.lines ?? []) if (l.label) { const A = v(l.a), B = v(l.b); const at = A.lerp(B, 0.92); out.push({ at: [at.x, at.y + 0.18, at.z], text: l.label, color: l.color ?? C.blue }) }
     for (const pl of scene.planes ?? []) if (pl.label) { const [a, , c] = pl.corners; const at = v(a).lerp(v(c), 0.1); out.push({ at: [at.x, at.y, at.z], text: pl.label, color: pl.color ?? C.blue }) }
     return out
@@ -113,7 +113,7 @@ export default function StereoScene({ scene, resetKey }: { scene: Scene; resetKe
         <Controls camera={scene.camera ?? DEFAULT_CAMERA} resetKey={resetKey} />
         {(scene.planes ?? []).map((p, i) => <Plane key={`p${i}`} corners={p.corners} color={p.color ?? C.blue} opacity={p.opacity} />)}
         {(scene.lines ?? []).map((l, i) => <Rod key={`l${i}`} a={l.a} b={l.b} color={l.color ?? C.blue} r={l.thin ? 0.014 : 0.03} dashed={l.dashed} />)}
-        {(scene.points ?? []).map((p, i) => (
+        {(scene.points ?? []).filter(p => p.dot !== false).map((p, i) => (
           <mesh key={`t${i}`} position={p.at}>
             <sphereGeometry args={[0.075, 20, 20]} />
             <meshStandardMaterial color={p.color ?? '#e2e8f0'} />
