@@ -11,6 +11,10 @@ import { PHYSICS_2 } from './physics-2'
 import { PHYSICS_2_KK } from './physics-2.kk'
 import { MATH_2 } from './math-2'
 import { MATH_2_KK } from './math-2.kk'
+import { PHYSICS_3 } from './physics-3'
+import { PHYSICS_3_KK } from './physics-3.kk'
+import { MATH_3 } from './math-3'
+import { MATH_3_KK } from './math-3.kk'
 import { PHYSICS_1_KK } from './physics-1.kk'
 import { MATH_1_KK } from './math-1.kk'
 import { applyKk, type VariantKk } from './kk'
@@ -18,10 +22,10 @@ import type { Locale } from '../i18n'
 
 export type EntVariant = EntVariantInfo & { questions: EntQuestion[]; kk: EntQuestion[] }
 
-const QUESTIONS: Record<string, EntQuestion[]> = { 'physics-1': PHYSICS_1, 'math-1': MATH_1, 'physics-2': PHYSICS_2, 'math-2': MATH_2 }
-const KK: Record<string, VariantKk> = { 'physics-1': PHYSICS_1_KK, 'math-1': MATH_1_KK, 'physics-2': PHYSICS_2_KK, 'math-2': MATH_2_KK }
+const QUESTIONS: Record<string, EntQuestion[]> = { 'physics-1': PHYSICS_1, 'math-1': MATH_1, 'physics-2': PHYSICS_2, 'math-2': MATH_2, 'physics-3': PHYSICS_3, 'math-3': MATH_3 }
+const KK: Record<string, VariantKk> = { 'physics-1': PHYSICS_1_KK, 'math-1': MATH_1_KK, 'physics-2': PHYSICS_2_KK, 'math-2': MATH_2_KK, 'physics-3': PHYSICS_3_KK, 'math-3': MATH_3_KK }
 // Варианты, где порядок ответов нужно перемешать (верный записан первым)
-const SHUFFLE = new Set(['physics-2', 'math-2'])
+const SHUFFLE = new Set(['physics-2', 'math-2', 'physics-3', 'math-3'])
 
 // Простой генератор случайных чисел с начальным значением: порядок
 // одинаковый при каждой сборке

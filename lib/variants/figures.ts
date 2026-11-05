@@ -154,3 +154,26 @@ export function sqrtGraph(): string {
 }
 
 export { gridFigure, gridVectors } from '../templates/figures'
+
+// x(t): амплитуда 4 см, период 2 с
+export function harmonic4(): string {
+  return plot({ x: [0, 4, 0.5], y: [-6, 6, 2], xLabel: 't, с', yLabel: 'x, см', lines: [{ pts: sine(4, 2, 4) }] })
+}
+
+// Батарея конденсаторов: три ветви параллельно — один, два и три
+// конденсатора последовательно; все конденсаторы одинаковые (C)
+export function capNetwork(): string {
+  const W = 330, L = 30, R = 300, ys = [40, 95, 150]
+  const cap = (x: number, y: number) =>
+    `<rect x="${x - 6}" y="${y - 12}" width="12" height="24" fill="var(--bg, #fff)" stroke="none"/>` +
+    line([x - 4, y - 12], [x - 4, y + 12], `stroke="${ACC}" stroke-width="3"`) + line([x + 4, y - 12], [x + 4, y + 12], `stroke="${ACC}" stroke-width="3"`) +
+    text(x, y - 16, 'C', 'middle', 'font-style="italic" font-weight="700"')
+  let b = line([10, 95], [L, 95]) + line([R, 95], [320, 95]) + line([L, ys[0]], [L, ys[2]]) + line([R, ys[0]], [R, ys[2]])
+  for (const y of ys) b += line([L, y], [R, y])
+  b += cap(165, ys[0])
+  for (const x of [120, 210]) b += cap(x, ys[1])
+  for (const x of [95, 165, 235]) b += cap(x, ys[2])
+  b += `<circle cx="10" cy="95" r="4" fill="none" stroke="currentColor" stroke-width="1.5"/><circle cx="320" cy="95" r="4" fill="none" stroke="currentColor" stroke-width="1.5"/>`
+  for (const p of [[L, 95], [R, 95]] as Pt[]) b += dot(p)
+  return svg(W, 175, b)
+}
