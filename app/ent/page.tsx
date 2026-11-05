@@ -579,7 +579,11 @@ export default function EntPage() {
       {header}
 
       <div className="card" style={{ padding: '20px 18px' }}>
-        <div style={{ color: 'var(--muted)', fontSize: 12, fontWeight: 700, marginBottom: 8 }}>{t('ЗАДАНИЕ')} {index + 1}</div>
+        <div style={{ color: 'var(--muted)', fontSize: 12, fontWeight: 700, marginBottom: 8 }}>
+          {t('ЗАДАНИЕ')} {index + 1}
+          {/* Тема задания: видно, из какой выбранной темы оно пришло */}
+          {q.topic && <span style={{ fontWeight: 500, textTransform: 'none' }}> · {t(q.topic)}</span>}
+        </div>
         <MathText text={q.question} style={{ fontSize: 16, lineHeight: 1.6, marginBottom: 18 }} />
         <Figure svg={q.figure} />
 

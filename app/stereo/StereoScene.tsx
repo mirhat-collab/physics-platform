@@ -35,19 +35,20 @@ function Rod({ a, b, color, r, dashed }: { a: V3; b: V3; color: string; r: numbe
   )
 }
 
-function Plane({ corners, color }: { corners: V3[]; color: string }) {
+function Plane({ corners, color, opacity = 0.22 }: { corners: V3[]; color: string; opacity?: number }) {
   const geo = useMemo(() => {
     const g = new THREE.BufferGeometry().setFromPoints(corners.map(v))
-    g.setIndex([0, 1, 2, 0, 2, 3])
+    // Выпуклый многоугольник — веером треугольников из первой вершины
+    g.setIndex(corners.slice(2).flatMap((_, i) => [0, i + 1, i + 2]))
     g.computeVertexNormals()
     return g
   }, [corners])
   return (
     <>
       <mesh geometry={geo} renderOrder={-1}>
-        <meshBasicMaterial color={color} transparent opacity={0.22} side={THREE.DoubleSide} depthWrite={false} />
+        <meshBasicMaterial color={color} transparent opacity={opacity} side={THREE.DoubleSide} depthWrite={false} />
       </mesh>
-      {corners.map((c, i) => <Rod key={i} a={c} b={corners[(i + 1) % 4]} color={color} r={0.008} />)}
+      {corners.map((c, i) => <Rod key={i} a={c} b={corners[(i + 1) % corners.length]} color={color} r={0.008} />)}
     </>
   )
 }
@@ -110,7 +111,7 @@ export default function StereoScene({ scene, resetKey }: { scene: Scene; resetKe
         <ambientLight intensity={0.8} />
         <directionalLight position={[4, 8, 6]} intensity={1.1} />
         <Controls camera={scene.camera ?? DEFAULT_CAMERA} resetKey={resetKey} />
-        {(scene.planes ?? []).map((p, i) => <Plane key={`p${i}`} corners={p.corners} color={p.color ?? C.blue} />)}
+        {(scene.planes ?? []).map((p, i) => <Plane key={`p${i}`} corners={p.corners} color={p.color ?? C.blue} opacity={p.opacity} />)}
         {(scene.lines ?? []).map((l, i) => <Rod key={`l${i}`} a={l.a} b={l.b} color={l.color ?? C.blue} r={l.thin ? 0.014 : 0.03} dashed={l.dashed} />)}
         {(scene.points ?? []).map((p, i) => (
           <mesh key={`t${i}`} position={p.at}>

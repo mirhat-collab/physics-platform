@@ -2,20 +2,10 @@
 // Сцена описывается данными — точки, отрезки, прямые, плоскости — и рисуется
 // компонентом StereoScene. Координаты three.js: y — вверх.
 
-export type V3 = [number, number, number]
-export type Txt = { ru: string; kk: string }
+import { C, type Lesson, type SceneLine, type ScenePoint, type Txt, type V3 } from './types'
+import { POLYHEDRA } from './lesson-polyhedra'
 
-export type ScenePoint = { at: V3; label?: string; color?: string }
-export type SceneLine = { a: V3; b: V3; label?: string; color?: string; dashed?: boolean; thin?: boolean }
-export type ScenePlane = { corners: [V3, V3, V3, V3]; label?: string; color?: string }
-export type Scene = { points?: ScenePoint[]; lines?: SceneLine[]; planes?: ScenePlane[]; camera?: V3 }
-
-export type Step = { title: Txt; text: Txt; scene: Scene }
-export type Quiz = { q: Txt; options: Txt[]; correct: number; why: Txt }
-export type Lesson = { id: string; title: Txt; summary: Txt; steps: Step[]; quiz: Quiz[] }
-
-// Цвета сцены (в three.js CSS-переменные не работают)
-export const C = { blue: '#3d7bff', red: '#ff5a5f', green: '#22c55e', orange: '#ff8a4c', violet: '#8b7cf6', gray: '#94a3b8' }
+export * from './types'
 
 // Горизонтальная плоскость y = h размером w × d с центром (cx, cz)
 const flat = (h: number, w = 4, d = 3, cx = 0, cz = 0): [V3, V3, V3, V3] =>
@@ -191,13 +181,13 @@ export const LESSONS: Lesson[] = [
       },
     ],
   },
+  POLYHEDRA,
 ]
 
 // Следующие уроки — пока в планах (показываем в списке как «скоро»)
 export const UPCOMING: Txt[] = [
   { ru: 'Параллельность в пространстве', kk: 'Кеңістіктегі параллельдік' },
   { ru: 'Перпендикуляр и наклонная', kk: 'Перпендикуляр және көлбеу' },
-  { ru: 'Многогранники: призма и пирамида', kk: 'Көпжақтар: призма және пирамида' },
   { ru: 'Цилиндр, конус и шар', kk: 'Цилиндр, конус және шар' },
   { ru: 'Сечения', kk: 'Қималар' },
   { ru: 'Объёмы тел', kk: 'Денелердің көлемдері' },
