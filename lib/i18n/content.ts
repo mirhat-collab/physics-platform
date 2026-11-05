@@ -4,6 +4,7 @@ import { contentKkHard } from './content-kk-hard'
 import { contentKkHard3 } from './content-kk-hard3'
 import { contentKkExtra } from './content-extra'
 import { contentKkSolids } from './content-kk-solids'
+import { contentKkWord } from './content-kk-word'
 import type { Locale } from './index'
 
 // Переводы учебного контента, который генерирует код на сервере: условия,
@@ -12,7 +13,7 @@ import type { Locale } from './index'
 // заняты LaTeX (\frac{s}{t}), поэтому {name} как в интерфейсе не подходит.
 const CONTENT: Record<Locale, Record<string, string> | null> = {
   ru: null,
-  kk: { ...contentKkMore, ...contentKkHard, ...contentKkHard3, ...contentKkExtra, ...contentKkSolids, ...contentKk },
+  kk: { ...contentKkMore, ...contentKkHard, ...contentKkHard3, ...contentKkExtra, ...contentKkSolids, ...contentKkWord, ...contentKk },
 }
 
 export function contentLookup(locale: Locale, text: string): string {
