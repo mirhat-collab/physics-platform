@@ -6,8 +6,8 @@
 // Среди неверных вариантов тоже есть такие пары, поэтому ответ не угадать
 // по совпадающим вариантам — задачу нужно решить.
 //
-// Соответствие: три задачи и пять ответов, к каждой задаче — свой ответ.
-import type { EntQuestion, EntSubject } from './ent'
+// Соответствие: две задачи (A и B) и четыре ответа, к каждой задаче — свой.
+import { MATCH_ITEMS, MATCH_OPTIONS, MULTI_MIN, MULTI_OPTIONS, type EntQuestion, type EntSubject } from './ent'
 import { tr, withLocale, withUnit, type Generated } from './templates/helpers'
 import { piFrac } from './templates/more/common'
 import type { Locale } from './i18n'
@@ -134,48 +134,53 @@ export function needsUnit(question: string): boolean {
   return TARGET_UNIT.some(re => re.test(question))
 }
 
-// «Один или несколько правильных ответов» из числовой задачи: 6 вариантов
+// «Несколько правильных ответов» из числовой задачи: 6 вариантов, верных 2–3
 export function buildMulti(g: Generated, subject: EntSubject, locale: Locale): EntQuestion | null {
   if (!g.num || g.num.values.length < 4 || needsUnit(g.question)) return null
   return withLocale(locale, () => {
     const { values, unit } = g.num!
     const main = (v: number) => withUnit(v, unit)
     const right = [main(values[0]), ...altForms(values[0], unit, subject)]
-    if (right.length < 2) return null
-    // Верных вариантов 1–3: чаще два
-    const k = Math.min(right.length, [1, 2, 2, 2, 3][Math.floor(Math.random() * 5)])
+    if (right.length < MULTI_MIN) return null
+    // Верных вариантов не меньше двух: чаще два, иногда три
+    const k = Math.min(right.length, [2, 2, 2, 3][Math.floor(Math.random() * 4)])
     const correct = shuffled(right).slice(0, k)
     const taken = new Set(right)
     const wrong: string[] = []
-    const add = (s: string) => { if (!taken.has(s) && wrong.length < 6 - k) { taken.add(s); wrong.push(s) } }
+    const add = (s: string) => { if (!taken.has(s) && wrong.length < MULTI_OPTIONS - k) { taken.add(s); wrong.push(s) } }
     // Первый неверный ответ — тоже парой в двух записях
     const w = values.slice(1)
     w.forEach((v, i) => { add(main(v)); if (i === 0 || Math.random() < 0.5) altForms(v, unit, subject).slice(0, 1).forEach(add) })
     w.forEach(v => altForms(v, unit, subject).forEach(add))
-    if (wrong.length < 6 - k) return null
+    if (wrong.length < MULTI_OPTIONS - k) return null
     const options = shuffled([...correct, ...wrong])
     const answers = correct.map(c => options.indexOf(c)).sort((a, b) => a - b)
     const note = tr('Верные варианты — одно и то же значение, записанное по-разному.')
     return {
       question: g.question, options, correct: answers[0], kind: 'multi' as const, answers,
       ...(g.figure ? { figure: g.figure } : {}),
-      solution: k > 1 ? `${g.solution} ${note}` : g.solution,
+      solution: `${g.solution} ${note}`,
     }
   })
 }
 
-// «Соответствие» из трёх задач: к каждой — её ответ, плюс два лишних варианта
+// «Соответствие» из двух задач (A и B): к каждой — её ответ, плюс два лишних
+// варианта в выпадающем списке
 export function buildMatch(gs: Generated[], locale: Locale): EntQuestion | null {
+  const n = MATCH_ITEMS, need = MATCH_OPTIONS - MATCH_ITEMS
   // В соответствии у пунктов нет места для рисунка — задачи по рисунку не берём
-  if (gs.length !== 3 || gs.some(g => g.figure) || new Set(gs.map(g => g.question)).size !== 3) return null
+  if (gs.length !== n || gs.some(g => g.figure) || new Set(gs.map(g => g.question)).size !== n) return null
   const right = gs.map(g => g.options[g.correct])
-  if (new Set(right).size !== 3) return null
+  if (new Set(right).size !== n) return null
   const extra: string[] = []
-  for (const g of shuffled(gs)) {
-    const w = shuffled(g.options.filter((o, i) => i !== g.correct && !right.includes(o) && !extra.includes(o)))[0]
-    if (w && extra.length < 2) extra.push(w)
+  // Лишние варианты — по очереди из неверных ответов каждой задачи
+  for (let round = 0; round < need && extra.length < need; round++) {
+    for (const g of shuffled(gs)) {
+      const w = shuffled(g.options.filter((o, i) => i !== g.correct && !right.includes(o) && !extra.includes(o)))[0]
+      if (w && extra.length < need) extra.push(w)
+    }
   }
-  if (extra.length < 2) return null
+  if (extra.length < need) return null
   const options = shuffled([...right, ...extra])
   return withLocale(locale, () => ({
     question: tr('Установите соответствие между задачами и ответами.'),
@@ -184,6 +189,6 @@ export function buildMatch(gs: Generated[], locale: Locale): EntQuestion | null 
     pairs: right.map(r => options.indexOf(r)),
     correct: 0,
     kind: 'match' as const,
-    solution: gs.map((g, i) => `${i + 1}) ${g.solution}`).join('\n\n'),
+    solution: gs.map((g, i) => `${'AB'[i]}) ${g.solution}`).join('\n\n'),
   }))
 }

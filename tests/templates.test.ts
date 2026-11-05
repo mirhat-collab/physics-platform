@@ -73,3 +73,40 @@ test('сложные задачи всегда дают 5 разных вари�
   }
   assert.deepEqual(bad, [])
 })
+
+test('стереометрия на готовых чертежах: рисунок, перевод условия и решения', async () => {
+  const { MATH_SOLIDS } = await import('@/lib/templates/more/math-solids')
+  assert.ok(MATH_SOLIDS.length >= 15)
+  for (const t of MATH_SOLIDS) {
+    for (let i = 0; i < 20; i++) {
+      const ru = withSeed(300 + i, () => withLocale('ru', () => t.gen(5)))
+      const kk = withSeed(300 + i, () => withLocale('kk', () => t.gen(5)))
+      const where = `«${t.topic}»: ${ru.question.slice(0, 60)}`
+      assert.ok(ru.figure?.startsWith('<svg') && !/NaN|undefined/.test(ru.figure), `${where} — нет рисунка`)
+      assert.notEqual(kk.question, ru.question, `${where} — условие не переведено`)
+      if (/[а-яё]{3}/i.test(ru.solution.replace(/\$[^$]*\$/g, ''))) assert.notEqual(kk.solution, ru.solution, `${where} — решение не переведено`)
+      assert.equal(kk.options[kk.correct], ru.options[ru.correct], `${where} — разный ответ на двух языках`)
+    }
+  }
+})
+
+test('текстовые задачи: по 10+ шаблонов на тему, перевод условия и решения', async () => {
+  const { MATH_WORD } = await import('@/lib/templates/more/math-word')
+  const topics = [...new Set(MATH_WORD.map(t => t.topic))]
+  assert.equal(topics.length, 6)
+  for (const topic of topics) assert.ok(MATH_WORD.filter(t => t.topic === topic).length >= 10, topic)
+  for (const t of MATH_WORD) {
+    for (let i = 0; i < 20; i++) {
+      const ru = withSeed(500 + i, () => withLocale('ru', () => t.gen(5)))
+      const kk = withSeed(500 + i, () => withLocale('kk', () => t.gen(5)))
+      const where = `«${t.topic}»: ${ru.question.slice(0, 60)}`
+      assert.notEqual(kk.question, ru.question, `${where} — условие не переведено`)
+      assert.ok(!/\d\{,\}\d/.test(ru.question.replace(/\$[^$]*\$/g, '')), `${where} — {,} вне формулы`)
+      // В переводе те же числа, что в русском условии (метки ⟪n⟫ не перепутаны)
+      const nums = (x: string) => (x.match(/\d+(?:[,.]\d+)?/g) || []).sort().join(' ')
+      assert.equal(nums(kk.question), nums(ru.question), `${where} — числа в переводе не совпадают`)
+      if (/[а-яё]{3}| ч\b/i.test(ru.solution.replace(/\$[^$]*\$/g, ''))) assert.notEqual(kk.solution, ru.solution, `${where} — решение не переведено`)
+      assert.equal(kk.options[kk.correct], ru.options[ru.correct], `${where} — разный ответ на двух языках`)
+    }
+  }
+})

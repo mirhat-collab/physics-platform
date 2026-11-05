@@ -21,6 +21,7 @@ export type PlotLine = { pts: Pt[]; accent?: boolean; dashed?: boolean; label?: 
 export function plot(o: {
   x: [number, number, number]; y: [number, number, number]
   xLabel: string; yLabel: string; lines: PlotLine[]; dots?: Pt[]
+  marks?: { at: Pt; label: string }[] // подписи точек (1, 2, 3)
 }): string {
   const W = 340, H = 230, L = 44, R = 18, T = 18, B = 34
   const [x0, x1, dx] = o.x, [y0, y1, dy] = o.y
@@ -50,6 +51,7 @@ export function plot(o: {
     }
   }
   for (const [x, y] of o.dots ?? []) body += `<circle cx="${px(x)}" cy="${py(y)}" r="3.5" fill="var(--accent, #8b7cf6)"/>`
+  for (const m of o.marks ?? []) body += text(px(m.at[0]) + 9, py(m.at[1]) - 7, m.label, 'start', 'font-weight="700"')
   return svg(W, H, body)
 }
 

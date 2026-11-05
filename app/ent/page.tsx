@@ -378,14 +378,39 @@ export default function EntPage() {
             </>
           )}
 
-          {topics.length > 0 && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', marginTop: -6, marginBottom: 18, fontSize: 13, color: 'var(--muted)' }}>
-              <span>{t('Выбрано тем: {n}', { n: topics.length })}{topicSections.length > 1 ? ` · ${t('разделов: {n}', { n: topicSections.length })}` : ''}</span>
-              <button onClick={() => { setTopics([]); setRepair(false) }} style={{ background: 'none', border: 'none', color: 'var(--muted)', fontSize: 13, cursor: 'pointer', fontFamily: 'inherit', textDecoration: 'underline', padding: 0 }}>
-                {t('Сбросить выбор')}
-              </button>
-            </div>
-          )}
+          {topics.length > 0 && (() => {
+            // Темы из других разделов тоже попадут в тест — показываем их,
+            // иначе кажется, что задания приходят «не по теме»
+            const elsewhere = topics.filter(x => sectionOfTopic(subject, x) !== section)
+            const linkBtn = { background: 'none', border: 'none', color: 'var(--muted)', fontSize: 13, cursor: 'pointer', fontFamily: 'inherit', textDecoration: 'underline', padding: 0 } as const
+            return (
+              <div style={{ marginTop: -6, marginBottom: 18, fontSize: 13, color: 'var(--muted)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+                  <span>{t('Выбрано тем: {n}', { n: topics.length })}{topicSections.length > 1 ? ` · ${t('разделов: {n}', { n: topicSections.length })}` : ''}</span>
+                  {section !== 'all' && elsewhere.length > 0 && elsewhere.length < topics.length && (
+                    <button onClick={() => setTopics(prev => prev.filter(x => sectionOfTopic(subject, x) === section))} style={linkBtn}>{t('Оставить только этот раздел')}</button>
+                  )}
+                  <button onClick={() => { setTopics([]); setRepair(false) }} style={linkBtn}>{t('Сбросить выбор')}</button>
+                </div>
+                {elsewhere.length > 0 && (
+                  <div style={{ marginTop: 10 }}>
+                    <div style={{ marginBottom: 6 }}>{section === 'all' ? t('Выбранные темы:') : t('Также в тесте темы из других разделов:')}</div>
+                    <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                      {elsewhere.map(name => (
+                        <span key={name} className="chip on" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 13, padding: '5px 6px 5px 12px', cursor: 'default' }}>
+                          <span>{t(name)} <span style={{ opacity: 0.7, fontWeight: 500 }}>· {t(sectionOfTopic(subject, name)!)}</span></span>
+                          <button onClick={() => toggleTopic(name)} aria-label={t('Убрать тему «{topic}»', { topic: t(name) })}
+                            style={{ width: 22, height: 22, borderRadius: 11, border: 'none', background: 'rgba(255,255,255,0.25)', color: 'inherit', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0 }}>
+                            <Icon name="x" size={12} />
+                          </button>
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )
+          })()}
 
           <div className="label">{t('Сложность')}</div>
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 18 }}>
@@ -554,7 +579,11 @@ export default function EntPage() {
       {header}
 
       <div className="card" style={{ padding: '20px 18px' }}>
-        <div style={{ color: 'var(--muted)', fontSize: 12, fontWeight: 700, marginBottom: 8 }}>{t('ЗАДАНИЕ')} {index + 1}</div>
+        <div style={{ color: 'var(--muted)', fontSize: 12, fontWeight: 700, marginBottom: 8 }}>
+          {t('ЗАДАНИЕ')} {index + 1}
+          {/* Тема задания: видно, из какой выбранной темы оно пришло */}
+          {q.topic && <span style={{ fontWeight: 500, textTransform: 'none' }}> · {t(q.topic)}</span>}
+        </div>
         <MathText text={q.question} style={{ fontSize: 16, lineHeight: 1.6, marginBottom: 18 }} />
         <Figure svg={q.figure} />
 

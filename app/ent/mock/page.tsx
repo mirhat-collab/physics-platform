@@ -13,6 +13,8 @@ import { entMistakePayload, logAnswers } from '@/lib/answer-log'
 import { useT } from '@/app/components/LanguageProvider'
 import { mockResult } from '@/lib/mock-result'
 import PracticeTools from '../PracticeTools'
+import { plainMath as plainOption } from '@/lib/plain-math'
+import { variantsOf } from '@/lib/variants/list'
 
 type Turn = { role: 'user' | 'assistant'; content: string }
 type Saved = { subject: EntSubject; questions: EntQuestion[]; answers: MockAnswer[]; endAt: number }
@@ -113,14 +115,15 @@ export default function MockEntPage() {
     if (phase === 'exam' && now >= endAt) finish(questions, answers, subject)
   }, [phase, now, endAt, questions, answers, subject, finish])
 
-  async function start() {
+  // variant — готовый вариант НЦТ, без него — новый вариант по шаблонам
+  async function start(variant?: string) {
     setPhase('loading')
     setError('')
     try {
       const res = await fetch('/api/ent/mock', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ subject }),
+        body: JSON.stringify({ subject, variant }),
       })
       const data = await res.json()
       if (!res.ok) throw new Error(t(data.error || 'Ошибка'))
@@ -169,7 +172,7 @@ export default function MockEntPage() {
       if (!value.length) value = null
     } else if (q.kind === 'match') {
       const sel = Array.isArray(cur) ? [...cur] : q.left!.map(() => -1)
-      sel[item] = sel[item] === i ? -1 : i
+      sel[item] = i
       value = sel.some(x => x >= 0) ? sel : null
     } else value = cur === i ? null : i
     const next = answers.map((a, k) => (k === index ? value : a))
@@ -190,7 +193,7 @@ export default function MockEntPage() {
         <Link href="/ent" style={{ color: 'var(--muted)', fontSize: 14, textDecoration: 'none' }}>← {t('Подготовка к ЕНТ')}</Link>
         <h1 className="page-title" style={{ marginTop: 8 }}>{t('Пробный ЕНТ')}</h1>
         <p className="page-sub">{t('Вариант по спецификации НЦТ: {count} заданий по всем темам предмета, {hours} часа, до {max} баллов. Трудность как на ЕНТ: 50% базовых, 30% средних, 20% сложных. Последние {hard} заданий стоят по 2 балла. Правильные ответы — только после сдачи.', { count: MOCK.count, hours: MOCK.minutes / 60, max: MOCK_MAX, hard: MOCK.count - MOCK.hardFrom })}
-          <span style={{ display: 'block', marginTop: 6, fontSize: 13 }}>{t('Задания {a}–{b} — «один или несколько правильных ответов», {c}–{d} — «на соответствие». За одну ошибку в них ставится 1 балл из 2.', { a: MOCK.multiFrom + 1, b: MOCK.matchFrom, c: MOCK.matchFrom + 1, d: MOCK.count })}</span></p>
+          <span style={{ display: 'block', marginTop: 6, fontSize: 13 }}>{t('Задания {a}–{b} — «на соответствие» (пункты A и B), {c}–{d} — «несколько правильных ответов» (из шести вариантов верных не меньше двух). За одну ошибку в них ставится 1 балл из 2.', { a: MOCK.matchFrom + 1, b: MOCK.multiFrom, c: MOCK.multiFrom + 1, d: MOCK.count })}</span></p>
 
         {loggedIn === false && (
           <div className="card" style={{ marginBottom: 16, borderColor: 'color-mix(in srgb, var(--warn) 40%, transparent)' }}>
@@ -219,7 +222,7 @@ export default function MockEntPage() {
               <button key={id} className={`chip${subject === id ? ' on' : ''}`} onClick={() => setSubject(id)}>{t(ENT_SUBJECTS[id].label)}</button>
             ))}
           </div>
-          <button className="btn" onClick={start} disabled={phase === 'loading'} style={{ width: '100%' }}>
+          <button className="btn" onClick={() => start()} disabled={phase === 'loading'} style={{ width: '100%' }}>
             {phase === 'loading' ? (
               <>
                 <span className="spin" style={{ width: 16, height: 16, border: '2px solid color-mix(in srgb, currentColor 30%, transparent)', borderTopColor: 'currentColor', borderRadius: '50%', display: 'inline-block' }} />
@@ -227,6 +230,18 @@ export default function MockEntPage() {
               </>
             ) : <><Icon name="sparkles" size={18} /> {t('Начать пробный ЕНТ')}</>}
           </button>
+          {variantsOf(subject).length > 0 && (
+            <>
+              <div className="label" style={{ marginTop: 18 }}>{t('Готовые варианты в формате НЦТ')}</div>
+              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                {variantsOf(subject).map(v => (
+                  <button key={v.id} className="btn btn-ghost" onClick={() => start(v.id)} disabled={phase === 'loading'}>
+                    <Icon name="clipboard" size={18} /> {t(v.title)}
+                  </button>
+                ))}
+              </div>
+            </>
+          )}
           {error && <div style={{ color: 'var(--bad)', fontSize: 14, marginTop: 10 }}>{error}</div>}
         </div>
 
@@ -372,33 +387,22 @@ export default function MockEntPage() {
         </div>
         <MathText text={q.question} style={{ fontSize: 16, lineHeight: 1.6, marginBottom: 12 }} />
         <Figure svg={q.figure} />
-        {q.kind === 'multi' && <div style={{ color: 'var(--accent)', fontSize: 13, fontWeight: 700, marginBottom: 12 }}>{t('Выберите один или несколько правильных ответов')}</div>}
+        {q.kind === 'multi' && <div style={{ color: 'var(--accent)', fontSize: 13, fontWeight: 700, marginBottom: 12 }}>{t('Выберите все правильные ответы — их не меньше двух')}</div>}
         {q.kind === 'match' ? (
-          <div style={{ display: 'grid', gap: 14 }}>
+          <div style={{ display: 'grid', gap: 12 }}>
             {q.left!.map((l, k) => {
               const sel = Array.isArray(answers[index]) ? (answers[index] as number[])[k] : -1
               return (
-                <div key={k} style={{ padding: '12px 14px', borderRadius: 12, background: 'var(--surface-2)', border: '1px solid var(--line)' }}>
-                  <MathText text={`${k + 1}) ${l}`} style={{ fontSize: 15, lineHeight: 1.55, marginBottom: 10 }} />
-                  <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-                    {q.options.map((_, i) => (
-                      <button key={i} onClick={() => choose(i, k)} aria-label={`${k + 1} — ${LETTERS[i]}`}
-                        style={{ width: 40, height: 36, borderRadius: 8, border: `1.5px solid ${sel === i ? 'var(--accent)' : 'var(--line)'}`, background: sel === i ? 'var(--accent)' : 'var(--bg)', color: sel === i ? 'var(--on-accent)' : 'var(--text)', fontWeight: 800, cursor: 'pointer', fontFamily: 'inherit' }}>
-                        {LETTERS[i]}
-                      </button>
-                    ))}
-                  </div>
+                <div key={k} style={{ padding: '12px 14px', borderRadius: 12, background: 'var(--surface-2)', border: `1.5px solid ${sel >= 0 ? 'var(--accent)' : 'var(--line)'}` }}>
+                  <MathText text={`${LETTERS[k]}) ${l}`} style={{ fontSize: 15, lineHeight: 1.55, marginBottom: 10 }} />
+                  <select value={sel} onChange={e => choose(Number(e.target.value), k)} aria-label={`${LETTERS[k]}`}
+                    style={{ minWidth: 160, maxWidth: '100%', padding: '9px 12px', borderRadius: 10, border: '1.5px solid var(--line)', background: 'var(--bg)', color: 'var(--text)', fontFamily: 'inherit', fontSize: 15, fontWeight: 600, cursor: 'pointer' }}>
+                    <option value={-1}>{t('Выбрать…')}</option>
+                    {q.options.map((opt, i) => <option key={i} value={i}>{plainOption(opt)}</option>)}
+                  </select>
                 </div>
               )
             })}
-            <div style={{ display: 'grid', gap: 6 }}>
-              {q.options.map((opt, i) => (
-                <div key={i} style={{ display: 'flex', gap: 10, alignItems: 'baseline', fontSize: 15 }}>
-                  <b style={{ color: 'var(--muted)', width: 22 }}>{LETTERS[i]})</b>
-                  <MathText text={opt} />
-                </div>
-              ))}
-            </div>
           </div>
         ) : (
           <div style={{ display: 'grid', gap: 8 }}>

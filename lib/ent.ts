@@ -173,6 +173,14 @@ export const ENT_SUBJECTS: Record<EntSubject, { label: string; sections: EntSect
         'Иррациональные неравенства',
         'Системы неравенств',
       ] },
+      { name: 'Текстовые задачи', topics: [
+        'Задачи на проценты',
+        'Задачи на смеси и сплавы',
+        'Задачи на совместную работу',
+        'Задачи на движение',
+        'Статистика: среднее, мода, медиана',
+        'Теория вероятностей',
+      ] },
       { name: 'Прогрессии', topics: [
         'Арифметическая прогрессия',
         'Геометрическая прогрессия',
@@ -273,8 +281,8 @@ export type EntQuestion = {
   topic?: string
   bankId?: number // задание из банка, а не от ИИ
   figure?: string // рисунок к заданию (SVG, генерируется шаблоном)
-  // Формат ЕНТ: обычное задание — один ответ (correct). multi — «один или
-  // несколько правильных ответов» (answers), match — соответствие: для каждого
+  // Формат ЕНТ: обычное задание — один ответ (correct). multi — «несколько
+  // правильных ответов», не меньше двух (answers), match — соответствие: для каждого
   // пункта left[k] верный вариант options[pairs[k]]. correct у них служебный.
   kind?: 'multi' | 'match'
   answers?: number[]
@@ -309,13 +317,16 @@ export function answerPoints(q: EntQuestion, a: MockAnswer | undefined, max: num
 }
 
 // Пробный ЕНТ по спецификации НЦТ (с 2026 года): 40 заданий, 4 часа на весь
-// вариант. 25 + 5 заданий с одним ответом — по 1 баллу, 5 «один или несколько
-// ответов» и 5 «на соответствие» — по 2 балла (одна ошибка — 1 балл).
+// вариант. 25 + 5 заданий с одним ответом — по 1 баллу, 5 «на соответствие»
+// (два пункта A и B) и 5 «несколько правильных ответов» (шесть вариантов,
+// верных не меньше двух) — по 2 балла (одна ошибка — 1 балл).
 // Уровни трудности: A — 50%, B — 30%, C — 20%.
-export const MOCK = { count: 40, hardFrom: 30, multiFrom: 30, matchFrom: 35, minutes: 240, levelB: 20, levelC: 32 } as const
-// Формат задания по номеру: 31–35 — несколько ответов, 36–40 — соответствие
+export const MOCK = { count: 40, hardFrom: 30, matchFrom: 30, multiFrom: 35, minutes: 240, levelB: 20, levelC: 32 } as const
+// Формат задания по номеру: 31–35 — соответствие, 36–40 — несколько ответов
 export const mockFormat = (index: number): 'single' | 'multi' | 'match' =>
-  index >= MOCK.matchFrom ? 'match' : index >= MOCK.multiFrom ? 'multi' : 'single'
+  index >= MOCK.multiFrom ? 'multi' : index >= MOCK.matchFrom ? 'match' : 'single'
+// Соответствие: пунктов A и B, вариантов в списке; «несколько ответов»: вариантов
+export const MATCH_ITEMS = 2, MATCH_OPTIONS = 4, MULTI_OPTIONS = 6, MULTI_MIN = 2
 export const mockPoints = (index: number) => (index >= MOCK.hardFrom ? 2 : 1)
 export const MOCK_MAX = MOCK.hardFrom + (MOCK.count - MOCK.hardFrom) * 2
 
