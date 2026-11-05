@@ -15,9 +15,9 @@ test('уроки стереометрии: тексты на двух языка
       if (/[а-яё]{4}/i.test(s.text.ru.replace(/\$[^$]*\$/g, ''))) assert.notEqual(s.text.kk, s.text.ru, `${l.id}: шаг «${s.title.ru}» не переведён`)
       if ('steps' in s) assert.ok(s.steps.length > 0, `${l.id}: у задачи «${s.title.ru}» нет решения`)
       const sc = s.scene
-      assert.ok((sc.points?.length ?? 0) + (sc.lines?.length ?? 0) + (sc.planes?.length ?? 0) > 0, `${l.id}: пустая сцена «${s.title.ru}»`)
+      assert.ok((sc.points?.length ?? 0) + (sc.lines?.length ?? 0) + (sc.planes?.length ?? 0) + (sc.bodies?.length ?? 0) > 0, `${l.id}: пустая сцена «${s.title.ru}»`)
       for (const p of sc.planes ?? []) assert.ok(p.corners.length >= 3)
-      for (const xs of [...(sc.points ?? []).map(p => p.at), ...(sc.lines ?? []).flatMap(x => [x.a, x.b]), ...(sc.planes ?? []).flatMap(p => p.corners)]) {
+      for (const xs of [...(sc.points ?? []).map(p => p.at), ...(sc.lines ?? []).flatMap(x => [x.a, x.b]), ...(sc.planes ?? []).flatMap(p => p.corners), ...(sc.bodies ?? []).map(b => b.c), ...(sc.rings ?? []).map(g => g.c)]) {
         assert.ok(xs.every(Number.isFinite), `${l.id}: координата не число в «${s.title.ru}»`)
       }
     }

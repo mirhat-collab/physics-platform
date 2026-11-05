@@ -3,7 +3,7 @@ import { useEffect, useMemo, useRef } from 'react'
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import * as THREE from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
-import { C, type Scene, type V3 } from '@/lib/stereo/lessons'
+import { C, type Scene, type SceneBody, type SceneRing, type V3 } from '@/lib/stereo/lessons'
 
 // 3D-сцена урока стереометрии: точки, отрезки, плоскости из описания Scene.
 // Фигуру можно вращать и приближать пальцем или мышью. Подписи — обычный
@@ -49,6 +49,37 @@ function Plane({ corners, color, opacity = 0.22 }: { corners: V3[]; color: strin
         <meshBasicMaterial color={color} transparent opacity={opacity} side={THREE.DoubleSide} depthWrite={false} />
       </mesh>
       {corners.map((c, i) => <Rod key={i} a={c} b={corners[(i + 1) % corners.length]} color={color} r={0.008} />)}
+    </>
+  )
+}
+
+// Тело вращения: полупрозрачная поверхность (цилиндр, конус, шар)
+function Body({ b }: { b: SceneBody }) {
+  const color = b.color ?? C.blue, opacity = b.opacity ?? 0.2
+  const mat = <meshStandardMaterial color={color} transparent opacity={opacity} side={THREE.DoubleSide} depthWrite={false} roughness={0.6} />
+  if (b.kind === 'sphere') return <mesh position={b.c} renderOrder={-1}><sphereGeometry args={[b.r, 48, 32]} />{mat}</mesh>
+  const h = b.h ?? 1
+  return (
+    <mesh position={[b.c[0], b.c[1] + h / 2, b.c[2]]} renderOrder={-1}>
+      <cylinderGeometry args={[b.rTop ?? b.r, b.r, h, 64, 1, true]} />
+      {mat}
+    </mesh>
+  )
+}
+
+// Окружность из коротких отрезков; fill — полупрозрачный круг внутри
+function Ring({ g }: { g: SceneRing }) {
+  const n = 64, color = g.color ?? C.blue
+  const pts: V3[] = Array.from({ length: n }, (_, i) => [g.c[0] + g.r * Math.cos((2 * Math.PI * i) / n), g.c[1], g.c[2] + g.r * Math.sin((2 * Math.PI * i) / n)])
+  return (
+    <>
+      {pts.map((p, i) => <Rod key={i} a={p} b={pts[(i + 1) % n]} color={color} r={0.014} />)}
+      {g.fill ? (
+        <mesh position={g.c} rotation={[-Math.PI / 2, 0, 0]} renderOrder={-1}>
+          <circleGeometry args={[g.r, 64]} />
+          <meshBasicMaterial color={color} transparent opacity={g.fill} side={THREE.DoubleSide} depthWrite={false} />
+        </mesh>
+      ) : null}
     </>
   )
 }
@@ -111,6 +142,8 @@ export default function StereoScene({ scene, resetKey }: { scene: Scene; resetKe
         <ambientLight intensity={0.8} />
         <directionalLight position={[4, 8, 6]} intensity={1.1} />
         <Controls camera={scene.camera ?? DEFAULT_CAMERA} resetKey={resetKey} />
+        {(scene.bodies ?? []).map((b, i) => <Body key={`b${i}`} b={b} />)}
+        {(scene.rings ?? []).map((g, i) => <Ring key={`r${i}`} g={g} />)}
         {(scene.planes ?? []).map((p, i) => <Plane key={`p${i}`} corners={p.corners} color={p.color ?? C.blue} opacity={p.opacity} />)}
         {(scene.lines ?? []).map((l, i) => <Rod key={`l${i}`} a={l.a} b={l.b} color={l.color ?? C.blue} r={l.thin ? 0.014 : 0.03} dashed={l.dashed} />)}
         {(scene.points ?? []).filter(p => p.dot !== false).map((p, i) => (

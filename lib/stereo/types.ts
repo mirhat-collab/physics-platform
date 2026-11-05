@@ -9,7 +9,12 @@ export type ScenePoint = { at: V3; label?: string; color?: string; dot?: false }
 export type SceneLine = { a: V3; b: V3; label?: string; color?: string; dashed?: boolean; thin?: boolean }
 // Плоскость или грань — выпуклый многоугольник (3 и больше вершин)
 export type ScenePlane = { corners: V3[]; label?: string; color?: string; opacity?: number }
-export type Scene = { points?: ScenePoint[]; lines?: SceneLine[]; planes?: ScenePlane[]; camera?: V3 }
+// Тело вращения с вертикальной осью: c — центр нижнего основания (у шара — центр).
+// rTop ≠ r — усечённый конус, rTop = 0 — конус
+export type SceneBody = { kind: 'cylinder' | 'sphere'; c: V3; r: number; rTop?: number; h?: number; color?: string; opacity?: number }
+// Окружность в горизонтальной плоскости (основания, сечения)
+export type SceneRing = { c: V3; r: number; color?: string; fill?: number }
+export type Scene = { points?: ScenePoint[]; lines?: SceneLine[]; planes?: ScenePlane[]; bodies?: SceneBody[]; rings?: SceneRing[]; camera?: V3 }
 
 // Шаг теории; tip — выделенный блок «Важно для ЕНТ»
 export type Step = { title: Txt; text: Txt; scene: Scene; tip?: Txt }

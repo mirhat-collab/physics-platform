@@ -5,6 +5,8 @@
 import { C, type Lesson, type SceneLine, type ScenePoint, type Txt, type V3 } from './types'
 import { POLYHEDRA } from './lesson-polyhedra'
 import { PERPENDICULAR } from './lesson-perpendicular'
+import { SECTIONS } from './lesson-sections'
+import { ROUND, SPHERE } from './lesson-round'
 
 export * from './types'
 
@@ -184,14 +186,15 @@ export const LESSONS: Lesson[] = [
   },
   PERPENDICULAR,
   POLYHEDRA,
+  SECTIONS,
+  ROUND,
+  SPHERE,
 ]
 
 // Следующие уроки — пока в планах (показываем в списке как «скоро»)
 export const UPCOMING: Txt[] = [
   { ru: 'Параллельность в пространстве', kk: 'Кеңістіктегі параллельдік' },
-  { ru: 'Цилиндр, конус и шар', kk: 'Цилиндр, конус және шар' },
-  { ru: 'Сечения', kk: 'Қималар' },
-  { ru: 'Объёмы тел', kk: 'Денелердің көлемдері' },
+  { ru: 'Векторы и прямая на плоскости', kk: 'Жазықтықтағы векторлар және түзу' },
 ]
 
 export const lessonById = (id: string) => LESSONS.find(l => l.id === id)
