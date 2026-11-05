@@ -48,6 +48,7 @@ function buildGroups(role: string | null): NavGroup[] {
         { href: '/formulas', icon: 'formula', label: 'Тренажёр формул' },
         { href: '/ent', icon: 'target', label: 'Подготовка к ЕНТ' },
         { href: '/reference', icon: 'book', label: 'Справочник ЕНТ' },
+        { href: '/stereo', icon: 'gem', label: 'Стереометрия в 3D' },
       ],
     },
     {
