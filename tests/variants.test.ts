@@ -36,3 +36,24 @@ test('готовые варианты: 40 заданий в формате НЦ�
     assert.equal(answerPoints(v.questions[35], v.questions[35].answers!.slice(1), mockPoints(35)), 1)
   }
 })
+
+// Слова в вариантах (не только числа с единицами) должны быть переведены
+const hasWords = (s: string) => (s.replace(/\$[^$]*\$/g, '').match(/[а-яё]{4,}/gi) || []).some(w => !['моль'].includes(w.toLowerCase()))
+
+test('готовые варианты переведены на казахский целиком', () => {
+  for (const v of ENT_VARIANTS) {
+    assert.equal(v.kk.length, v.questions.length, v.id)
+    v.kk.forEach((q, i) => {
+      const ru = v.questions[i], where = `${v.id} №${i + 1}`
+      assert.notEqual(q.question, ru.question, `${where}: условие не переведено`)
+      if (hasWords(ru.solution)) assert.notEqual(q.solution, ru.solution, `${where}: решение не переведено`)
+      assert.equal(q.options.length, ru.options.length, where)
+      for (const s of [q.question, q.solution, ...q.options, ...(q.left ?? [])]) {
+        assert.equal((s.match(/\$/g) || []).length % 2, 0, `${where}: непарный $ в «${s.slice(0, 60)}»`)
+      }
+      if (ru.options.some(hasWords)) assert.notDeepEqual(q.options, ru.options, `${where}: варианты не переведены`)
+      if (ru.left?.some(hasWords)) assert.notDeepEqual(q.left, ru.left, `${where}: пункты не переведены`)
+      assert.deepEqual([q.correct, q.answers, q.pairs, q.figure], [ru.correct, ru.answers, ru.pairs, ru.figure], where)
+    })
+  }
+})

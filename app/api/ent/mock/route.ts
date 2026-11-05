@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { ENT_SUBJECTS, type EntSubject } from '@/lib/ent'
 import { buildMock } from '@/lib/mock-build'
 import { getLocale } from '@/lib/i18n/server'
-import { findVariant } from '@/lib/variants'
+import { findVariant, variantQuestions } from '@/lib/variants'
 
 // Вариант пробного ЕНТ целиком: только задачи по шаблонам — быстро,
 // без лимита ИИ и всегда с верным ответом. С variant — готовый вариант НЦТ.
@@ -13,7 +13,7 @@ export async function POST(req: NextRequest) {
   if (body?.variant) {
     const v = findVariant(body.variant)
     if (!v || v.subject !== subject) return NextResponse.json({ error: 'Неверные параметры' }, { status: 400 })
-    return NextResponse.json({ questions: v.questions })
+    return NextResponse.json({ questions: variantQuestions(v, await getLocale()) })
   }
   try {
     return NextResponse.json({ questions: buildMock(subject, await getLocale()) })
