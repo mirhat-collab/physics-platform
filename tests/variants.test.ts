@@ -37,8 +37,9 @@ test('готовые варианты: 40 заданий в формате НЦ�
   }
 })
 
-// Слова в вариантах (не только числа с единицами) должны быть переведены
-const hasWords = (s: string) => (s.replace(/\$[^$]*\$/g, '').match(/[а-яё]{4,}/gi) || []).some(w => !['моль'].includes(w.toLowerCase()))
+// Слова в вариантах (не только числа с единицами) должны быть переведены;
+// единицы (мкДж, моль) короче пяти букв
+const hasWords = (s: string) => (s.replace(/\$[^$]*\$/g, '').match(/[а-яёәғқңөұүһі]{5,}/gi) || []).length > 0
 
 test('готовые варианты переведены на казахский целиком', () => {
   for (const v of ENT_VARIANTS) {
@@ -55,5 +56,13 @@ test('готовые варианты переведены на казахски
       if (ru.left?.some(hasWords)) assert.notDeepEqual(q.left, ru.left, `${where}: пункты не переведены`)
       assert.deepEqual([q.correct, q.answers, q.pairs, q.figure], [ru.correct, ru.answers, ru.pairs, ru.figure], where)
     })
+  }
+})
+
+test('готовые варианты: верный ответ стоит на разных местах', () => {
+  for (const v of ENT_VARIANTS) {
+    const at = v.questions.filter(q => !q.kind).map(q => q.correct)
+    assert.ok(new Set(at).size >= 3, `${v.id}: верный ответ почти всегда на одном месте`)
+    assert.ok(at.filter(x => x === 0).length <= at.length / 2, `${v.id}: слишком часто вариант A`)
   }
 })

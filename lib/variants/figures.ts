@@ -138,3 +138,19 @@ export function skatingTriangle(): string {
   b += text(A[0] - 8, 145, '12 м', 'end') + text(120, 218, '16 м')
   return svg(250, 230, b)
 }
+
+// v(t) лифта: разгон 2 с до 2 м/с, 10 с равномерно, торможение 2 с
+export function liftSpeed(): string {
+  return plot({ x: [0, 16, 2], y: [0, 3, 1], xLabel: 't, с', yLabel: 'v, м/с', lines: [{ pts: [[0, 0], [2, 2], [12, 2], [14, 0]] }] })
+}
+
+// R1 последовательно с параллельными R2 и R3
+export { circuitSeriesParallel } from '../templates/figures'
+
+// График y = √(x + 2) − 3
+export function sqrtGraph(): string {
+  const pts = Array.from({ length: 41 }, (_, i) => { const x = -2 + (i / 40) * 9; return [x, Math.sqrt(x + 2) - 3] as Pt })
+  return plot({ x: [-3, 7, 1], y: [-4, 1, 1], xLabel: 'x', yLabel: 'y', lines: [{ pts }], dots: [[-2, -3]] })
+}
+
+export { gridFigure, gridVectors } from '../templates/figures'
