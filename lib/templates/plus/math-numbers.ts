@@ -186,8 +186,8 @@ export const PLUS_MATH_NUMBERS: Template[] = [
     return N(q(V, `$${a}^0 + ${b}^{-1} \\cdot ${b}$.`), 2, [a + 1, 1, b], n, '', `$1 + 1 = 2$.`)
   }),
   c(R4, n => {
-    const a = rnd(2, 5), b = rnd(2, 4), d = rnd(1, a * b - 1)
-    return T(q(S, `$\\frac{(x^{${a}})^{${b}}}{x^{${d}}}$.`), `$x^{${a * b - d}}$`, [`$x^{${a + b - d}}$`, `$x^{${a * b + d}}$`, `$x^{${a * b}}$`, `$x^{${a * b - d + 1}}$`, `$x^{${a * b * d}}$`], n, `$x^{${a * b} - ${d}} = x^{${a * b - d}}$.`)
+    const a = rnd(2, 5), b = rnd(2, 4), d = rnd(2, a * b - 1)
+    return T(q(S, `$\\frac{(x^{${a}})^{${b}}}{x^{${d}}}$.`), `$x^{${a * b - d}}$`, [`$x^{${a * b + d}}$`, `$x^{${a * b}}$`, `$x^{${a * b - d + 1}}$`, `$x^{${a * b * d}}$`, `$x^{${a * b + 2 * d}}$`], n, `$x^{${a * b} - ${d}} = x^{${a * b - d}}$.`)
   }),
   c(R4, n => {
     const a = pick([2, 3, 5]), k = rnd(5, 20)
