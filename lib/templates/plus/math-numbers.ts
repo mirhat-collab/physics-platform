@@ -104,7 +104,7 @@ export const PLUS_MATH_NUMBERS: Template[] = [
   }),
   c(R2, n => {
     const k = rnd(2, 6), m = pick([2, 3, 5])
-    return T(['Внесите множитель под знак корня: $' + k + '\\sqrt{' + m + '}$.', 'Көбейткішті түбір белгісінің астына енгізіңіз: $' + k + '\\sqrt{' + m + '}$.'], `$\\sqrt{${k * k * m}}$`, [`$\\sqrt{${k * m}}$`, `$\\sqrt{${k + m}}$`, `$\\sqrt{${k * m * m}}$`, `$\\sqrt{${2 * k * m}}$`], n, `$${k}\\sqrt{${m}} = \\sqrt{${k * k} \\cdot ${m}} = \\sqrt{${k * k * m}}$.`)
+    return T(['Внесите множитель под знак корня: $' + k + '\\sqrt{' + m + '}$.', 'Көбейткішті түбір белгісінің астына енгізіңіз: $' + k + '\\sqrt{' + m + '}$.'], `$\\sqrt{${k * k * m}}$`, [`$\\sqrt{${k * m}}$`, `$\\sqrt{${k * k + m}}$`, `$\\sqrt{${k * k * m + k}}$`, `$\\sqrt{${k * k * m * m}}$`], n, `$${k}\\sqrt{${m}} = \\sqrt{${k * k} \\cdot ${m}} = \\sqrt{${k * k * m}}$.`)
   }),
   c(R2, n => {
     const a = pick([2, 3, 5]), b = rnd(2, 5)
@@ -187,7 +187,7 @@ export const PLUS_MATH_NUMBERS: Template[] = [
   }),
   c(R4, n => {
     const a = rnd(2, 5), b = rnd(2, 4), d = rnd(1, a * b - 1)
-    return T(q(S, `$\\frac{(x^{${a}})^{${b}}}{x^{${d}}}$.`), `$x^{${a * b - d}}$`, [`$x^{${a + b - d}}$`, `$x^{${a * b + d}}$`, `$x^{${a * b}}$`, `$x^{${Math.abs(a - d) + b}}$`], n, `$x^{${a * b} - ${d}} = x^{${a * b - d}}$.`)
+    return T(q(S, `$\\frac{(x^{${a}})^{${b}}}{x^{${d}}}$.`), `$x^{${a * b - d}}$`, [`$x^{${a + b - d}}$`, `$x^{${a * b + d}}$`, `$x^{${a * b}}$`, `$x^{${a * b - d + 1}}$`, `$x^{${a * b * d}}$`], n, `$x^{${a * b} - ${d}} = x^{${a * b - d}}$.`)
   }),
   c(R4, n => {
     const a = pick([2, 3, 5]), k = rnd(5, 20)
