@@ -110,3 +110,19 @@ test('текстовые задачи: по 10+ шаблонов на тему, 
     }
   }
 })
+
+test('100 задач по векторам: верный ответ в вариантах, перевод условия и решения', async () => {
+  const { MATH_VECTORS_BANK } = await import('@/lib/templates/more/math-vectors-bank')
+  assert.equal(MATH_VECTORS_BANK.length, 100)
+  for (const t of MATH_VECTORS_BANK) {
+    assert.ok(ENT_SUBJECTS.math.sections.some(s => s.topics.includes(t.topic)), `неизвестная тема «${t.topic}»`)
+    for (const n of [4, 5]) {
+      const ru = withSeed(n, () => withLocale('ru', () => t.gen(n)))
+      const kk = withSeed(n, () => withLocale('kk', () => t.gen(n)))
+      assert.equal(ru.options.length, n)
+      assert.equal(new Set(ru.options).size, n)
+      assert.notEqual(kk.question, ru.question, `не переведено: ${ru.question.slice(0, 60)}`)
+      if (/[а-яё]{3}/i.test(ru.solution)) assert.notEqual(kk.solution, ru.solution, `не переведено решение: ${ru.solution.slice(0, 60)}`)
+    }
+  }
+})

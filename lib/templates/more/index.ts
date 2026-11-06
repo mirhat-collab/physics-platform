@@ -18,6 +18,7 @@ import { MATH_HARD3 } from './math-hard3'
 import { MATH_FIGURES } from './math-figures'
 import { MATH_SOLIDS } from './math-solids'
 import { MATH_WORD } from './math-word'
+import { MATH_VECTORS_BANK } from './math-vectors-bank'
 
 // При неудачных случайных числах неправильные варианты могут совпасть
 // между собой — тогда просто генерируем задание заново.
@@ -35,4 +36,4 @@ function robust(t: Template): Template {
 }
 
 export const PHYSICS_MORE: Template[] = [...PHYSICS_MECHANICS, ...PHYSICS_THERMO, ...PHYSICS_ELECTRO, ...PHYSICS_WAVES, ...PHYSICS_HARD, ...PHYSICS_HARD2, ...PHYSICS_HARD3, ...PHYSICS_FIGURES].map(robust)
-export const MATH_MORE: Template[] = [...MATH_NUMBERS, ...MATH_EQUATIONS, ...MATH_FUNCTIONS, ...MATH_CALCULUS, ...MATH_GEOMETRY, ...MATH_HARD, ...MATH_HARD2, ...MATH_HARD3, ...MATH_FIGURES, ...MATH_SOLIDS, ...MATH_WORD].map(robust)
+export const MATH_MORE: Template[] = [...MATH_NUMBERS, ...MATH_EQUATIONS, ...MATH_FUNCTIONS, ...MATH_CALCULUS, ...MATH_GEOMETRY, ...MATH_HARD, ...MATH_HARD2, ...MATH_HARD3, ...MATH_FIGURES, ...MATH_SOLIDS, ...MATH_WORD, ...MATH_VECTORS_BANK].map(robust)
