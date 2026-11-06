@@ -9,7 +9,10 @@ export type B = [ru: string, kk: string]
 // Выбор текста под язык генерации
 export const L = (ru: string, kk: string): string => (currentLocale() === 'kk' ? kk : ru)
 // Вне формул дробная запятая — обычная: 0{,}5 → 0,5
-const plain = (s: string): string => s.split('$').map((part, i) => (i % 2 ? part : part.replace(/\{,\}/g, ','))).join('$')
+// а степенную запись (1,2 · 10⁵), если она оказалась в тексте, берём в формулу
+const SCI = /(-?\d+(\{,\}\d+)? \\cdot 10\^\{-?\d+\}|10\^\{-?\d+\})/g
+const outside = (s: string, f: (t: string) => string): string => s.split('$').map((part, i) => (i % 2 ? part : f(part))).join('$')
+const plain = (s: string): string => outside(outside(s, t => t.replace(SCI, m => `$${m}$`)), t => t.replace(/\{,\}/g, ','))
 const l = (b: B | string): string => plain(typeof b === 'string' ? b : L(b[0], b[1]))
 
 export const G = 10 // g, м/с²
