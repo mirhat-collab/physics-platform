@@ -4,7 +4,8 @@
   "description": "Промо-ролик Mirha_Edu (Remotion). Просмотр: npm run studio, рендер: npm run render",
   "scripts": {
     "studio": "remotion studio src/index.ts",
-    "render": "remotion render src/index.ts Vertical out/promo-9x16.mp4 && remotion render src/index.ts Horizontal out/promo-16x9.mp4 && remotion render src/index.ts Square out/promo-1x1.mp4"
+    "render": "remotion render src/index.ts Vertical out/promo-9x16.mp4 && remotion render src/index.ts Vertical-kk out/promo-9x16-kk.mp4 && remotion render src/index.ts Horizontal out/promo-16x9.mp4 && remotion render src/index.ts Horizontal-kk out/promo-16x9-kk.mp4 && remotion render src/index.ts Square out/promo-1x1.mp4 && remotion render src/index.ts Square-kk out/promo-1x1-kk.mp4",
+    "render:vertical": "remotion render src/index.ts Vertical out/promo-9x16.mp4 && remotion render src/index.ts Vertical-kk out/promo-9x16-kk.mp4"
   },
   "dependencies": {
     "@remotion/cli": "4.0.536",
@@ -13,5 +14,8 @@
     "react-dom": "19.2.4",
     "remotion": "4.0.536"
   },
-  "devDependencies": { "@types/react": "19.2.2", "typescript": "5.8.3" }
+  "devDependencies": {
+    "@types/react": "19.2.2",
+    "typescript": "5.8.3"
+  }
 }
