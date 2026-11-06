@@ -177,3 +177,103 @@ export function capNetwork(): string {
   for (const p of [[L, 95], [R, 95]] as Pt[]) b += dot(p)
   return svg(W, 175, b)
 }
+
+// ---- Вариант 4 (по пробнику ЕНТ) ----
+import { circuitParts } from '../templates/figures'
+const { resistor, wire, node, terminal } = circuitParts
+
+// Пять клиньев: № 5 — самый длинный и тонкий
+export function wedges(): string {
+  const ws: [number, number, boolean][] = [[100, 38, true], [62, 104, true], [58, 48, false], [64, 66, true], [140, 32, true]]
+  let b = '', x = 12
+  ws.forEach(([w, h, fill], i) => {
+    b += `<polygon points="${x},150 ${x + w},150 ${x + w},${150 - h}" fill="${fill ? 'currentColor' : 'none'}" fill-opacity="0.75" stroke="currentColor" stroke-width="1.5"/>`
+    b += text(x + w / 2, 170, String(i + 1), 'middle', 'font-style="italic"')
+    x += w + 14
+  })
+  return svg(x, 180, b)
+}
+
+// Конденсация пара при 100 °C (0–20 мин), затем вода остывает до 50 °C
+export function steamCooling(): string {
+  return plot({ x: [0, 60, 10], y: [0, 110, 50], xLabel: 't, мин', yLabel: 't, °C', lines: [{ pts: [[0, 100], [20, 100], [50, 50]] }] })
+}
+
+// Смешанное соединение: 2R ∥ 2R, затем 2R, обход 3R, затем R, обход R
+export function mixedCircuit(): string {
+  const X = 50, Y = 40
+  let b = terminal([20, Y]) + wire([[24, Y], [X, Y]]) + node([X, Y]) + wire([[X, Y], [X, 190]])
+  b += resistor([X, Y], [130, Y], '2R') + node([130, Y])
+  b += wire([[X, 82], [70, 82]]) + resistor([70, 82], [120, 82], '2R') + wire([[120, 82], [130, 82], [130, Y]]) + node([X, 82])
+  b += resistor([130, Y], [220, Y], '2R') + node([220, Y])
+  b += wire([[X, 136], [110, 136]]) + resistor([110, 136], [190, 136], '3R') + wire([[190, 136], [220, 136], [220, Y]]) + node([X, 136])
+  b += resistor([220, Y], [300, Y], 'R') + node([300, Y])
+  b += wire([[X, 190], [200, 190]]) + resistor([200, 190], [270, 190], 'R') + wire([[270, 190], [300, 190], [300, Y]])
+  b += wire([[300, Y], [326, Y]]) + terminal([330, Y])
+  b += text(20, Y - 12, 'a', 'middle', bold) + text(330, Y - 12, 'b', 'middle', bold)
+  return svg(345, 205, b)
+}
+
+// Лампа и реостат: ток идёт по реостату от левого конца до ползунка
+export function rheostat(): string {
+  let b = wire([[30, 30], [92, 30]]) + line([92, 16], [92, 44], 'stroke="currentColor" stroke-width="2"') + line([102, 22], [102, 38], 'stroke="currentColor" stroke-width="4"')
+  b += wire([[102, 30], [200, 30], [200, 62]])
+  b += `<circle cx="200" cy="78" r="16" fill="none" stroke="currentColor" stroke-width="1.5"/>` + line([189, 67], [211, 89], 'stroke="currentColor" stroke-width="1.5"') + line([211, 67], [189, 89], 'stroke="currentColor" stroke-width="1.5"')
+  b += wire([[200, 94], [200, 120], [90, 120], [90, 142]]) + `<path d="M90,150 l-6,-10 h12 z" fill="${ACC}"/>`
+  b += `<rect x="60" y="150" width="110" height="20" fill="none" stroke="${ACC}" stroke-width="2"/>`
+  b += wire([[30, 30], [30, 160], [60, 160]])
+  return svg(240, 185, b)
+}
+
+// Ток от нас (⊗); точки B и A — на линиях поля радиусом 1 и 1,6
+export function wireField(): string {
+  const c: Pt = [110, 100]
+  let b = `<circle cx="${c[0]}" cy="${c[1]}" r="85" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="${c[0]}" cy="${c[1]}" r="55" fill="none" stroke="currentColor" stroke-width="2"/>`
+  b += `<circle cx="${c[0]}" cy="${c[1]}" r="16" fill="none" stroke="currentColor" stroke-width="2.5"/>` + line([c[0] - 11, c[1] - 11], [c[0] + 11, c[1] + 11], 'stroke="currentColor" stroke-width="2.5"') + line([c[0] + 11, c[1] - 11], [c[0] - 11, c[1] + 11], 'stroke="currentColor" stroke-width="2.5"')
+  b += text(c[0] + 26, c[1] - 14, 'I', 'start', 'font-style="italic" font-size="15"')
+  b += dot([c[0], c[1] + 55], ACC) + dot([c[0], c[1] + 85], ACC)
+  b += text(c[0] + 10, c[1] + 50, 'B', 'start', bold) + text(c[0] + 10, c[1] + 82, 'A', 'start', bold)
+  return svg(220, 200, b)
+}
+
+// Модули скорости четырёх тел
+export function fourBodies(): string {
+  return plot({
+    x: [0, 5, 1], y: [0, 6, 1], xLabel: 't, с', yLabel: 'v, м/с',
+    lines: [{ pts: [[0, 5], [3, 0.8]], label: '1' }, { pts: [[0, 3], [4.6, 3]], label: '2' }, { pts: [[0, 0], [4.3, 4]], label: '3' }, { pts: [[0, 5], [4, 1.5]], label: '4' }],
+  })
+}
+
+// y = (x − 1)²(x + 2): максимум 4 при x = −1, минимум 0 при x = 1
+export function cubicGraph(): string {
+  const pts = Array.from({ length: 61 }, (_, i) => { const x = -2.15 + (i / 60) * 4.15; return [x, (x - 1) ** 2 * (x + 2)] as Pt })
+  return plot({ x: [-3, 3, 1], y: [-2, 4, 1], xLabel: 'x', yLabel: 'y', lines: [{ pts }] })
+}
+
+// Прямоугольный параллелепипед ABCDA₁B₁C₁D₁: AD = 24, A₁B₁ = 7
+export function boxAD(): string {
+  const A: Pt = [40, 170], D: Pt = [210, 170], B: Pt = [82, 132], C: Pt = [252, 132]
+  const up = (p: Pt): Pt => [p[0], p[1] - 110]
+  const s = 'stroke="currentColor" stroke-width="2"', h = 'stroke="currentColor" stroke-width="1.5" stroke-dasharray="5 4"'
+  let b = line(A, D, s) + line(D, up(D), s) + line(up(A), up(D), s) + line(A, up(A), s)
+  b += line(up(A), up(B), s) + line(up(B), up(C), s) + line(up(C), up(D), s) + line(D, C, s) + line(C, up(C), s)
+  b += line(A, B, h) + line(B, C, h) + line(B, up(B), h)
+  b += text(A[0] - 6, A[1] + 14, 'A', 'end', bold) + text(D[0] + 4, D[1] + 14, 'D', 'start', bold) + text(B[0] - 8, B[1] - 4, 'B', 'end', bold) + text(C[0] + 6, C[1] + 4, 'C', 'start', bold)
+  b += text(up(A)[0] - 6, up(A)[1] + 4, 'A₁', 'end', bold) + text(up(D)[0] + 6, up(D)[1] + 14, 'D₁', 'start', bold) + text(up(B)[0] - 4, up(B)[1] - 6, 'B₁', 'end', bold) + text(up(C)[0] + 6, up(C)[1], 'C₁', 'start', bold)
+  b += text((A[0] + D[0]) / 2, A[1] + 16, '24', 'middle', bold) + text(54, 42, '7', 'middle', bold)
+  return svg(290, 195, b)
+}
+
+// Конус: образующая 18, угол между образующей и плоскостью основания 30°
+export function cone30(): string {
+  const cx = 130, top = 20, base = 170, rx = 100, ry = 26
+  const K: Pt = [cx - 70, base + 18.6], M: Pt = [cx + rx, base], O: Pt = [cx, base]
+  let b = `<path d="M${cx - rx},${base} A${rx},${ry} 0 0 0 ${cx + rx},${base}" fill="none" stroke="currentColor" stroke-width="2"/>`
+  b += `<path d="M${cx - rx},${base} A${rx},${ry} 0 0 1 ${cx + rx},${base}" fill="none" stroke="currentColor" stroke-width="1.5" stroke-dasharray="5 4"/>`
+  b += line([cx - rx, base], [cx, top], 'stroke="currentColor" stroke-width="2"') + line([cx, top], M, 'stroke="currentColor" stroke-width="2"') + line([cx, top], K, `stroke="${ACC}" stroke-width="2"`)
+  b += line([cx, top], O, 'stroke="currentColor" stroke-width="1.5" stroke-dasharray="5 4"') + line(K, O, `stroke="${ACC}" stroke-width="1.5" stroke-dasharray="5 4"`)
+  b += `<path d="M${cx},${base - 10} h-10 v10" fill="none" stroke="currentColor" stroke-width="1.2"/>` + dot(O) + dot(K)
+  b += text(cx, top - 6, 'C', 'middle', bold) + text(K[0] - 4, K[1] + 16, 'K', 'middle', bold) + text(M[0] + 8, M[1] + 4, 'M', 'start', bold) + text(O[0] + 8, O[1] + 16, 'O', 'start', bold)
+  b += text(cx + 60, 92, '18', 'start', bold) + text(K[0] + 26, K[1] - 8, '30°', 'middle')
+  return svg(260, 215, b)
+}
