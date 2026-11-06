@@ -6,7 +6,8 @@ export type Txt = { ru: string; kk: string }
 
 // dot: false — только подпись (например, угол φ), без шарика
 export type ScenePoint = { at: V3; label?: string; color?: string; dot?: false }
-export type SceneLine = { a: V3; b: V3; label?: string; color?: string; dashed?: boolean; thin?: boolean }
+// arrow — наконечник стрелки в конце b (векторы)
+export type SceneLine = { a: V3; b: V3; label?: string; color?: string; dashed?: boolean; thin?: boolean; arrow?: boolean }
 // Плоскость или грань — выпуклый многоугольник (3 и больше вершин)
 export type ScenePlane = { corners: V3[]; label?: string; color?: string; opacity?: number }
 // Тело вращения с вертикальной осью: c — центр нижнего основания (у шара — центр).

@@ -7,6 +7,7 @@ import { POLYHEDRA } from './lesson-polyhedra'
 import { PERPENDICULAR } from './lesson-perpendicular'
 import { SECTIONS } from './lesson-sections'
 import { ROUND, SPHERE } from './lesson-round'
+import { VECTORS } from './lesson-vectors'
 
 export * from './types'
 
@@ -189,12 +190,12 @@ export const LESSONS: Lesson[] = [
   SECTIONS,
   ROUND,
   SPHERE,
+  VECTORS,
 ]
 
 // Следующие уроки — пока в планах (показываем в списке как «скоро»)
 export const UPCOMING: Txt[] = [
   { ru: 'Параллельность в пространстве', kk: 'Кеңістіктегі параллельдік' },
-  { ru: 'Векторы и прямая на плоскости', kk: 'Жазықтықтағы векторлар және түзу' },
 ]
 
 export const lessonById = (id: string) => LESSONS.find(l => l.id === id)

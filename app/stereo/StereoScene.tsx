@@ -35,6 +35,20 @@ function Rod({ a, b, color, r, dashed }: { a: V3; b: V3; color: string; r: numbe
   )
 }
 
+// Наконечник стрелки: конус в точке b по направлению a → b
+function ArrowHead({ a, b, color }: { a: V3; b: V3; color: string }) {
+  const { pos, quat } = useMemo(() => {
+    const A = v(a), B = v(b), dir = B.clone().sub(A).normalize()
+    return { pos: B.clone().sub(dir.clone().multiplyScalar(0.09)), quat: new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 1, 0), dir) }
+  }, [a, b])
+  return (
+    <mesh position={pos} quaternion={quat}>
+      <coneGeometry args={[0.075, 0.2, 16]} />
+      <meshStandardMaterial color={color} />
+    </mesh>
+  )
+}
+
 function Plane({ corners, color, opacity = 0.22 }: { corners: V3[]; color: string; opacity?: number }) {
   const geo = useMemo(() => {
     const g = new THREE.BufferGeometry().setFromPoints(corners.map(v))
@@ -145,7 +159,12 @@ export default function StereoScene({ scene, resetKey }: { scene: Scene; resetKe
         {(scene.bodies ?? []).map((b, i) => <Body key={`b${i}`} b={b} />)}
         {(scene.rings ?? []).map((g, i) => <Ring key={`r${i}`} g={g} />)}
         {(scene.planes ?? []).map((p, i) => <Plane key={`p${i}`} corners={p.corners} color={p.color ?? C.blue} opacity={p.opacity} />)}
-        {(scene.lines ?? []).map((l, i) => <Rod key={`l${i}`} a={l.a} b={l.b} color={l.color ?? C.blue} r={l.thin ? 0.014 : 0.03} dashed={l.dashed} />)}
+        {(scene.lines ?? []).map((l, i) => (
+          <group key={`l${i}`}>
+            <Rod a={l.a} b={l.b} color={l.color ?? C.blue} r={l.thin ? 0.014 : 0.03} dashed={l.dashed} />
+            {l.arrow && <ArrowHead a={l.a} b={l.b} color={l.color ?? C.blue} />}
+          </group>
+        ))}
         {(scene.points ?? []).filter(p => p.dot !== false).map((p, i) => (
           <mesh key={`t${i}`} position={p.at}>
             <sphereGeometry args={[0.075, 20, 20]} />
