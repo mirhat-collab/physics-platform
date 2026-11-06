@@ -8,6 +8,8 @@ import { PERPENDICULAR } from './lesson-perpendicular'
 import { SECTIONS } from './lesson-sections'
 import { ROUND, SPHERE } from './lesson-round'
 import { VECTORS } from './lesson-vectors'
+import { PARALLEL } from './lesson-parallel'
+import { QUIZ_EXTRA } from './quiz-extra'
 
 export * from './types'
 
@@ -24,7 +26,7 @@ const cubeEdges: SceneLine[] = ([['A', 'B'], ['B', 'C'], ['C', 'D'], ['D', 'A'],
   .map(([a, b]) => ({ a: K[a], b: K[b], color: C.gray, thin: true }))
 const cubePoints: ScenePoint[] = Object.entries(K).map(([name, at]) => ({ at, label: name.replace('1', '₁') }))
 
-export const LESSONS: Lesson[] = [
+const BASE: Lesson[] = [
   {
     id: 'intro',
     title: { ru: 'Введение в стереометрию', kk: 'Стереометрияға кіріспе' },
@@ -185,6 +187,7 @@ export const LESSONS: Lesson[] = [
       },
     ],
   },
+  PARALLEL,
   PERPENDICULAR,
   POLYHEDRA,
   SECTIONS,
@@ -193,9 +196,22 @@ export const LESSONS: Lesson[] = [
   VECTORS,
 ]
 
+// К проверке каждого урока добавляем вопросы из quiz-extra (всего не меньше 10)
+export const LESSONS: Lesson[] = BASE.map(l => ({ ...l, quiz: [...l.quiz, ...(QUIZ_EXTRA[l.id] ?? [])] }))
+
 // Следующие уроки — пока в планах (показываем в списке как «скоро»)
-export const UPCOMING: Txt[] = [
-  { ru: 'Параллельность в пространстве', kk: 'Кеңістіктегі параллельдік' },
-]
+export const UPCOMING: Txt[] = []
 
 export const lessonById = (id: string) => LESSONS.find(l => l.id === id)
+
+// Порядок вариантов в вопросе проверки: в данных верный ответ обычно первый,
+// поэтому показываем их перемешанными. Порядок зависит от урока, номера
+// вопроса и попытки — одинаковый на сервере и в браузере.
+export function quizOrder(lessonId: string, qi: number, n: number, attempt = 0): number[] {
+  let h = 2166136261
+  for (const ch of `${lessonId}:${qi}:${attempt}`) h = Math.imul(h ^ ch.charCodeAt(0), 16777619)
+  const rnd = () => { h = Math.imul(h ^ (h >>> 15), 2246822507); h = Math.imul(h ^ (h >>> 13), 3266489909); h ^= h >>> 16; return (h >>> 0) / 4294967296 }
+  const order = Array.from({ length: n }, (_, i) => i)
+  for (let i = n - 1; i > 0; i--) { const j = Math.floor(rnd() * (i + 1)); [order[i], order[j]] = [order[j], order[i]] }
+  return order
+}

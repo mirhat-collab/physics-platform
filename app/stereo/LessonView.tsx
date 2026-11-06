@@ -5,7 +5,7 @@ import Link from 'next/link'
 import MathText from '@/app/components/MathText'
 import Icon from '@/app/components/Icon'
 import { useT } from '@/app/components/LanguageProvider'
-import { lessonById, type Txt } from '@/lib/stereo/lessons'
+import { lessonById, quizOrder, type Txt } from '@/lib/stereo/lessons'
 import { readProgress, saveProgress, useProgress } from './progress'
 
 // three.js работает только в браузере
@@ -23,6 +23,8 @@ export default function LessonView({ id }: { id: string }) {
   // Проверка себя: номер вопроса, выбранные ответы
   const [quiz, setQuiz] = useState<number | null>(null)
   const [picked, setPicked] = useState<(number | null)[]>(() => lesson.quiz.map(() => null))
+  // Номер попытки: при повторной проверке варианты перемешиваются заново
+  const [attempt, setAttempt] = useState(0)
   // Разбор задач: номер задачи и сколько шагов решения открыто
   const [prac, setPrac] = useState<number | null>(null)
   const [shown, setShown] = useState(0)
@@ -43,7 +45,7 @@ export default function LessonView({ id }: { id: string }) {
 
   const s = lesson.steps[step]
   const total = lesson.steps.length
-  const startQuiz = () => { setPrac(null); setPicked(lesson.quiz.map(() => null)); setQuiz(0); window.scrollTo({ top: 0 }) }
+  const startQuiz = () => { setPrac(null); setPicked(lesson.quiz.map(() => null)); setAttempt(a => a + 1); setQuiz(0); window.scrollTo({ top: 0 }) }
   const back = <Link href="/stereo" style={{ color: 'var(--muted)', fontSize: 14, textDecoration: 'none' }}>← {t('Стереометрия в 3D')}</Link>
   const sceneBox = (scene: typeof s.scene, key: string | number) => (
     <div className="card" style={{ padding: 0, overflow: 'hidden', position: 'relative', height: 'min(52vh, 400px)', background: 'radial-gradient(circle at 50% 40%, #1e293b, #0b1220)' }}>
@@ -112,7 +114,7 @@ export default function LessonView({ id }: { id: string }) {
             <p style={{ color: 'var(--muted)', marginTop: 6 }}>{score === lesson.quiz.length ? t('Отлично! Урок пройден.') : t('Повтори шаги урока и попробуй ещё раз.')}</p>
             <div style={{ display: 'grid', gap: 10, marginTop: 18 }}>
               <Link className="btn" href={`/ent?subject=math&section=${encodeURIComponent('Стереометрия')}`}><Icon name="target" size={18} /> {t('Решать задачи по стереометрии')}</Link>
-              <button className="btn btn-ghost" onClick={() => { setPicked(lesson.quiz.map(() => null)); setQuiz(0) }}><Icon name="refresh" size={18} /> {t('Пройти проверку ещё раз')}</button>
+              <button className="btn btn-ghost" onClick={() => { setPicked(lesson.quiz.map(() => null)); setAttempt(a => a + 1); setQuiz(0) }}><Icon name="refresh" size={18} /> {t('Пройти проверку ещё раз')}</button>
               <Link className="btn btn-ghost" href="/stereo">{t('К списку уроков')}</Link>
             </div>
           </div>
@@ -128,7 +130,8 @@ export default function LessonView({ id }: { id: string }) {
         <div className="card">
           <MathText text={tx(q.q)} style={{ fontSize: 16, lineHeight: 1.6, marginBottom: 14, fontWeight: 600 }} />
           <div style={{ display: 'grid', gap: 8 }}>
-            {q.options.map((o, i) => {
+            {quizOrder(id, quiz, q.options.length, attempt).map(i => {
+              const o = q.options[i]
               const right = ans !== null && i === q.correct, wrong = ans === i && i !== q.correct
               return (
                 <button key={i} disabled={ans !== null}

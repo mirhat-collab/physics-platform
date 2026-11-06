@@ -24,3 +24,18 @@ test('уроки стереометрии: тексты на двух языка
     for (const q of l.quiz) assert.ok(q.correct >= 0 && q.correct < q.options.length)
   }
 })
+
+test('уроки стереометрии: в каждой проверке не меньше 10 вопросов, варианты перемешаны', async () => {
+  const { quizOrder } = await import('@/lib/stereo/lessons')
+  assert.ok(LESSONS.some(l => l.id === 'parallel'), 'нет урока «Параллельность в пространстве»')
+  for (const l of LESSONS) {
+    assert.ok(l.quiz.length >= 10, `${l.id}: в проверке ${l.quiz.length} вопросов`)
+    const firsts = l.quiz.map((q, i) => quizOrder(l.id, i, q.options.length).indexOf(q.correct))
+    for (const [i, q] of l.quiz.entries()) {
+      assert.deepEqual([...quizOrder(l.id, i, q.options.length)].sort(), q.options.map((_, k) => k))
+      assert.equal(new Set(q.options.map(o => o.ru)).size, q.options.length, `${l.id}: повтор варианта в «${q.q.ru}»`)
+    }
+    // верный ответ не стоит всё время на одном месте
+    assert.ok(new Set(firsts).size > 1, `${l.id}: верный ответ всегда на месте ${firsts[0]}`)
+  }
+})
