@@ -10,6 +10,7 @@ import { PLUS_MAGNET } from './phys-magnet'
 import { PLUS_WAVES } from './phys-waves'
 import { PLUS_MODERN } from './phys-modern'
 import { PLUS_MATH_NUMBERS } from './math-numbers'
+import { PLUS_MATH_EQUATIONS } from './math-equations'
 
 export const PHYSICS_PLUS: Template[] = [...PLUS_KINEMATICS, ...PLUS_DYNAMICS, ...PLUS_HYDRO, ...PLUS_MOLECULAR, ...PLUS_ELECTRO, ...PLUS_MAGNET, ...PLUS_WAVES, ...PLUS_MODERN]
-export const MATH_PLUS: Template[] = [...PLUS_MATH_NUMBERS]
+export const MATH_PLUS: Template[] = [...PLUS_MATH_NUMBERS, ...PLUS_MATH_EQUATIONS]
