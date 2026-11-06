@@ -9,7 +9,7 @@ import { withSeed } from './seed'
 const RUNS = Number(process.env.RUNS || 25)
 const nums = (s: string) => (s.replace(/[{},]/g, '').match(/\d+(\.\d+)?/g) || []).sort().join(' ')
 // Единицы измерения одинаковы на двух языках — их словами не считаем
-const UNITS = /(рад|моль|мин|кВт|МэВ|кэВ|кПа|МПа|ГПа|мкФ|пФ|нФ|мДж|кДж|МДж|мкКл|нКл|мкТл|мТл|кОм|МОм|мВб|мкм|нм|мГн|МГц|кГц|ГГц)(\/[а-яё²³]+)?/g
+const UNITS = /(мкс|дптр|рад|моль|мин|кВт|МэВ|кэВ|кПа|МПа|ГПа|мкФ|пФ|нФ|мДж|кДж|МДж|мкКл|нКл|мкТл|мТл|кОм|МОм|мВб|мкм|нм|мГн|МГц|кГц|ГГц)(\/[а-яё²³]+)?/g
 const words = (s: string) => /[а-яёәіңғүұқөһ]{3}/i.test(s.replace(/\$[^$]*\$/g, '').replace(UNITS, ''))
 
 function check(t: Template, subject: string, i: number) {
