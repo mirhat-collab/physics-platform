@@ -5,7 +5,8 @@
   "scripts": {
     "studio": "remotion studio src/index.ts",
     "render": "remotion render src/index.ts Vertical out/promo-9x16.mp4 && remotion render src/index.ts Vertical-kk out/promo-9x16-kk.mp4 && remotion render src/index.ts Horizontal out/promo-16x9.mp4 && remotion render src/index.ts Horizontal-kk out/promo-16x9-kk.mp4 && remotion render src/index.ts Square out/promo-1x1.mp4 && remotion render src/index.ts Square-kk out/promo-1x1-kk.mp4",
-    "render:vertical": "remotion render src/index.ts Vertical out/promo-9x16.mp4 && remotion render src/index.ts Vertical-kk out/promo-9x16-kk.mp4"
+    "render:vertical": "remotion render src/index.ts Vertical out/promo-9x16.mp4 && remotion render src/index.ts Vertical-kk out/promo-9x16-kk.mp4",
+    "render:solve": "remotion render src/index.ts Solve out/promo-solve-9x16.mp4"
   },
   "dependencies": {
     "@remotion/cli": "4.0.536",

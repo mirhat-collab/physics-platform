@@ -12,19 +12,19 @@ export const FPS = 30
 const S = { hook: 0, cube: 75, pyr: 255, fmt: 405, screens: 585, lang: 690, final: 765 }
 export const DURATION = 840
 
-const BG = '#04060c'
-const BLUE = '#3d7bff'
-const BLUE2 = '#7fb2ff'
-const WARM = '#ff8a4c'
-const GREEN = '#34d399'
-const TEXT = '#eef2fb'
-const TEXT2 = '#a9b3c7'
+export const BG = '#04060c'
+export const BLUE = '#3d7bff'
+export const BLUE2 = '#7fb2ff'
+export const WARM = '#ff8a4c'
+export const GREEN = '#34d399'
+export const TEXT = '#eef2fb'
+export const TEXT2 = '#a9b3c7'
 
-const ease = Easing.bezier(0.16, 1, 0.3, 1)
-const clamp = { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' } as const
+export const ease = Easing.bezier(0.16, 1, 0.3, 1)
+export const clamp = { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' } as const
 
 // Масштаб: всё считаем от короткой стороны кадра
-function useU() {
+export function useU() {
   const { width, height } = useVideoConfig()
   const tall = height / width > 1.2
   // На вертикальном видео (телефон) всё крупнее — там много места по высоте
@@ -32,7 +32,7 @@ function useU() {
 }
 
 // Плавный вход/выход сцены
-function useInOut(len: number, fade = 10) {
+export function useInOut(len: number, fade = 10) {
   const f = useCurrentFrame()
   return interpolate(f, [0, fade, len - fade, len], [0, 1, 1, 0], clamp)
 }
@@ -51,7 +51,7 @@ const GLOBE = (() => {
   return pts
 })()
 
-function Space({ globe }: { globe: { x: number; y: number; r: number; opacity: number } }) {
+export function Space({ globe }: { globe: { x: number; y: number; r: number; opacity: number } }) {
   const f = useCurrentFrame()
   const { width, height } = useVideoConfig()
   const rot = f * 0.008
@@ -79,14 +79,14 @@ function Space({ globe }: { globe: { x: number; y: number; r: number; opacity: n
 }
 
 // ---------- общие элементы ----------
-function Kicker({ children, delay = 0, color = BLUE2 }: { children: React.ReactNode; delay?: number; color?: string }) {
+export function Kicker({ children, delay = 0, color = BLUE2 }: { children: React.ReactNode; delay?: number; color?: string }) {
   const f = useCurrentFrame(); const { u } = useU()
   const o = interpolate(f - delay, [0, 12], [0, 1], clamp)
   return <div style={{ fontFamily: MONO, fontSize: 26 * u, letterSpacing: '0.18em', textTransform: 'uppercase', color, opacity: o, marginBottom: 22 * u }}>{children}</div>
 }
 
 // Заголовок: буквы выплывают из размытия
-function Split({ text, size, delay = 0, color = TEXT, glow = false }: { text: string; size: number; delay?: number; color?: string; glow?: boolean }) {
+export function Split({ text, size, delay = 0, color = TEXT, glow = false }: { text: string; size: number; delay?: number; color?: string; glow?: boolean }) {
   const f = useCurrentFrame()
   let k = 0
   return (
@@ -103,14 +103,14 @@ function Split({ text, size, delay = 0, color = TEXT, glow = false }: { text: st
   )
 }
 
-function Typed({ text, start, cps = 22, style }: { text: string; start: number; cps?: number; style?: React.CSSProperties }) {
+export function Typed({ text, start, cps = 22, style }: { text: string; start: number; cps?: number; style?: React.CSSProperties }) {
   const f = useCurrentFrame()
   const n = Math.max(0, Math.floor((f - start) * cps / FPS))
   const shown = text.slice(0, n), done = n >= text.length
   return <span style={style}>{shown}{!done && f >= start && <span style={{ opacity: Math.floor(f / 8) % 2 ? 0 : 1, color: BLUE2 }}>▍</span>}</span>
 }
 
-function Panel({ children, style }: { children: React.ReactNode; style?: React.CSSProperties }) {
+export function Panel({ children, style }: { children: React.ReactNode; style?: React.CSSProperties }) {
   const { u } = useU()
   return (
     <div style={{ borderRadius: 28 * u, border: '1px solid rgba(160,185,255,0.18)', background: 'linear-gradient(180deg, rgba(10,16,34,0.88), rgba(8,12,26,0.74))', boxShadow: '0 30px 80px -30px rgba(0,0,0,0.8), 0 0 0 1px rgba(61,123,255,0.06) inset', padding: 44 * u, ...style }}>
@@ -120,8 +120,8 @@ function Panel({ children, style }: { children: React.ReactNode; style?: React.C
 }
 
 // ---------- 3D: простая проекция в SVG ----------
-type P3 = [number, number, number]
-function project(p: P3, yaw: number, pitch: number, scale: number, cx: number, cy: number) {
+export type P3 = [number, number, number]
+export function project(p: P3, yaw: number, pitch: number, scale: number, cx: number, cy: number) {
   const [x, y, z] = p
   const x1 = x * Math.cos(yaw) - z * Math.sin(yaw), z1 = x * Math.sin(yaw) + z * Math.cos(yaw)
   const y2 = y * Math.cos(pitch) + z1 * Math.sin(pitch), z2 = -y * Math.sin(pitch) + z1 * Math.cos(pitch) // смотрим сверху
@@ -358,7 +358,7 @@ function Langs({ lang }: { lang: Lang }) {
   )
 }
 
-function Final({ lang }: { lang: Lang }) {
+export function Final({ lang }: { lang: Lang }) {
   const T = TEXTS[lang]; const f = useCurrentFrame(); const { u, wide } = useU()
   const p = spring({ frame: f, fps: FPS, config: { damping: 14 } })
   const shine = interpolate(f, [15, 45], [-30, 130], clamp)
