@@ -14,6 +14,12 @@ const l = (b: B | string): string => plain(typeof b === 'string' ? b : L(b[0], b
 
 export const G = 10 // g, м/с²
 
+// «в 4 раза», «в 9 раз», «в 12 раз»
+export const raz = (k: number): string => {
+  const a = Math.abs(Math.round(k)), d = a % 10, t = a % 100
+  return Number.isInteger(k) && d >= 2 && d <= 4 && (t < 12 || t > 14) ? 'раза' : 'раз'
+}
+
 // Расчётная задача: условие и решение на двух языках
 export function c(topic: string, gen: (n: number) => Generated): Template {
   return { topic, gen }
