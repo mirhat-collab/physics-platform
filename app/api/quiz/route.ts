@@ -61,7 +61,8 @@ export async function POST(req: NextRequest) {
     if (!topic) {
       return NextResponse.json({ error: 'Тема не найдена' }, { status: 404 })
     }
-    if (topic.quiz) {
+    // Старые квизы были по 4 вопроса — такие пересобираем до QUIZ_SIZE
+    if (Array.isArray(topic.quiz) && topic.quiz.length >= QUIZ_SIZE) {
       return NextResponse.json({ questions: await localizeQuiz(topicId, topic.quiz) })
     }
     const { name: topicName, theory, formulas, examples } = topic
@@ -99,7 +100,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Недостаточно материала для квиза' }, { status: 400 })
     }
 
-    const prompt = `На основе этого материала по физике составь 4 вопроса с вариантами ответа. Отвечай ТОЛЬКО в формате JSON массива (без лишнего текста, без markdown):
+    const prompt = `На основе этого материала по физике составь ${QUIZ_SIZE} разных вопросов с четырьмя вариантами ответа: и на понимание теории, и задачи на расчёт по формулам. Вопросы не должны повторяться. Отвечай ТОЛЬКО в формате JSON массива (без лишнего текста, без markdown):
 
 ${content}
 
@@ -118,7 +119,7 @@ ${content}
       body: JSON.stringify({
         model: 'openai/gpt-oss-20b',
         messages: [{ role: 'user', content: prompt }],
-        max_tokens: 1536,
+        max_tokens: 6144,
         temperature: 0.7
       })
     })
@@ -136,11 +137,18 @@ ${content}
       return NextResponse.json({ error: 'Не удалось разобрать ответ AI' }, { status: 500 })
     }
 
-    const questions = JSON.parse(jsonMatch[0])
+    const parsed: unknown = JSON.parse(jsonMatch[0])
+    const questions = (Array.isArray(parsed) ? parsed : []).filter(isQuestion)
+    if (!questions.length) {
+      return NextResponse.json({ error: 'Не удалось разобрать ответ AI' }, { status: 500 })
+    }
 
-    await admin.from('topics').update({ quiz: questions }).eq('id', topicId)
+    // Сохраняем, только если вопросов хватает: иначе в следующий раз пересоберём
+    if (questions.length >= QUIZ_SIZE) {
+      await admin.from('topics').update({ quiz: questions.slice(0, QUIZ_SIZE) }).eq('id', topicId)
+    }
 
-    return NextResponse.json({ questions: await localizeQuiz(topicId, questions) })
+    return NextResponse.json({ questions: await localizeQuiz(topicId, questions.slice(0, QUIZ_SIZE)) })
 
   } catch (err: any) {
     console.error('Quiz API error:', err) // Только на сервере
@@ -149,6 +157,15 @@ ${content}
 }
 
 type QuizQuestion = { question: string; options: string[]; correct: number }
+
+// Сколько вопросов в мини-тесте по теме
+const QUIZ_SIZE = 10
+
+function isQuestion(q: unknown): q is QuizQuestion {
+  const x = q as QuizQuestion
+  return !!x && typeof x.question === 'string' && x.question.trim() !== '' && Array.isArray(x.options) && x.options.length >= 2
+    && x.options.every(o => typeof o === 'string') && Number.isInteger(x.correct) && x.correct >= 0 && x.correct < x.options.length
+}
 
 // Квиз в базе хранится по-русски; для казахского переводим
 // его через ИИ (один раз, перевод кэшируется). При сбое ИИ — русский вариант.

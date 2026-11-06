@@ -143,3 +143,6 @@ export function circleFigure(points: { deg: number; name: string }[], chords: [n
 
 // Подпись оси с единицей: «v, м/с»
 export const axis = (sym: string, unit: string) => `${sym}, ${tr(unit)}`
+
+// Детали схем для рисунков готовых вариантов
+export const circuitParts = { resistor, wire, node, terminal }

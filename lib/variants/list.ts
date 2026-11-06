@@ -11,6 +11,8 @@ export const VARIANT_LIST: EntVariantInfo[] = [
   { id: 'math-2', subject: 'math', title: 'Вариант 2' },
   { id: 'physics-3', subject: 'physics', title: 'Вариант 3' },
   { id: 'math-3', subject: 'math', title: 'Вариант 3' },
+  { id: 'physics-4', subject: 'physics', title: 'Вариант 4 (пробник)' },
+  { id: 'math-4', subject: 'math', title: 'Вариант 4 (пробник)' },
 ]
 
 export const variantsOf = (subject: EntSubject) => VARIANT_LIST.filter(v => v.subject === subject)

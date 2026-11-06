@@ -388,7 +388,7 @@ export default function TopicPage() {
               <div className="ls-result" aria-live="polite">
                 <p className="try-verdict">{t('{a} из {b} правильно', { a: quizScore, b: quiz?.length ?? 0 })}</p>
                 <p className="ls-muted">
-                  {quizScore === 4 ? t('Отлично! Ты отлично знаешь тему!') : quizScore >= 3 ? t('Хорошо! Почти всё правильно!') : quizScore >= 2 ? t('Неплохо, но стоит повторить материал') : t('Советуем перечитать теорию ещё раз')}
+                  {quizScore === (quiz?.length ?? 0) ? t('Отлично! Ты отлично знаешь тему!') : quizScore >= 0.75 * (quiz?.length ?? 0) ? t('Хорошо! Почти всё правильно!') : quizScore >= 0.5 * (quiz?.length ?? 0) ? t('Неплохо, но стоит повторить материал') : t('Советуем перечитать теорию ещё раз')}
                 </p>
                 <button type="button" className="btn btn-ghost" onClick={() => { setQuizAnswers(new Array(quiz?.length ?? 0).fill(null)); setQuizDone(false) }}>
                   {t('Пройти снова')}
