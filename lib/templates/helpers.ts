@@ -25,6 +25,11 @@ export function withLocale<T>(l: Locale, fn: () => T): T {
   try { return fn() } finally { locale = prev }
 }
 
+// Язык текущей генерации (для двуязычных шаблонов, где перевод написан рядом)
+export function currentLocale(): Locale {
+  return locale
+}
+
 // Строка с подстановками: tl('Скорость ⟪0⟫ м/с', [v])
 export function tl(key: string, values: unknown[]): string {
   return contentFormat(locale, key, values)
