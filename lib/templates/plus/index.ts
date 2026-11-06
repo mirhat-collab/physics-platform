@@ -7,6 +7,7 @@ import { PLUS_HYDRO } from './phys-hydro'
 import { PLUS_MOLECULAR } from './phys-molecular'
 import { PLUS_ELECTRO } from './phys-electro'
 import { PLUS_MAGNET } from './phys-magnet'
+import { PLUS_WAVES } from './phys-waves'
 
-export const PHYSICS_PLUS: Template[] = [...PLUS_KINEMATICS, ...PLUS_DYNAMICS, ...PLUS_HYDRO, ...PLUS_MOLECULAR, ...PLUS_ELECTRO, ...PLUS_MAGNET]
+export const PHYSICS_PLUS: Template[] = [...PLUS_KINEMATICS, ...PLUS_DYNAMICS, ...PLUS_HYDRO, ...PLUS_MOLECULAR, ...PLUS_ELECTRO, ...PLUS_MAGNET, ...PLUS_WAVES]
 export const MATH_PLUS: Template[] = []
