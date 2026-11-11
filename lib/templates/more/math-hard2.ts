@@ -166,7 +166,7 @@ const INEQUALITIES: Template[] = [
       lt`Нужно $x \\ge ${b}$. Тогда возводим в квадрат: $x + ${a} \\le (x - ${b})^2$, $${poly([1, -(2 * b + 1), b * b - a])} \\ge 0$, корни $${b + 1 - t}$ и $${b + t}$. С учётом $x \\ge ${b}$: $x \\ge ${b + t}$.`)
   }),
   calc('Системы неравенств', n => {
-    const p = rnd(-5, 0), q = p + rnd(4, 8), a = rnd(1, 6), b = rnd(-2, 8)
+    const p = rnd(-5, -1), q0 = p + rnd(4, 8), q = q0 === 0 ? 1 : q0, a = rnd(1, 6), b = rnd(-2, 8)
     const bound = (b - a) / 2
     let cnt = 0
     for (let x = p + 1; x < q; x++) if (x >= bound) cnt++

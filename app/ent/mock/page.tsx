@@ -15,7 +15,7 @@ import { useT } from '@/app/components/LanguageProvider'
 import { mockResult } from '@/lib/mock-result'
 import PracticeTools from '../PracticeTools'
 import { plainMath as plainOption } from '@/lib/plain-math'
-import { variantsOf } from '@/lib/variants/list'
+import { HARD_VARIANTS, hardVariantId, variantsOf } from '@/lib/variants/list'
 
 type Turn = { role: 'user' | 'assistant'; content: string }
 type Saved = { subject: EntSubject; questions: EntQuestion[]; answers: MockAnswer[]; endAt: number }
@@ -244,6 +244,15 @@ export default function MockEntPage() {
               </div>
             </>
           )}
+          <div className="label" style={{ marginTop: 18 }}>{t('Сложные варианты')}</div>
+          <div style={{ color: 'var(--muted)', fontSize: 13, marginBottom: 8 }}>{t('Все 40 заданий — уровня C: задачи в несколько действий. Для тех, кто идёт на высокий балл.')}</div>
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+            {HARD_VARIANTS.map(no => (
+              <button key={no} className="btn btn-ghost" onClick={() => start(hardVariantId(subject, no))} disabled={phase === 'loading'}>
+                <Icon name="flame" size={18} /> {t('Сложный вариант {n}', { n: no })}
+              </button>
+            ))}
+          </div>
           {error && <div style={{ color: 'var(--bad)', fontSize: 14, marginTop: 10 }}>{error}</div>}
         </div>
 

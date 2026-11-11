@@ -157,3 +157,38 @@ test('«несколько ответов»: не из задач, где усл
     for (const q of buildMock(s, 'ru')) if (q.kind === 'multi') assert.ok(!needsUnit(q.question), q.question)
   }
 })
+
+test('сложные варианты: 40 заданий в формате НЦТ, постоянные и одинаковые на двух языках', async () => {
+  const { buildHardVariant } = await import('@/lib/mock-build')
+  const { HARD_VARIANTS, hardVariantId, parseHardVariant } = await import('@/lib/variants/list')
+  const { MOCK: M, mockFormat: fmt } = await import('@/lib/ent')
+  const { mockResult } = await import('@/lib/mock-result')
+  for (const s of ['physics', 'math'] as const) {
+    const firsts = new Set<string>()
+    for (const no of HARD_VARIANTS) {
+      assert.equal(parseHardVariant(hardVariantId(s, no), s), no)
+      const ru = buildHardVariant(s, no, 'ru')
+      // Между сборками — обычный вариант: он не должен влиять на сложный
+      buildMock(s, 'kk')
+      const again = buildHardVariant(s, no, 'ru'), kk = buildHardVariant(s, no, 'kk')
+      assert.deepEqual(again, ru, `${s} ${no}: вариант меняется от сборки к сборке`)
+      assert.equal(ru.length, M.count)
+      ru.forEach((q, i) => {
+        const where = `${s}-hard-${no} №${i + 1}`
+        assert.equal(q.kind ?? 'single', fmt(i), where)
+        assert.equal(new Set(q.options).size, q.options.length, where)
+        assert.deepEqual([kk[i].topic, kk[i].correct, kk[i].answers, kk[i].pairs, kk[i].options.length], [q.topic, q.correct, q.answers, q.pairs, q.options.length], `${where}: ru и kk расходятся`)
+        const nums = (x: string) => (x.match(/\d+/g) || []).sort().join(' ')
+        assert.equal(nums(kk[i].question), nums(q.question), `${where}: числа в переводе`)
+      })
+      const texts = ru.flatMap(q => (q.kind === 'match' ? q.left! : [q.question]))
+      assert.equal(new Set(texts).size, texts.length, `${s} ${no}: повтор условий`)
+      const right = ru.map(q => (q.kind === 'multi' ? q.answers! : q.kind === 'match' ? q.pairs! : q.correct))
+      assert.equal(mockResult(s, ru, right).score, 50)
+      firsts.add(ru.map(q => q.question).join('|'))
+    }
+    assert.equal(firsts.size, HARD_VARIANTS.length, `${s}: варианты совпадают`)
+    assert.equal(parseHardVariant(`${s}-hard-9`, s), null)
+    assert.equal(parseHardVariant(`${s === 'math' ? 'physics' : 'math'}-hard-1`, s), null)
+  }
+})

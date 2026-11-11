@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { ENT_SUBJECTS, type EntSubject } from '@/lib/ent'
-import { buildMock } from '@/lib/mock-build'
+import { buildHardVariant, buildMock } from '@/lib/mock-build'
+import { parseHardVariant } from '@/lib/variants/list'
 import { getLocale } from '@/lib/i18n/server'
 import { findVariant, variantQuestions } from '@/lib/variants'
 
@@ -11,6 +12,15 @@ export async function POST(req: NextRequest) {
   const subject = body?.subject as EntSubject
   if (!ENT_SUBJECTS[subject]) return NextResponse.json({ error: 'Неверные параметры' }, { status: 400 })
   if (body?.variant) {
+    const hard = parseHardVariant(body.variant, subject)
+    if (hard) {
+      try {
+        return NextResponse.json({ questions: buildHardVariant(subject, hard, await getLocale()) })
+      } catch (err) {
+        console.error('hard variant build:', err)
+        return NextResponse.json({ error: 'Не удалось подготовить задания, попробуй ещё раз' }, { status: 502 })
+      }
+    }
     const v = findVariant(body.variant)
     if (!v || v.subject !== subject) return NextResponse.json({ error: 'Неверные параметры' }, { status: 400 })
     return NextResponse.json({ questions: variantQuestions(v, await getLocale()) })

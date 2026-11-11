@@ -14,6 +14,7 @@ import { ENT_SPEC, type SpecTopic } from './ent-spec'
 import { generateFromTemplate, topicKinds, type TemplateKind } from './templates'
 import { buildMatch, buildMulti } from './mock-formats'
 import type { Locale } from './i18n'
+import { withSeed } from './seeded'
 
 export const MOCK_THEORY = 3
 
@@ -28,8 +29,9 @@ function shuffled<T>(arr: T[]): T[] {
   return a
 }
 
-function slotKind(index: number): TemplateKind {
-  return mockLevel(index) === 'C' && mockFormat(index) === 'multi' ? 'hard' : 'calc'
+// hard — «сложный вариант»: на всех местах задачи в несколько действий
+function slotKind(index: number, hard = false): TemplateKind {
+  return hard || (mockLevel(index) === 'C' && mockFormat(index) === 'multi') ? 'hard' : 'calc'
 }
 
 // Годится ли тема для «нескольких ответов»: у ответа часто есть вторая запись
@@ -41,11 +43,16 @@ export function multiCapable(subject: EntSubject, topic: string, kind: TemplateK
   const key = `${subject}|${topic}|${kind}`
   let v = multiCache.get(key)
   if (v === undefined) {
-    let ok = 0
-    for (let i = 0; i < CAPABLE_TRIES; i++) {
-      const g = generateFromTemplate(subject, topic, 5, 'ru', kind === 'hard' ? 'hard' : 'ent', kind)
-      if (g && buildMulti(g, subject, 'ru')) ok++
-    }
+    // Своя последовательность случайных чисел: проба не должна сбивать
+    // воспроизводимую сборку «сложных вариантов»
+    const ok = withSeed(101, () => {
+      let n = 0
+      for (let i = 0; i < CAPABLE_TRIES; i++) {
+        const g = generateFromTemplate(subject, topic, 5, 'ru', kind === 'hard' ? 'hard' : 'ent', kind)
+        if (g && buildMulti(g, subject, 'ru')) n++
+      }
+      return n
+    })
     v = ok >= CAPABLE_TRIES / 2
     multiCache.set(key, v)
   }
@@ -59,11 +66,14 @@ export function matchCapable(subject: EntSubject, topic: string): boolean {
   const key = `${subject}|${topic}`
   let v = matchCache.get(key)
   if (v === undefined) {
-    let ok = 0
-    for (let i = 0; i < CAPABLE_TRIES; i++) {
-      const gs = Array.from({ length: MATCH_ITEMS }, () => generateFromTemplate(subject, topic, 4, 'ru', 'ent', 'calc')).filter(g => !!g)
-      if (buildMatch(gs, 'ru')) ok++
-    }
+    const ok = withSeed(202, () => {
+      let n = 0
+      for (let i = 0; i < CAPABLE_TRIES; i++) {
+        const gs = Array.from({ length: MATCH_ITEMS }, () => generateFromTemplate(subject, topic, 4, 'ru', 'ent', 'calc')).filter(g => !!g)
+        if (buildMatch(gs, 'ru')) n++
+      }
+      return n
+    })
     v = ok >= CAPABLE_TRIES / 2
     matchCache.set(key, v)
   }
@@ -71,7 +81,7 @@ export function matchCapable(subject: EntSubject, topic: string): boolean {
 }
 
 // План варианта: тема тренажёра и вид задания для каждого из 40 мест
-export function mockPlan(subject: EntSubject): MockSlot[] {
+export function mockPlan(subject: EntSubject, hard = false): MockSlot[] {
   const spec = ENT_SPEC[subject]
   const kinds = (topic: string) => topicKinds(subject, topic)
   // Темы спецификации только с теорией (например, нанотехнологии) — по одному разу,
@@ -84,7 +94,7 @@ export function mockPlan(subject: EntSubject): MockSlot[] {
   }
   const entries: SpecTopic[] = shuffled(spec.flatMap((st, i) => Array(counts[i]).fill(st)))
 
-  const kind: TemplateKind[] = Array.from({ length: MOCK.count }, (_, i) => slotKind(i))
+  const kind: TemplateKind[] = Array.from({ length: MOCK.count }, (_, i) => slotKind(i, hard))
   const assigned: (SpecTopic | null)[] = Array(MOCK.count).fill(null)
   const take = (i: number, ok: (st: SpecTopic) => boolean) => {
     const k = entries.findIndex(ok)
@@ -109,7 +119,7 @@ export function mockPlan(subject: EntSubject): MockSlot[] {
   // Немного теории — на случайные места уровня A, где у темы она есть,
   // и каждый раз из другой темы спецификации
   for (const i of levelA) {
-    if (withTheory.size >= MOCK_THEORY) break
+    if (hard || withTheory.size >= MOCK_THEORY) break
     const st = assigned[i]!
     if (!withTheory.has(st) && st.ours.some(t => kinds(t).theory)) { kind[i] = 'theory'; withTheory.add(st) }
   }
@@ -139,13 +149,18 @@ function shuffleOptions(q: EntQuestion): EntQuestion {
 }
 
 // Вариант целиком: 40 заданий по плану, без повторов условий
-export function buildMock(subject: EntSubject, locale: Locale): EntQuestion[] {
-  const plan = mockPlan(subject)
+// hard — «сложный вариант»: все задания уровня C (в несколько действий)
+export function buildMock(subject: EntSubject, locale: Locale, opts: { hard?: boolean } = {}): EntQuestion[] {
+  const plan = mockPlan(subject, opts.hard)
   const seen = new Set<string>()
+  // Один шаблон — один раз за вариант (с другими числами задача та же по сути).
+  // Первые попытки берём только новые шаблоны, дальше — что есть.
+  const usedKeys = new Set<string>()
+  const fresh = (g: { key?: string } | null, attempt: number, limit: number) => !g?.key || attempt >= limit || !usedKeys.has(g.key)
   const out: EntQuestion[] = []
   const withTopic = (q: EntQuestion, topic: string): EntQuestion => ({ ...q, section: sectionOfTopic(subject, topic) ?? undefined, topic })
   plan.forEach(({ topic, kind }, i) => {
-    const level = mockLevel(i)
+    const level = opts.hard ? 'C' : mockLevel(i)
     const format = mockFormat(i)
     const difficulty = level === 'C' && format !== 'match' ? 'hard' : 'ent'
     const tl = level === 'A' ? 'base' : difficulty
@@ -153,14 +168,15 @@ export function buildMock(subject: EntSubject, locale: Locale): EntQuestion[] {
     if (format === 'multi') {
       for (let attempt = 0; attempt < 40 && !q; attempt++) {
         const g = generateFromTemplate(subject, topic, 5, locale, tl, kind)
-        const m = g && !seen.has(g.question) ? buildMulti(g, subject, locale) : null
-        if (m) q = withTopic(m, topic)
+        const m = g && !seen.has(g.question) && fresh(g, attempt, 25) ? buildMulti(g, subject, locale) : null
+        if (m) { q = withTopic(m, topic); if (g!.key) usedKeys.add(g!.key) }
       }
     } else if (format === 'match') {
       for (let attempt = 0; attempt < 40 && !q; attempt++) {
         const gs = Array.from({ length: MATCH_ITEMS }, () => generateFromTemplate(subject, topic, 4, locale, 'ent', 'calc')).filter(g => !!g)
-        const m = gs.length === MATCH_ITEMS && gs.every(g => !seen.has(g.question)) ? buildMatch(gs, locale) : null
-        if (m) q = withTopic(m, topic)
+        const distinct = new Set(gs.map(g => g.key)).size === gs.length || attempt >= 25
+        const m = gs.length === MATCH_ITEMS && distinct && gs.every(g => !seen.has(g.question) && fresh(g, attempt, 25)) ? buildMatch(gs, locale) : null
+        if (m) { q = withTopic(m, topic); for (const g of gs) if (g.key) usedKeys.add(g.key) }
       }
     }
     if (!q) {
@@ -172,14 +188,23 @@ export function buildMock(subject: EntSubject, locale: Locale): EntQuestion[] {
         if (!g) break
         const cand = withTopic({ question: g.question, options: g.options, correct: g.correct, solution: g.solution, ...(g.figure ? { figure: g.figure } : {}), ...(g.key ? { key: g.key } : {}) }, topic)
         if (!valid(cand, n)) continue
+        if (!fresh(g, attempt, 8) && q) continue
         q = shuffleOptions(cand)
-        if (!seen.has(g.question)) break
+        if (!seen.has(g.question) && fresh(g, attempt, 8)) break
       }
     }
     if (!q) throw new Error(`Нет задания для темы «${topic}»`)
+    if (q.key) usedKeys.add(q.key)
     seen.add(q.question)
     for (const l of q.left ?? []) seen.add(l)
     out.push(q)
   })
   return out
+}
+
+// «Сложные варианты»: вариант целиком из заданий уровня C. Номер варианта
+// задаёт начальное значение случайных чисел, поэтому задания в нём одни и те
+// же для всех учеников и на обоих языках (меняются только с обновлением банка).
+export function buildHardVariant(subject: EntSubject, no: number, locale: Locale): EntQuestion[] {
+  return withSeed(7919 * no + (subject === 'math' ? 104729 : 1299709), () => buildMock(subject, locale, { hard: true }))
 }
