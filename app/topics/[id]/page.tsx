@@ -41,7 +41,7 @@ function FormulaBlock({ text }: { text: string }) {
         try {
           html = katex.renderToString(line.trim(), { throwOnError: false, displayMode: true })
         } catch {
-          html = `<span style="font-family:monospace">${line}</span>`
+          html = `<span style="font-family:monospace">${line.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')}</span>`
         }
         return (
           <div key={i} className="ls-formula"

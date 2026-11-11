@@ -68,12 +68,12 @@ export default function ParentPage() {
     setLinking(true)
     setLinkMsg('')
     // Чужие профили родителю не видны — ищем одного ученика по точной почте
-    const { data: found } = await supabase.rpc('find_student_by_email', { p_email: linkEmail.trim() })
+    // Связь создаёт функция в базе: напрямую в parent_links писать нельзя,
+    // иначе можно было бы привязать к себе любого ученика, не зная его почты
+    const { data: found, error } = await supabase.rpc('link_child_by_email', { p_email: linkEmail.trim() })
     const student = ((found || []) as Student[])[0] ?? null
-    if (!student) { setLinkMsg(t('Ученик с таким email не найден')); setLinking(false); return }
-    const { data: existing } = await supabase.from('parent_links').select('id').eq('parent_id', userId).eq('student_id', student.id).maybeSingle()
-    if (existing) { setLinkMsg(t('Этот ученик уже привязан')); setLinking(false); return }
-    await supabase.from('parent_links').insert({ parent_id: userId, student_id: student.id })
+    if (error || !student) { setLinkMsg(t('Ученик с таким email не найден')); setLinking(false); return }
+    if (students.some(s => s.id === student.id)) { setLinkMsg(t('Этот ученик уже привязан')); setLinking(false); return }
     setStudents([...students, student])
     setLinkEmail('')
     setLinkMsg(t('Ученик успешно привязан!'))

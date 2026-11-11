@@ -3,7 +3,8 @@ import { createSupabaseAdmin } from '@/lib/supabase-admin'
 import { requireStaff } from '@/lib/admin-auth'
 import { BANK_IMAGE_BUCKET } from '@/lib/bank-image'
 
-const EXT = ['png', 'jpg', 'jpeg', 'webp', 'gif', 'svg']
+// SVG не принимаем: в нём может быть скрипт, а файл лежит в публичном хранилище
+const EXT = ['png', 'jpg', 'jpeg', 'webp', 'gif']
 
 // Рисунок к задаче банка: выдаём подписанную ссылку, браузер грузит файл
 // прямо в Supabase Storage (в обход лимита Vercel на размер запроса)
@@ -12,7 +13,7 @@ export async function POST(req: NextRequest) {
   if (denied) return denied
   const { name } = await req.json().catch(() => ({ name: null }))
   const ext = typeof name === 'string' && name.includes('.') ? name.split('.').pop()!.toLowerCase() : ''
-  if (!EXT.includes(ext)) return NextResponse.json({ error: 'Нужна картинка: PNG, JPG, WEBP, GIF или SVG' }, { status: 400 })
+  if (!EXT.includes(ext)) return NextResponse.json({ error: 'Нужна картинка: PNG, JPG, WEBP или GIF' }, { status: 400 })
   const path = `bank/${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`
   try {
     const admin = createSupabaseAdmin()
