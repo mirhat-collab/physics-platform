@@ -146,8 +146,9 @@ const NUMBERS: Template[] = [
 const EQUATIONS: Template[] = [
   calc('Линейные уравнения', n => {
     const [k, m] = pick([[4, 3], [5, 3], [3, 2], [4, 2]])
-    let S = rnd(6, 15)
-    while ((S * (k - m)) % (m - 1)) S++
+    let S = rnd(6, 10)
+    // «через … лет»: число лет от 5 до 20, чтобы слово согласовалось
+    while ((S * (k - m)) % (m - 1) || S * (k - m) / (m - 1) < 5) S++
     const y = S * (k - m) / (m - 1)
     return num(lt`Отцу сейчас в ${k} раз${k < 5 ? 'а' : ''} больше лет, чем сыну, а через ${y} лет будет больше в ${m} раза. Сколько лет отцу сейчас?`,
       k * S, [S, m * S, k * S + y], n, '',
@@ -309,7 +310,7 @@ const INEQUALITIES: Template[] = [
       lt`$x^2 \\le ${m * m} \\Leftrightarrow -${m} \\le x \\le ${m}$. С учётом $x > ${a}$: целые от $${a + 1}$ до $${m}$, их ${cnt}.`)
   }),
   calc('Системы неравенств', n => {
-    const a = rnd(-4, 2), b = a + rnd(3, 7), c = rnd(a - 1, b - 1)
+    const a = rnd(-4, 2) || 1, b0 = a + rnd(3, 7), b = b0 === 0 ? 1 : b0, c = rnd(a - 1, b - 1)
     let cnt = 0
     for (let x = a; x < b; x++) if (x >= c) cnt++
     return num(lt`Сколько целых решений имеет система $\\begin{cases} \\frac{x ${signed(-a)}}{x ${signed(-b)}} \\le 0 \\\\ x \\ge ${c} \\end{cases}$?`,

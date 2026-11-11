@@ -16,3 +16,13 @@ export const VARIANT_LIST: EntVariantInfo[] = [
 ]
 
 export const variantsOf = (subject: EntSubject) => VARIANT_LIST.filter(v => v.subject === subject)
+
+// Сложные варианты: собираются из заданий уровня C банка (в несколько
+// действий), набор заданий в каждом постоянный
+export const HARD_VARIANTS = [1, 2, 3] as const
+export const hardVariantId = (subject: EntSubject, no: number) => `${subject}-hard-${no}`
+export function parseHardVariant(id: unknown, subject: EntSubject): number | null {
+  const m = typeof id === 'string' ? /^(physics|math)-hard-(\d)$/.exec(id) : null
+  const no = m && m[1] === subject ? Number(m[2]) : 0
+  return (HARD_VARIANTS as readonly number[]).includes(no) ? no : null
+}
