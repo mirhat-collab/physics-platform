@@ -254,8 +254,8 @@ export default function BankPage() {
               </div>
             ) : (
               <label style={{ ...linkBtn, display: 'inline-flex', gap: 6, alignItems: 'center' }}>
-                <Icon name="image" size="1em" /> {uploading ? t('Загружаю…') : t('Добавить рисунок (PNG, JPG, SVG)')}
-                <input type="file" accept="image/png,image/jpeg,image/webp,image/gif,image/svg+xml" style={{ display: 'none' }} disabled={uploading}
+                <Icon name="image" size="1em" /> {uploading ? t('Загружаю…') : t('Добавить рисунок (PNG, JPG)')}
+                <input type="file" accept="image/png,image/jpeg,image/webp,image/gif" style={{ display: 'none' }} disabled={uploading}
                   onChange={e => { const f = e.target.files?.[0]; if (f) uploadImage(f); e.target.value = '' }} />
               </label>
             )}
