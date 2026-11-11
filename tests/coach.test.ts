@@ -1,6 +1,6 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { dailyPlan, forecast, gains, practiceStreak, sectionWeights, weekProgress } from '@/lib/coach'
+import { dailyPlan, forecast, gains, practiceStreak, sectionWeights, topicMastery, weekProgress } from '@/lib/coach'
 import { ENT_SPEC } from '@/lib/ent-spec'
 import { kzDate } from '@/lib/streak'
 import type { LogRow } from '@/lib/stats'
@@ -61,4 +61,20 @@ test('серия дней и неделя', () => {
   assert.equal(w.solved, 2)
   assert.equal(w.byDay.length, 7)
   assert.ok(Date.now() - new Date(at(0)).getTime() < DAY * 2)
+})
+
+test('владение темой: свежие ответы весят больше; давно освоенная тема — «освежить»', () => {
+  const [a, b] = topics
+  const rows = [
+    ...Array.from({ length: 6 }, () => row(a, true, 20)), // освоена, но давно
+    ...Array.from({ length: 4 }, () => row(b, false, 40)), row(b, true, 1), row(b, true, 1), row(b, true, 1),
+  ]
+  const m = Object.fromEntries(topicMastery(rows, 'physics').map(x => [x.topic, x]))
+  assert.ok(m[a].mastery > 0.8)
+  assert.ok(m[a].daysSince >= 19)
+  // У b больше неверных ответов, но они старые — владение выше 50%
+  assert.ok(m[b].mastery > 0.5)
+  const plan = dailyPlan(rows, 'physics')
+  const refresh = plan.find(p => p.kind === 'refresh')
+  assert.ok(refresh && refresh.topics.includes(a) && !refresh.topics.includes(b))
 })

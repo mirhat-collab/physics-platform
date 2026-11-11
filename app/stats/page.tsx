@@ -94,7 +94,7 @@ export default function StatsPage() {
     setRetry(r => ({ ...r, [m.id]: choice }))
     // Повторное решение тоже идёт в статистику — так видно, что ученик исправился
     const ok = choice === m.payload.correct
-    logAnswers([{ source: 'ent', subject: m.subject, section: m.section, topic: m.topic, correct: ok, payload: ok ? null : { ...m.payload, chosen: choice } }])
+    logAnswers([{ source: 'ent', subject: m.subject, section: m.section, topic: m.topic, correct: ok, task_key: m.payload.key ?? null, payload: ok ? null : { ...m.payload, chosen: choice } }])
   }
 
   if (loading) return (

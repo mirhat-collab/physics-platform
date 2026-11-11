@@ -3,7 +3,8 @@ import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
 import { sectionNames, sectionOfTopic, solutionHints, solutionSteps, topicsOf, ENT_BATCH, ENT_COUNTS, ENT_DIFFICULTIES, ENT_SUBJECTS, type EntDifficulty, type EntQuestion, type EntSubject } from '@/lib/ent'
-import { sectionStats, type LogRow } from '@/lib/stats'
+import type { LogRow } from '@/lib/stats'
+import { topicMastery } from '@/lib/coach'
 import Figure from '@/app/components/Figure'
 import MathText, { MathLine } from '@/app/components/MathText'
 import Icon from '@/app/components/Icon'
@@ -13,6 +14,7 @@ import PracticeTools from './PracticeTools'
 import QuestionBody, { LETTERS, SKIPPED } from './QuestionBody'
 import { entMistakePayload, logAnswers } from '@/lib/answer-log'
 import EntCoach from '@/app/components/EntCoach'
+import ReportTask from '@/app/components/ReportTask'
 import { useT } from '@/app/components/LanguageProvider'
 
 type Turn = { role: 'user' | 'assistant'; content: string }
@@ -158,9 +160,11 @@ export default function EntPage() {
       .eq('user_id', user.id).eq('source', 'ent').eq('subject', subject).gte('created_at', since)
       .order('created_at', { ascending: false }).limit(1000)
     const rows = (data || []) as LogRow[]
-    const stats = sectionStats(rows).filter(x => x.topic && sectionOfTopic(subject, x.topic))
-    const weak = stats.filter(x => x.total >= 2 && x.accuracy < 0.7)
-      .sort((a, b) => a.accuracy - b.accuracy || b.wrong - a.wrong).slice(0, 6).map(x => x.topic!)
+    // Владение темой: свежие ответы весят больше старых, поэтому исправленная
+    // недавно тема не считается слабой из-за давних ошибок
+    const stats = topicMastery(rows, subject).filter(x => sectionOfTopic(subject, x.topic))
+    const weak = stats.filter(x => x.answers >= 2 && x.mastery < 0.65)
+      .sort((a, b) => a.mastery - b.mastery || b.answers - a.answers).slice(0, 6).map(x => x.topic)
     const seen = new Set(stats.map(x => x.topic))
     const fresh = ENT_SUBJECTS[subject].sections.flatMap(x => x.topics).filter(x => !seen.has(x))
       .sort(() => Math.random() - 0.5).slice(0, Math.max(0, 5 - weak.length))
@@ -222,6 +226,7 @@ export default function EntPage() {
       section: q.section ?? (testSection !== 'all' ? testSection : null),
       topic: q.topic ?? (topics.length === 1 ? topics[0] : null),
       correct: ok,
+      task_key: q.key ?? null,
       payload: ok ? null : { ...entMistakePayload(q, choice === SKIPPED ? null : choice) },
     }])
     if (repair && q.topic && q.topic in needRef.current) {
@@ -499,6 +504,7 @@ export default function EntPage() {
                       <Explain q={q} chosen={a === SKIPPED ? null : a} turns={dialogs[i] || []} setTurns={t => setDialogs(d => ({ ...d, [i]: t }))} />
                     </div>
                     {!ok && <PracticeTools q={q} subject={subject} />}
+                    <div style={{ marginTop: 10 }}><ReportTask q={q} subject={subject} /></div>
                   </div>
                 )}
               </div>
@@ -643,10 +649,14 @@ export default function EntPage() {
                 </div>
               )}
               <Explain q={q} chosen={chosen === SKIPPED ? null : chosen} turns={dialogs[index] || []} setTurns={t => setDialogs(d => ({ ...d, [index]: t }))} />
+              {/* Закрепить сразу: похожая задача той же темы, пока разбор перед глазами */}
+              <PracticeTools key={index} q={q} subject={subject} retry={false} />
             </>
           )}
 
           <Link href={referenceHref(subject, q)} target="_blank" style={{ fontSize: 14, color: 'var(--accent)' }}><Icon name="book" size="1em" /> {t('Повторить теорию по теме «{topic}»', { topic: t(q.topic || q.section || '') })}</Link>
+
+          <ReportTask key={`r${index}`} q={q} subject={subject} />
 
           <button className="btn" onClick={next}>
             {index + 1 < total ? t('Следующее задание') : t('Завершить')} <Icon name="arrowRight" size={18} />

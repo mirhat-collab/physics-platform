@@ -8,6 +8,7 @@ import { useT } from '@/app/components/LanguageProvider'
 import MediaUploader, { fileIcon, type MediaItem } from '@/app/components/MediaUploader'
 import MaterialsAdmin from '@/app/components/MaterialsAdmin'
 import AdminStats from '@/app/components/AdminStats'
+import QualityAdmin from '@/app/components/QualityAdmin'
 import Icon from '@/app/components/Icon'
 
 
@@ -31,7 +32,7 @@ export default function AdminPage() {
   const [isAdmin, setIsAdmin] = useState(false)
   const [classes, setClasses] = useState<Class[]>([])
   const [topics, setTopics] = useState<Topic[]>([])
-  const [tab, setTab] = useState<'classes' | 'topics' | 'materials' | 'stats'>('classes')
+  const [tab, setTab] = useState<'classes' | 'topics' | 'materials' | 'stats' | 'quality'>('classes')
   const [materialCount, setMaterialCount] = useState<number | null>(null)
   const [newClass, setNewClass] = useState({ name: '', program: '' })
   const [accessClass, setAccessClass] = useState<Class | null>(null)
@@ -256,6 +257,7 @@ export default function AdminPage() {
             ['topics', `${t('Темы')} (${topics.length})`],
             ['materials', `${t('Справочник ЕНТ')}${materialCount !== null ? ` (${materialCount})` : ''}`],
             ['stats', t('Статистика')],
+            ['quality', t('Качество заданий')],
           ] as const).map(([key, label]) => (
             <button key={key} role="tab" aria-selected={tab === key} className={tab === key ? 'on' : ''} onClick={() => setTab(key)}>{label}</button>
           ))}
@@ -263,6 +265,7 @@ export default function AdminPage() {
 
         {tab === 'materials' && <MaterialsAdmin onCount={setMaterialCount} />}
         {tab === 'stats' && <AdminStats />}
+        {tab === 'quality' && <QualityAdmin />}
 
         {tab === 'classes' && (
           <div>

@@ -9,6 +9,7 @@ import { generateFromTemplate, type TemplateLevel } from '@/lib/templates'
 import { AI_LANGUAGE, type Locale } from '@/lib/i18n'
 import { getLocale } from '@/lib/i18n/server'
 import { translateFields } from '@/lib/translate'
+import { bankFigure } from '@/lib/bank-image'
 
 export const maxDuration = 120
 
@@ -36,7 +37,10 @@ const SYSTEM = `Ты — опытный составитель заданий Е
 "correct" — индекс правильного варианта, с нуля. "topic" — точное название темы из запроса.`
 
 type Slot = { section: string; topic: string; q?: EntQuestion }
-type BankRow = { id: number; section: string | null; topic: string | null; question: string; options: string[]; correct: number; solution: string | null }
+type BankRow = {
+  id: number; section: string | null; topic: string | null; question: string; options: string[]; correct: number; solution: string | null
+  question_kk?: string | null; options_kk?: string[] | null; solution_kk?: string | null; image_url?: string | null
+}
 
 function shuffle<T>(arr: T[]): T[] {
   const a = [...arr]
@@ -84,11 +88,15 @@ function fromTemplate(subject: EntSubject, slot: Slot, nOptions: number, locale:
 
 async function loadBank(subject: EntSubject, sections: string[], difficulty: EntDifficulty, exclude: number[]): Promise<BankRow[]> {
   const supabase = await createSupabaseServer()
-  let query = supabase.from('ent_bank').select('id, section, topic, question, options, correct, solution')
-    .eq('subject', subject).eq('difficulty', difficulty).limit(500)
-  if (sections.length) query = query.in('section', sections)
-  const { data } = await query
-  return shuffle(((data || []) as BankRow[]).filter(r => !exclude.includes(r.id)))
+  const build = (cols: string) => {
+    let query = supabase.from('ent_bank').select(cols).eq('subject', subject).eq('difficulty', difficulty).limit(500)
+    if (sections.length) query = query.in('section', sections)
+    return query
+  }
+  const full = await build('id, section, topic, question, options, correct, solution, question_kk, options_kk, solution_kk, image_url')
+  // Новых колонок может не быть, пока миграция не применена
+  const { data } = full.error ? await build('id, section, topic, question, options, correct, solution') : full
+  return shuffle(((data || []) as unknown as BankRow[]).filter(r => !exclude.includes(r.id)))
 }
 
 async function fillWithAi(subject: EntSubject, difficulty: EntDifficulty, slots: Slot[], locale: Locale): Promise<void> {
@@ -166,7 +174,14 @@ export async function POST(req: NextRequest) {
       const idx = bank.findIndex(b => b.topic ? b.topic === slot.topic : b.section === slot.section)
       if (idx >= 0) {
         const b = bank.splice(idx, 1)[0]
-        slot.q = { question: b.question, options: b.options, correct: b.correct, solution: b.solution || '', section: slot.section, topic: slot.topic, bankId: b.id }
+        // Казахская версия, если её добавил учитель; иначе — перевод ИИ (ниже)
+        const kk = locale === 'kk' && b.question_kk?.trim() && Array.isArray(b.options_kk) && b.options_kk.length === b.options.length
+        const figure = bankFigure(b.image_url)
+        slot.q = {
+          question: kk ? b.question_kk! : b.question, options: kk ? b.options_kk! : b.options, correct: b.correct,
+          solution: (kk ? b.solution_kk : b.solution) || b.solution || '', section: slot.section, topic: slot.topic,
+          bankId: b.id, key: `b:${b.id}`, ...(figure ? { figure } : {}), ...(kk ? { localized: true } : {}),
+        }
       }
     }
     if (!slot.q) aiSlots.push(slot)
@@ -200,7 +215,7 @@ export async function POST(req: NextRequest) {
 async function localizeBank(slots: Slot[], locale: Exclude<Locale, 'ru'>): Promise<void> {
   await Promise.all(slots.map(async slot => {
     const q = slot.q
-    if (!q?.bankId) return
+    if (!q?.bankId || q.localized) return
     const fields: Record<string, string> = { question: q.question, solution: q.solution || '' }
     q.options.forEach((o, i) => { fields[`o${i}`] = o })
     try {

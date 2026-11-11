@@ -22,7 +22,7 @@ export function RetryCard({ q, subject, onDone }: { q: EntQuestion; subject: Ent
     if (answered) return
     setChosen(i)
     const ok = i === q.correct
-    logAnswers([{ source: 'ent', subject, section: q.section ?? null, topic: q.topic ?? null, correct: ok, payload: ok ? null : { ...entMistakePayload(q, i) } }])
+    logAnswers([{ source: 'ent', subject, section: q.section ?? null, topic: q.topic ?? null, correct: ok, task_key: q.key ?? null, payload: ok ? null : { ...entMistakePayload(q, i) } }])
     onDone?.(ok)
   }
 

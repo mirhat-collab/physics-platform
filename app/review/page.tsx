@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import { logAnswers } from '@/lib/answer-log'
+import ReportTask from '@/app/components/ReportTask'
 import { answerReview, REVIEW_INTERVALS, type ReviewItem } from '@/lib/review'
 import { SUBJECT_LABEL } from '@/lib/stats'
 import Figure from '@/app/components/Figure'
@@ -74,7 +75,7 @@ export default function ReviewPage() {
     setScore(s => ok ? { ...s, ok: s.ok + 1 } : { ...s, bad: s.bad + 1 })
     answerReview(card, ok).then(upd => { if (upd.done) setLearned(n => n + 1) })
     // В статистику — тоже, но очередь мы уже обновили сами
-    logAnswers([{ source: 'ent', subject: card.subject, section: card.section, topic: card.topic, correct: ok, payload: ok ? null : { ...card.payload, chosen: real } }], { queue: false })
+    logAnswers([{ source: 'ent', subject: card.subject, section: card.section, topic: card.topic, correct: ok, task_key: card.payload.key ?? null, payload: ok ? null : { ...card.payload, chosen: real } }], { queue: false })
   }
 
   function next() {
@@ -165,6 +166,10 @@ export default function ReviewPage() {
                     chosen={real} turns={turns} setTurns={setTurns}
                   />
                 )}
+                <ReportTask
+                  q={{ question: card.payload.question, options: card.payload.options, correct: card.payload.correct, solution: card.payload.solution, figure: card.payload.figure, key: card.payload.key, topic: card.topic ?? undefined }}
+                  subject={card.subject}
+                />
                 <button type="button" className="btn" onClick={next} style={{ justifySelf: 'start' }}>
                   {idx + 1 < cards.length ? t('Следующая задача') : t('Завершить')} <Icon name="arrowRight" size={18} />
                 </button>

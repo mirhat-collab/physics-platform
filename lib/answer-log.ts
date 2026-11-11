@@ -9,6 +9,7 @@ export type AnswerRow = {
   topic?: string | null
   correct: boolean
   payload?: Record<string, unknown> | null
+  task_key?: string | null // ключ задания — для отчёта о качестве заданий
 }
 
 // Задание и ответ ученика, которые храним для «работы над ошибками»
@@ -19,10 +20,11 @@ export type MistakePayload = {
   chosen: number | null // null — «не знаю»
   solution: string
   figure?: string
+  key?: string
 }
 
 export function entMistakePayload(q: EntQuestion, chosen: number | null): MistakePayload {
-  return { question: q.question, options: q.options, correct: q.correct, chosen, solution: q.solution, ...(q.figure ? { figure: q.figure } : {}) }
+  return { question: q.question, options: q.options, correct: q.correct, chosen, solution: q.solution, ...(q.figure ? { figure: q.figure } : {}), ...(q.key ? { key: q.key } : {}) }
 }
 
 // Записывает ответ в статистику. Ошибки сети не мешают решать дальше.
@@ -32,7 +34,11 @@ export async function logAnswers(rows: AnswerRow[], opts: { queue?: boolean } = 
   try {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return
-    await supabase.from('answer_log').insert(rows.map(r => ({ ...r, user_id: user.id })))
+    const { error } = await supabase.from('answer_log').insert(rows.map(r => ({ ...r, user_id: user.id })))
+    // Колонки task_key может не быть, пока миграция не применена — пишем без неё
+    if (error && /task_key/.test(error.message)) {
+      await supabase.from('answer_log').insert(rows.map(r => ({ ...r, task_key: undefined, user_id: user.id })))
+    }
     if (opts.queue !== false) {
       const wrong = rows.filter(r => r.source === 'ent' && !r.correct && r.payload)
       await queueMistakes(user.id, wrong.map(r => ({ subject: r.subject, section: r.section, topic: r.topic, payload: r.payload as unknown as MistakePayload })))

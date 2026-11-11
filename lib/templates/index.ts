@@ -79,7 +79,32 @@ export function generateFromTemplate(subject: EntSubject, topic: string, nOption
     }
   }
   const template = list[Math.floor(Math.random() * list.length)]
-  return withLocale(locale, () => template.gen(nOptions))
+  return { ...withLocale(locale, () => template.gen(nOptions)), key: templateKey(template) }
+}
+
+// Ключ шаблона для статистики по заданиям: хеш русского условия при
+// фиксированных случайных числах. Не зависит от языка и от чисел в задании,
+// а после правки текста шаблона меняется — статистика начинается заново.
+const keyCache = new Map<Template, string>()
+export function templateKey(t: Template): string {
+  let key = keyCache.get(t)
+  if (!key) {
+    const orig = Math.random
+    let seed = 11
+    Math.random = () => { seed = (seed * 1103515245 + 12345) % 2147483648; return seed / 2147483648 }
+    let text = t.topic
+    try { text += '|' + withLocale('ru', () => t.gen(4)).question } finally { Math.random = orig }
+    let h = 2166136261
+    for (let i = 0; i < text.length; i++) h = Math.imul(h ^ text.charCodeAt(i), 16777619)
+    key = 't:' + (h >>> 0).toString(36)
+    keyCache.set(t, key)
+  }
+  return key
+}
+
+// Все шаблоны предмета с ключами — для отчёта о качестве заданий
+export function templateIndex(subject: EntSubject): { key: string; topic: string; template: Template }[] {
+  return ALL[subject].map(template => ({ key: templateKey(template), topic: template.topic, template }))
 }
 
 export function templateCount(subject: EntSubject): number {

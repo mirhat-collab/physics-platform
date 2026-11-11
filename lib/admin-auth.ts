@@ -18,3 +18,15 @@ export async function requireAdmin(): Promise<NextResponse | null> {
 
   return null
 }
+
+// Учитель или админ — для банка задач
+export async function requireStaff(): Promise<NextResponse | null> {
+  const supabase = await createSupabaseServer()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return NextResponse.json({ error: 'Не авторизован' }, { status: 401 })
+  const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
+  if (profile?.role !== 'admin' && profile?.role !== 'teacher') {
+    return NextResponse.json({ error: 'Доступ только для учителей и администратора' }, { status: 403 })
+  }
+  return null
+}

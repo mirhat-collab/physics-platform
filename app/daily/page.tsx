@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { solutionSteps, type EntQuestion, type EntSubject } from '@/lib/ent'
 import { entMistakePayload, logAnswers } from '@/lib/answer-log'
+import ReportTask from '@/app/components/ReportTask'
 import { kzDate } from '@/lib/streak'
 import Figure from '@/app/components/Figure'
 import MathText from '@/app/components/MathText'
@@ -48,7 +49,7 @@ export default function DailyPage() {
     setChosen(i)
     try { localStorage.setItem(key(subject), String(i)) } catch {}
     const ok = i === q.correct
-    logAnswers([{ source: 'ent', subject, section: q.section ?? null, topic: q.topic ?? null, correct: ok, payload: ok ? null : { ...entMistakePayload(q, i) } }])
+    logAnswers([{ source: 'ent', subject, section: q.section ?? null, topic: q.topic ?? null, correct: ok, task_key: q.key ?? null, payload: ok ? null : { ...entMistakePayload(q, i) } }])
   }
 
   const ok = q && chosen !== null && chosen === q.correct
@@ -103,6 +104,7 @@ export default function DailyPage() {
                     <ol>{steps.map((s, i) => <li key={i}><MathText text={s} /></li>)}</ol>
                   </div>
                 )}
+                <ReportTask q={q} subject={subject} />
                 <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
                   {!ok && <Link href="/review" className="btn" style={{ textDecoration: 'none' }}><Icon name="repeat" size={18} /> {t('Работа над ошибками')}</Link>}
                   <Link href={`/ent?subject=${subject}`} className={ok ? 'btn' : 'btn btn-ghost'} style={{ textDecoration: 'none' }}><Icon name="target" size={18} /> {t('Ещё задания')}</Link>
