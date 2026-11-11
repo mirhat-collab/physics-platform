@@ -59,7 +59,7 @@ export default function EntCoach() {
   const week = weekProgress(rows)
   const weekPct = Math.min(100, Math.round((week.solved / goals.weekly) * 100))
   const box = { padding: 14, borderRadius: 14, background: 'var(--surface-2)', marginBottom: 12 } as const
-  const label = (k: string) => k === 'repeat' ? t('Повторить ошибки') : k === 'weak' ? t('Слабая тема') : t('Новая тема')
+  const label = (k: string) => k === 'repeat' ? t('Повторить ошибки') : k === 'weak' ? t('Слабая тема') : k === 'refresh' ? t('Освежить: давно не решал') : t('Новая тема')
 
   return (
     <div className="card" style={{ marginBottom: 20 }}>

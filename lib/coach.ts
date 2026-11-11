@@ -74,8 +74,34 @@ export function gains(rows: LogRow[], subject: EntSubject, target: number, now =
     .sort((a, b) => b.points - a.points)
 }
 
+export type Mastery = { topic: string; mastery: number; answers: number; daysSince: number }
+
+// Насколько ученик владеет темой: доля верных ответов, где свежие ответы
+// весят больше (вес падает вдвое каждые 3 недели), с поправкой на малое число
+// ответов. Плюс сколько дней тему не решали — давно не решённая тема забывается.
+export const MASTERY_HALF_LIFE = 21
+export function topicMastery(rows: LogRow[], subject: EntSubject, now = Date.now()): Mastery[] {
+  const by: Record<string, { c: number; n: number; answers: number; last: number }> = {}
+  for (const r of rows) {
+    if (r.source !== 'ent' || r.subject !== subject || !r.topic) continue
+    const t = new Date(r.created_at).getTime()
+    const w = Math.pow(0.5, (now - t) / DAY / MASTERY_HALF_LIFE)
+    const x = by[r.topic] = by[r.topic] || { c: 0, n: 0, answers: 0, last: 0 }
+    x.n += w
+    if (r.correct) x.c += w
+    x.answers++
+    x.last = Math.max(x.last, t)
+  }
+  return Object.entries(by).map(([topic, x]) => ({
+    topic,
+    mastery: (x.c + 1) / (x.n + 2), // без ответов — 50%, пока данных мало — ближе к 50%
+    answers: x.answers,
+    daysSince: Math.floor((now - x.last) / DAY),
+  }))
+}
+
 export type PlanItem = {
-  kind: 'repeat' | 'weak' | 'new'
+  kind: 'repeat' | 'weak' | 'new' | 'refresh'
   topics: string[]
   count: number // сколько заданий решить
   done: number // сколько уже решено сегодня
@@ -104,6 +130,13 @@ export function dailyPlan(rows: LogRow[], subject: EntSubject, now = Date.now())
   const weak = Object.entries(by).filter(([t, [, n]]) => n >= 3 && !repeat.includes(t))
     .map(([t, [c, n]]) => ({ t, a: c / n })).filter(x => x.a < 0.7).sort((a, b) => a.a - b.a).slice(0, 2)
   for (const w of weak) plan.push({ kind: 'weak', topics: [w.t], count: 5, done: Math.min(5, doneIn([w.t])) })
+
+  // Освежить: тема была освоена, но её не решали 2+ недели — пока не забылась
+  const used = new Set(plan.flatMap(p => p.topics))
+  const refresh = topicMastery(rows, subject, now)
+    .filter(m => m.answers >= 5 && m.mastery >= 0.7 && m.daysSince >= 14 && !used.has(m.topic))
+    .sort((a, b) => b.daysSince - a.daysSince).slice(0, 2).map(m => m.topic)
+  if (refresh.length) plan.push({ kind: 'refresh', topics: refresh, count: 4, done: Math.min(4, doneIn(refresh)) })
 
   // Новая тема — первая по порядку спецификации, которую ещё не решали
   const seen = new Set(ent.map(r => r.topic!))

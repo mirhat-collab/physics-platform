@@ -10,6 +10,7 @@ import Icon from '@/app/components/Icon'
 import Explain from '../Explain'
 import QuestionBody, { LETTERS } from '../QuestionBody'
 import { entMistakePayload, logAnswers } from '@/lib/answer-log'
+import ReportTask from '@/app/components/ReportTask'
 import { useT } from '@/app/components/LanguageProvider'
 import { mockResult } from '@/lib/mock-result'
 import PracticeTools from '../PracticeTools'
@@ -85,6 +86,7 @@ export default function MockEntPage() {
     logAnswers(qs.flatMap((q, i) => !isAnswered(ans[i]) ? [] : [{
       source: 'ent' as const, subject: subj, section: q.section ?? null, topic: q.topic ?? null,
       correct: answerErrors(q, ans[i]) === 0,
+      task_key: q.kind ? null : q.key ?? null,
       payload: answerErrors(q, ans[i]) === 0 || q.kind ? null : { ...entMistakePayload(q, ans[i] as number) },
     }]))
     const { data: { user } } = await supabase.auth.getUser()
@@ -341,6 +343,7 @@ export default function MockEntPage() {
                       </div>
                     )}
                     {!ok && <PracticeTools q={q} subject={subject} retry={!q.kind} />}
+                    <div style={{ marginTop: 10 }}><ReportTask q={q} subject={subject} /></div>
                   </div>
                 )}
               </div>
