@@ -15,6 +15,7 @@ import QuestionBody, { LETTERS, SKIPPED } from './QuestionBody'
 import { entMistakePayload, logAnswers } from '@/lib/answer-log'
 import EntCoach from '@/app/components/EntCoach'
 import ReportTask from '@/app/components/ReportTask'
+import StepMode, { StepToggle, useStepMode } from '@/app/components/StepMode'
 import { useT } from '@/app/components/LanguageProvider'
 
 type Turn = { role: 'user' | 'assistant'; content: string }
@@ -58,6 +59,7 @@ export default function EntPage() {
   const [need, setNeed] = useState<Record<string, number>>({}) // сколько ещё верных подряд нужно по теме
   const needRef = useRef<Record<string, number>>({})
   const [hints, setHints] = useState<Record<number, number>>({}) // сколько шагов подсказки открыто
+  const [stepOn, setStepOn] = useStepMode()
   const [pickNote, setPickNote] = useState('')
   const [picking, setPicking] = useState(false)
 
@@ -585,13 +587,19 @@ export default function EntPage() {
       {header}
 
       <div className="card" style={{ padding: '20px 18px' }}>
-        <div style={{ color: 'var(--muted)', fontSize: 12, fontWeight: 700, marginBottom: 8 }}>
-          {t('ЗАДАНИЕ')} {index + 1}
-          {/* Тема задания: видно, из какой выбранной темы оно пришло */}
-          {q.topic && <span style={{ fontWeight: 500, textTransform: 'none' }}> · {t(q.topic)}</span>}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
+          <div style={{ flex: 1, color: 'var(--muted)', fontSize: 12, fontWeight: 700 }}>
+            {t('ЗАДАНИЕ')} {index + 1}
+            {/* Тема задания: видно, из какой выбранной темы оно пришло */}
+            {q.topic && <span style={{ fontWeight: 500, textTransform: 'none' }}> · {t(q.topic)}</span>}
+          </div>
+          {/* Решать по шагам — ученик включает и выключает сам */}
+          <StepToggle on={stepOn} onChange={setStepOn} />
         </div>
         <MathText text={q.question} style={{ fontSize: 16, lineHeight: 1.6, marginBottom: 18 }} />
         <Figure svg={q.figure} />
+
+        {stepOn && !answered && <div style={{ marginBottom: 14 }}><StepMode key={`${index}-${q.question}`} solution={q.solution || ''} /></div>}
 
         <div style={{ display: 'grid', gap: 8 }}>
           {q.options.map((opt, i) => {
@@ -608,7 +616,7 @@ export default function EntPage() {
           })}
         </div>
 
-        {!answered && hintShown > 0 && (
+        {!answered && !stepOn && hintShown > 0 && (
           <div className="animate-fade-in" style={{ marginTop: 14, padding: '12px 14px', borderRadius: 12, background: 'color-mix(in srgb, var(--accent) 8%, transparent)', border: '1px solid color-mix(in srgb, var(--accent) 30%, transparent)', display: 'grid', gap: 6 }}>
             <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--accent)' }}>{t('ПОДСКАЗКА')}</div>
             <StepTutor question={q.question} steps={steps} shown={hintShown} hideAnswer />
@@ -617,7 +625,7 @@ export default function EntPage() {
 
         {!answered && (
           <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', alignItems: 'center', marginTop: 12 }}>
-            {hintShown < hintMax && (
+            {!stepOn && hintShown < hintMax && (
               <button onClick={() => setHints(h => ({ ...h, [index]: hintShown + 1 }))} style={{ background: 'none', border: 'none', color: 'var(--accent)', fontSize: 14, cursor: 'pointer', fontFamily: 'inherit', textDecoration: 'underline', padding: 0 }}>
                 <Icon name="bulb" size="1em" /> {hintShown ? t('Следующий шаг ({a}/{b})', { a: hintShown + 1, b: hintMax }) : t('Подсказка')}
               </button>
