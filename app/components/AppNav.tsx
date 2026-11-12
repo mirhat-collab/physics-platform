@@ -47,6 +47,10 @@ function buildGroups(role: string | null): NavGroup[] {
       items: [
         { href: '/formulas', icon: 'formula', label: 'Тренажёр формул' },
         { href: '/ent', icon: 'target', label: 'Подготовка к ЕНТ' },
+        { href: '/solve', icon: 'edit', label: 'Решение задач' },
+        { href: '/mark', icon: 'hash', label: 'Отметь на рисунке' },
+        { href: '/sim', icon: 'flask', label: 'Симуляции' },
+        { href: '/blitz', icon: 'zap', label: 'Блиц и дуэль' },
         { href: '/reference', icon: 'book', label: 'Справочник ЕНТ' },
         { href: '/stereo', icon: 'gem', label: 'Стереометрия в 3D' },
       ],
