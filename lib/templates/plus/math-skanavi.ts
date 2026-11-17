@@ -4,12 +4,16 @@
 // неверные варианты в формате ЕНТ и решения. Сразу на двух языках.
 // Порция 1: главы 8 (тригонометрические уравнения) и 13 (текстовые задачи).
 import type { Template } from '../helpers'
-import { c, h, T, type B } from './bi'
+import { c, h, N, T, type B } from './bi'
 
 const r = String.raw
 type Opt = B | string
 const t = (topic: string, q: B, right: Opt, wrongs: Opt[], s: B | string): Template => c(topic, n => T(q, right, wrongs, n, s))
 const th = (topic: string, q: B, right: Opt, wrongs: Opt[], s: B | string): Template => h(topic, n => T(q, right, wrongs, n, s))
+// Числовой ответ (можно решать и вводом числа); единица — перед решением: n(тема, q, 10, [..], '%', s)
+const numGen = (q: B, ans: number, wrongs: number[], a: B | string, b?: B | string) => (k: number) => (b === undefined ? N(q, ans, wrongs, k, '', a) : N(q, ans, wrongs, k, a as string, b))
+const n = (topic: string, q: B, ans: number, wrongs: number[], a: B | string, b?: B | string): Template => c(topic, numGen(q, ans, wrongs, a, b))
+const nh = (topic: string, q: B, ans: number, wrongs: number[], a: B | string, b?: B | string): Template => h(topic, numGen(q, ans, wrongs, a, b))
 
 // Типовые формулировки
 const solve = (e: string): B => [`Решите уравнение $${e}$.`, `$${e}$ теңдеуін шешіңіз.`]
@@ -23,7 +27,7 @@ const M = 'Задачи на движение'
 
 export const PLUS_MATH_SKANAVI: Template[] = [
   // ---------- Разложение на множители ----------
-  t(Y2, cnt(r`\sin 3x + \sin x = 0`, r`[0;\ \pi]`), '$3$', ['$4$', '$2$', '$5$', '$6$'],
+  n(Y2, cnt(r`\sin 3x + \sin x = 0`, r`[0;\ \pi]`), 3, [4, 2, 5, 6],
     [r`$\sin 3x + \sin x = 2\sin 2x\cos x = 0$. $\sin 2x = 0$: $x = \frac{\pi k}{2}$ (сюда входят и корни $\cos x = 0$). На $[0;\ \pi]$: $0,\ \frac{\pi}{2},\ \pi$ — три корня.`,
       r`$\sin 3x + \sin x = 2\sin 2x\cos x = 0$. $\sin 2x = 0$: $x = \frac{\pi k}{2}$ ($\cos x = 0$ түбірлері де осыған кіреді). $[0;\ \pi]$ кесіндісінде: $0,\ \frac{\pi}{2},\ \pi$ — үш түбір.`]),
   t(Y2, solve(r`(1 + \cos 4x)\sin 2x = 2\cos^2 2x`), r`$x = \frac{\pi}{4} + \frac{\pi k}{2},\ k \in \mathbb{Z}$`,
@@ -34,23 +38,23 @@ export const PLUS_MATH_SKANAVI: Template[] = [
     [r`$x = \frac{\pi k}{4},\ k \in \mathbb{Z}$`, r`$x = \frac{\pi k}{16},\ k \in \mathbb{Z}$`, r`$x = \frac{\pi k}{2},\ k \in \mathbb{Z}$`, r`$x = \frac{\pi}{8} + \frac{\pi k}{4},\ k \in \mathbb{Z}$`],
     [r`Произведение в сумму: $\frac{\cos 2x + \cos 4x}{2} = \frac{\cos 2x + \cos 12x}{2}$, то есть $\cos 12x - \cos 4x = -2\sin 8x\sin 4x = 0$. Корни $\sin 4x = 0$ входят в корни $\sin 8x = 0$: $x = \frac{\pi k}{8}$.`,
       r`Көбейтіндіні қосындыға: $\frac{\cos 2x + \cos 4x}{2} = \frac{\cos 2x + \cos 12x}{2}$, яғни $\cos 12x - \cos 4x = -2\sin 8x\sin 4x = 0$. $\sin 4x = 0$ түбірлері $\sin 8x = 0$ түбірлеріне кіреді: $x = \frac{\pi k}{8}$.`]),
-  th(Y2, cnt(r`\mathrm{tg}\,x + \mathrm{tg}\,3x = \mathrm{tg}\,4x`, r`[0;\ \pi]`), '$6$', ['$5$', '$4$', '$7$', '$3$'],
+  nh(Y2, cnt(r`\mathrm{tg}\,x + \mathrm{tg}\,3x = \mathrm{tg}\,4x`, r`[0;\ \pi]`), 6, [5, 4, 7, 3],
     [r`$\mathrm{tg}\,4x = \frac{\mathrm{tg}\,x + \mathrm{tg}\,3x}{1 - \mathrm{tg}\,x\,\mathrm{tg}\,3x}$. Пусть $s = \mathrm{tg}\,x + \mathrm{tg}\,3x$, $p = \mathrm{tg}\,x\,\mathrm{tg}\,3x$: $s = \frac{s}{1 - p}$, откуда $sp = 0$. $s = 0$: $x = \frac{\pi m}{4}$; $p = 0$: $x = \frac{\pi m}{3}$. Точку $\frac{\pi}{2}$ исключаем ($\mathrm{tg}\,x$ не существует). На $[0;\ \pi]$: $0,\ \frac{\pi}{4},\ \frac{\pi}{3},\ \frac{2\pi}{3},\ \frac{3\pi}{4},\ \pi$ — шесть корней.`,
       r`$\mathrm{tg}\,4x = \frac{\mathrm{tg}\,x + \mathrm{tg}\,3x}{1 - \mathrm{tg}\,x\,\mathrm{tg}\,3x}$. $s = \mathrm{tg}\,x + \mathrm{tg}\,3x$, $p = \mathrm{tg}\,x\,\mathrm{tg}\,3x$ болсын: $s = \frac{s}{1 - p}$, осыдан $sp = 0$. $s = 0$: $x = \frac{\pi m}{4}$; $p = 0$: $x = \frac{\pi m}{3}$. $\frac{\pi}{2}$ нүктесін алып тастаймыз ($\mathrm{tg}\,x$ анықталмаған). $[0;\ \pi]$ кесіндісінде: $0,\ \frac{\pi}{4},\ \frac{\pi}{3},\ \frac{2\pi}{3},\ \frac{3\pi}{4},\ \pi$ — алты түбір.`]),
   t(Y2, solve(r`\mathrm{tg}^3 x - \mathrm{tg}^2 x + 4\,\mathrm{tg}\,x - 4 = 0`), r`$x = \frac{\pi}{4} + \pi k,\ k \in \mathbb{Z}$`,
     [r`$x = -\frac{\pi}{4} + \pi k,\ k \in \mathbb{Z}$`, r`$x = \pm\frac{\pi}{4} + \pi k,\ k \in \mathbb{Z}$`, r`$x = \frac{\pi}{4} + 2\pi k,\ k \in \mathbb{Z}$`, r`$x = \mathrm{arctg}\,4 + \pi k,\ k \in \mathbb{Z}$`],
     [r`Группировка: $\mathrm{tg}^2 x(\mathrm{tg}\,x - 1) + 4(\mathrm{tg}\,x - 1) = (\mathrm{tg}\,x - 1)(\mathrm{tg}^2 x + 4) = 0$. Второй множитель положителен, значит $\mathrm{tg}\,x = 1$, $x = \frac{\pi}{4} + \pi k$.`,
       r`Топтау: $\mathrm{tg}^2 x(\mathrm{tg}\,x - 1) + 4(\mathrm{tg}\,x - 1) = (\mathrm{tg}\,x - 1)(\mathrm{tg}^2 x + 4) = 0$. Екінші көбейткіш оң, демек $\mathrm{tg}\,x = 1$, $x = \frac{\pi}{4} + \pi k$.`]),
-  t(Y2, cnt(r`\sin x + \sin 2x + \sin 3x = 0`, r`[0;\ \pi]`), '$4$', ['$3$', '$5$', '$2$', '$6$'],
+  n(Y2, cnt(r`\sin x + \sin 2x + \sin 3x = 0`, r`[0;\ \pi]`), 4, [3, 5, 2, 6],
     [r`$\sin x + \sin 3x = 2\sin 2x\cos x$, поэтому $\sin 2x(2\cos x + 1) = 0$. $\sin 2x = 0$: $0,\ \frac{\pi}{2},\ \pi$; $\cos x = -\frac{1}{2}$: $\frac{2\pi}{3}$. Всего четыре корня.`,
       r`$\sin x + \sin 3x = 2\sin 2x\cos x$, сондықтан $\sin 2x(2\cos x + 1) = 0$. $\sin 2x = 0$: $0,\ \frac{\pi}{2},\ \pi$; $\cos x = -\frac{1}{2}$: $\frac{2\pi}{3}$. Барлығы төрт түбір.`]),
-  t(Y2, cnt(r`\cos 3x + \cos x = 2\cos 2x`, r`[0;\ 2\pi]`), '$6$', ['$5$', '$4$', '$8$', '$7$'],
+  n(Y2, cnt(r`\cos 3x + \cos x = 2\cos 2x`, r`[0;\ 2\pi]`), 6, [5, 4, 8, 7],
     [r`$\cos 3x + \cos x = 2\cos 2x\cos x$, поэтому $2\cos 2x(\cos x - 1) = 0$. $\cos 2x = 0$: $\frac{\pi}{4},\ \frac{3\pi}{4},\ \frac{5\pi}{4},\ \frac{7\pi}{4}$; $\cos x = 1$: $0,\ 2\pi$. Всего шесть корней.`,
       r`$\cos 3x + \cos x = 2\cos 2x\cos x$, сондықтан $2\cos 2x(\cos x - 1) = 0$. $\cos 2x = 0$: $\frac{\pi}{4},\ \frac{3\pi}{4},\ \frac{5\pi}{4},\ \frac{7\pi}{4}$; $\cos x = 1$: $0,\ 2\pi$. Барлығы алты түбір.`]),
-  t(Y2, cnt(r`\cos^4\frac{x}{2} - \sin^4\frac{x}{2} = \sin 2x`, r`[0;\ \pi]`), '$3$', ['$2$', '$4$', '$1$', '$5$'],
+  n(Y2, cnt(r`\cos^4\frac{x}{2} - \sin^4\frac{x}{2} = \sin 2x`, r`[0;\ \pi]`), 3, [2, 4, 1, 5],
     [r`$\cos^4\frac{x}{2} - \sin^4\frac{x}{2} = \left(\cos^2\frac{x}{2} - \sin^2\frac{x}{2}\right) \cdot 1 = \cos x$. Уравнение $\cos x = 2\sin x\cos x$, то есть $\cos x(2\sin x - 1) = 0$: $\frac{\pi}{2}$, а также $\frac{\pi}{6}$ и $\frac{5\pi}{6}$. Три корня.`,
       r`$\cos^4\frac{x}{2} - \sin^4\frac{x}{2} = \left(\cos^2\frac{x}{2} - \sin^2\frac{x}{2}\right) \cdot 1 = \cos x$. Теңдеу $\cos x = 2\sin x\cos x$, яғни $\cos x(2\sin x - 1) = 0$: $\frac{\pi}{2}$, сондай-ақ $\frac{\pi}{6}$ және $\frac{5\pi}{6}$. Үш түбір.`]),
-  th(Y2, cnt(r`\sin^2 x + \sin^2 2x + \sin^2 3x = \frac{3}{2}`, r`[0;\ \pi]`), '$6$', ['$4$', '$5$', '$8$', '$7$'],
+  nh(Y2, cnt(r`\sin^2 x + \sin^2 2x + \sin^2 3x = \frac{3}{2}`, r`[0;\ \pi]`), 6, [4, 5, 8, 7],
     [r`Понижаем степень: $\frac{3}{2} - \frac{\cos 2x + \cos 4x + \cos 6x}{2} = \frac{3}{2}$, то есть $\cos 2x + \cos 6x + \cos 4x = \cos 4x(2\cos 2x + 1) = 0$. $\cos 4x = 0$: $\frac{\pi}{8},\ \frac{3\pi}{8},\ \frac{5\pi}{8},\ \frac{7\pi}{8}$; $\cos 2x = -\frac{1}{2}$: $\frac{\pi}{3},\ \frac{2\pi}{3}$. Шесть корней.`,
       r`Дәрежесін төмендетеміз: $\frac{3}{2} - \frac{\cos 2x + \cos 4x + \cos 6x}{2} = \frac{3}{2}$, яғни $\cos 2x + \cos 6x + \cos 4x = \cos 4x(2\cos 2x + 1) = 0$. $\cos 4x = 0$: $\frac{\pi}{8},\ \frac{3\pi}{8},\ \frac{5\pi}{8},\ \frac{7\pi}{8}$; $\cos 2x = -\frac{1}{2}$: $\frac{\pi}{3},\ \frac{2\pi}{3}$. Алты түбір.`]),
   th(Y2, solve(r`\sin x\cos 3x = \sin 5x\cos 7x`), r`$x = \frac{\pi k}{4};\ x = \frac{\pi}{16} + \frac{\pi k}{8},\ k \in \mathbb{Z}$`,
