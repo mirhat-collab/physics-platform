@@ -15,6 +15,15 @@ import { PLUS_MATH_FUNCTIONS } from './math-functions'
 import { PLUS_MATH_CALCULUS } from './math-calculus'
 import { PLUS_MATH_GEOMETRY } from './math-geometry'
 import { PLUS_MATH_TRIG_BANK } from './math-trig-bank'
+import { PLUS_MATH_SKANAVI } from './math-skanavi'
+import { PLUS_MATH_SKANAVI_2 } from './math-skanavi-2'
+import { PLUS_MATH_SKANAVI_3 } from './math-skanavi-3'
+import { PLUS_MATH_SKANAVI_GEO } from './math-skanavi-geo'
+import { SK_NUMBERS } from './math-sk-numbers'
+import { SK_CALCULUS } from './math-sk-calculus'
+import { SK_INEQ } from './math-sk-ineq'
+import { SK_APPLIED } from './math-sk-applied'
+import { SK_TRIG } from './math-sk-trig'
 import { PLUS2_MATH_NUMBERS } from './math2-numbers'
 import { PLUS2_MATH_EQUATIONS } from './math2-equations'
 import { PLUS2_MATH_FUNCTIONS } from './math2-functions'
@@ -23,4 +32,4 @@ import { PLUS2_MATH_GEOMETRY } from './math2-geometry'
 import { MATH_PARAMS, MATH_VISUAL, PHYSICS_VISUAL } from './visual'
 
 export const PHYSICS_PLUS: Template[] = [...PLUS_KINEMATICS, ...PLUS_DYNAMICS, ...PLUS_HYDRO, ...PLUS_MOLECULAR, ...PLUS_ELECTRO, ...PLUS_MAGNET, ...PLUS_WAVES, ...PLUS_MODERN, ...PHYSICS_VISUAL]
-export const MATH_PLUS: Template[] = [...PLUS_MATH_NUMBERS, ...PLUS_MATH_EQUATIONS, ...PLUS_MATH_FUNCTIONS, ...PLUS_MATH_CALCULUS, ...PLUS_MATH_GEOMETRY, ...PLUS_MATH_TRIG_BANK, ...PLUS2_MATH_NUMBERS, ...PLUS2_MATH_EQUATIONS, ...PLUS2_MATH_FUNCTIONS, ...PLUS2_MATH_CALCULUS, ...PLUS2_MATH_GEOMETRY, ...MATH_VISUAL, ...MATH_PARAMS]
+export const MATH_PLUS: Template[] = [...PLUS_MATH_NUMBERS, ...PLUS_MATH_EQUATIONS, ...PLUS_MATH_FUNCTIONS, ...PLUS_MATH_CALCULUS, ...PLUS_MATH_GEOMETRY, ...PLUS_MATH_TRIG_BANK, ...PLUS_MATH_SKANAVI, ...PLUS_MATH_SKANAVI_2, ...PLUS_MATH_SKANAVI_3, ...PLUS_MATH_SKANAVI_GEO, ...SK_NUMBERS, ...SK_CALCULUS, ...SK_INEQ, ...SK_APPLIED, ...SK_TRIG, ...PLUS2_MATH_NUMBERS, ...PLUS2_MATH_EQUATIONS, ...PLUS2_MATH_FUNCTIONS, ...PLUS2_MATH_CALCULUS, ...PLUS2_MATH_GEOMETRY, ...MATH_VISUAL, ...MATH_PARAMS]
